@@ -23,13 +23,13 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.Configuration
+import play.api.{Configuration, Environment}
 import play.api.http._
 import play.api.i18n.MessagesApi
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.play.audit.http.connector.{AuditConnector, AuditResult}
-import uk.gov.hmrc.play.config.inject.{AppName, RunMode}
+import uk.gov.hmrc.play.config.{AppName, RunMode}
 import uk.gov.hmrc.preferencesadminfrontend.config.FrontendAppConfig
 import uk.gov.hmrc.preferencesadminfrontend.services.{LoginService, LoginServiceConfiguration}
 import uk.gov.hmrc.preferencesadminfrontend.utils.CSRFTest
@@ -111,9 +111,10 @@ trait LoginControllerFixtures extends PlaySpec with MockitoSugar with GuiceOneAp
   when(auditConnectorMock.sendEvent(any())(any(), any())).thenReturn(Future.successful(AuditResult.Success))
 
   val playConfiguration = app.injector.instanceOf[Configuration]
+  val environment = app.injector.instanceOf[Environment]
   val runMode = app.injector.instanceOf[RunMode]
   val appName = app.injector.instanceOf[AppName]
 
-  val loginServiceConfiguration = new LoginServiceConfiguration(playConfiguration, runMode)
-  val loginController = new LoginController(new LoginService(loginServiceConfiguration), auditConnectorMock, appName)
+  val loginServiceConfiguration = app.injector.instanceOf[LoginServiceConfiguration] //new LoginServiceConfiguration(playConfiguration, environment)
+  val loginController = app.injector.instanceOf[LoginController] //new LoginController(new LoginService(loginServiceConfiguration), auditConnectorMock, appName)
 }

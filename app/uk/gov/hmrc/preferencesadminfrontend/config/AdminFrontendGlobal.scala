@@ -26,7 +26,7 @@ import play.api.{Application, Configuration}
 import play.filters.csrf.CSRFFilter
 import play.twirl.api.Html
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
-import uk.gov.hmrc.play.config.inject.RunMode
+import uk.gov.hmrc.play.config.RunMode
 import uk.gov.hmrc.play.frontend.bootstrap.DefaultFrontendGlobal
 import uk.gov.hmrc.preferencesadminfrontend.config.filters.{PreferencesFrontendAuditFilter, SessionTimeoutFilterWithEntryPoint}
 import uk.gov.hmrc.play.frontend.filters.{ FrontendLoggingFilter, SessionTimeoutFilter }

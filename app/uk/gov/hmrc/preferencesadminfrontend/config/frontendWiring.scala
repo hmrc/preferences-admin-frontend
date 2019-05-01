@@ -19,7 +19,7 @@ package uk.gov.hmrc.preferencesadminfrontend
 import javax.inject.{Inject, Singleton}
 
 import uk.gov.hmrc.play.audit.http.connector.{AuditConnector => Auditing}
-import uk.gov.hmrc.play.config.inject.AppName
+import uk.gov.hmrc.play.config.AppName
 import uk.gov.hmrc.play.frontend.config.LoadAuditingConfig
 
 @Singleton

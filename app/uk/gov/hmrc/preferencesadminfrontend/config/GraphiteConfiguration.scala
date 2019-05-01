@@ -23,7 +23,7 @@ import javax.inject.Inject
 import com.codahale.metrics.graphite.{Graphite, GraphiteReporter}
 import com.codahale.metrics.{MetricFilter, SharedMetricRegistries}
 import play.api.{Configuration, Logger}
-import uk.gov.hmrc.play.config.inject.RunMode
+import uk.gov.hmrc.play.config.RunMode
 
 class GraphiteConfiguration @Inject()(configuration: Configuration, runMode: RunMode) {
 

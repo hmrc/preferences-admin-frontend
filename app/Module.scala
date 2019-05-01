@@ -15,10 +15,13 @@
  */
 
 import com.google.inject.AbstractModule
-import play.api.{Logger, LoggerLike}
-import uk.gov.hmrc.crypto.{ApplicationCrypto, ApplicationCryptoDI}
+import com.typesafe.config.{Config, ConfigFactory}
+import play.api.Mode.Mode
+import play.api.{Configuration, Logger, LoggerLike, Play}
+import uk.gov.hmrc.play.config.AppName
+//import uk.gov.hmrc.crypto.{ApplicationCrypto, ApplicationCryptoDI}
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
-import uk.gov.hmrc.play.config.inject.{DefaultRunMode, RunMode}
+import uk.gov.hmrc.play.config.RunMode
 import uk.gov.hmrc.play.frontend.bootstrap.FrontendFilters
 import uk.gov.hmrc.preferencesadminfrontend.FrontendAuditConnector
 import uk.gov.hmrc.preferencesadminfrontend.config._
@@ -28,18 +31,23 @@ import uk.gov.hmrc.play.frontend.filters.FrontendLoggingFilter
 class Module extends AbstractModule {
 
   override def configure(): Unit = {
-
     // On startup
+    bind(classOf[Config]).toInstance(ConfigFactory.load())
     bind(classOf[FrontendStartup]).asEagerSingleton()
     bind(classOf[AppConfig]).to(classOf[FrontendAppConfig]).asEagerSingleton()
     bind(classOf[FrontendFilters]).to(classOf[AdminFrontendGlobal]).asEagerSingleton()
-
-    bind(classOf[RunMode]).to(classOf[DefaultRunMode])
-    bind(classOf[ApplicationCrypto]).to(classOf[ApplicationCryptoDI])
     bind(classOf[FrontendLoggingFilter]).to(classOf[PreferencesFrontendLoggingFilter])
     bind(classOf[LoggerLike]) toInstance Logger
-
     bind(classOf[AuditConnector]).to(classOf[FrontendAuditConnector])
+
+    bind(classOf[AppName]).toInstance(new AppName {
+      override protected def appNameConfiguration: Configuration = Play.current.configuration
+    })
+
+    bind(classOf[RunMode]).toInstance(new RunMode {
+      override protected def mode: Mode = Play.current.mode
+      override protected def runModeConfiguration: Configuration = Play.current.configuration
+    })
   }
 
 }

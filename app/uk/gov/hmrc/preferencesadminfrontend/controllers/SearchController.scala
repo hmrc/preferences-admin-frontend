@@ -18,6 +18,7 @@ package uk.gov.hmrc.preferencesadminfrontend.controllers
 
 import javax.inject.{Inject, Singleton}
 
+import play.api.{Configuration, Play}
 import play.api.data.Form
 import play.api.data.Forms.{mapping, text}
 import play.api.i18n.{I18nSupport, MessagesApi}
@@ -35,6 +36,8 @@ import scala.concurrent.Future
 @Singleton
 class SearchController @Inject()(auditConnector: AuditConnector, searchService: SearchService)
                                 (implicit appConfig: AppConfig, val messagesApi: MessagesApi) extends FrontendController with AppName with I18nSupport {
+
+  def appNameConfiguration: Configuration = Play.current.configuration
 
   def showSearchPage(taxIdentifierName: String, taxIdentifierValue: String) = AuthorisedAction.async {
     implicit request =>

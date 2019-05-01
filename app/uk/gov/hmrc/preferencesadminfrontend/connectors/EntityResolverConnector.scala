@@ -16,14 +16,16 @@
 
 package uk.gov.hmrc.preferencesadminfrontend.connectors
 
+import akka.actor.ActorSystem
+import com.typesafe.config.Config
 import javax.inject.{Inject, Singleton}
-
 import org.joda.time.{DateTime, DateTimeZone}
-import play.api.Logger
+import play.api.Mode.Mode
+import play.api.{Configuration, Environment, Logger, Play}
 import play.api.http.Status
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
-import uk.gov.hmrc.play.config.inject.ServicesConfig
+import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.play.http.ws.{WSGet, WSPost}
 import uk.gov.hmrc.preferencesadminfrontend.services.model.{Email, EntityId, TaxIdentifier}
 
@@ -37,15 +39,23 @@ import uk.gov.hmrc.play.config.AppName
 import scala.util.Try
 
 @Singleton
-class EntityResolverConnector @Inject()(serviceConfiguration: ServicesConfig, frontendAuditConnector: FrontendAuditConnector) extends HttpGet with WSGet
-  with HttpPost with WSPost with HttpAuditing with AppName {
+class EntityResolverConnector @Inject()(frontendAuditConnector: FrontendAuditConnector,
+                                        environment: Environment,
+                                        val runModeConfiguration: Configuration,
+                                        val actorSystem: ActorSystem) extends HttpGet with WSGet
+  with HttpPost with WSPost with HttpAuditing with AppName with ServicesConfig {
 
   implicit val ef = Entity.formats
 
+  override protected def mode: Mode = environment.mode
+  override def appNameConfiguration: Configuration = Play.current.configuration
+  override lazy val configuration: Option[Config] = None
+
   val hooks: Seq[HttpHook] = Seq()
+
   override val auditConnector = frontendAuditConnector
 
-  def serviceUrl = serviceConfiguration.baseUrl("entity-resolver")
+  def serviceUrl = baseUrl("entity-resolver")
 
   def getTaxIdentifiers(taxId: TaxIdentifier)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[TaxIdentifier]] = {
     val response = GET[Option[Entity]](s"$serviceUrl/entity-resolver/${taxId.regime}/${taxId.value}")

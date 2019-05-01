@@ -16,8 +16,12 @@
 
 package uk.gov.hmrc.preferencesadminfrontend.connectors
 
+import akka.actor.ActorSystem
+import com.typesafe.config.Config
 import javax.inject.{Inject, Singleton}
-import uk.gov.hmrc.play.config.inject.ServicesConfig
+import play.api.Mode.Mode
+import play.api.{Configuration, Environment, Play}
+import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.play.http.ws.{WSGet, WSPost}
 import uk.gov.hmrc.preferencesadminfrontend.services.model.{Email, TaxIdentifier}
 
@@ -29,16 +33,22 @@ import uk.gov.hmrc.play.audit.http.HttpAuditing
 import uk.gov.hmrc.play.config.AppName
 
 @Singleton
-class PreferencesConnector @Inject()(serviceConfiguration: ServicesConfig, frontendAuditConnector: FrontendAuditConnector) extends HttpGet with WSGet
-  with HttpPost with WSPost with HttpAuditing with AppName {
+class PreferencesConnector @Inject()(frontendAuditConnector: FrontendAuditConnector,
+                                     environment: Environment,
+                                     val runModeConfiguration: Configuration,
+                                     val actorSystem: ActorSystem) extends HttpGet with WSGet
+  with HttpPost with WSPost with HttpAuditing with AppName with ServicesConfig {
 
   implicit val ef = Entity.formats
+  override protected def mode: Mode = environment.mode
+  override def appNameConfiguration: Configuration = Play.current.configuration
+  override lazy val configuration: Option[Config] = None
 
   val hooks: Seq[HttpHook] = Seq()
 
   override val auditConnector = frontendAuditConnector
 
-  def serviceUrl = serviceConfiguration.baseUrl("preferences")
+  def serviceUrl = baseUrl("preferences")
 
   def getPreferenceDetails(taxId: TaxIdentifier)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[List[PreferenceDetails]] = {
     GET[List[PreferenceDetails]](s"$serviceUrl/preferences/email/${taxId.value}").recover {

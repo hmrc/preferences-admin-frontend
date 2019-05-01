@@ -20,7 +20,7 @@ import javax.inject.Inject
 
 import akka.stream.Materializer
 import play.api.Configuration
-import uk.gov.hmrc.play.config.inject.{AppName, RunMode}
+import uk.gov.hmrc.play.config.{AppName, RunMode}
 import uk.gov.hmrc.play.frontend.filters.FrontendAuditFilter
 import uk.gov.hmrc.preferencesadminfrontend.FrontendAuditConnector
 

@@ -17,11 +17,10 @@
 package uk.gov.hmrc.preferencesadminfrontend.services
 
 import javax.inject.Inject
-
 import com.google.common.io.BaseEncoding
 import com.typesafe.config.ConfigException.Missing
-import play.api.Configuration
-import uk.gov.hmrc.play.config.inject.RunMode
+import play.api.{Configuration, Environment, Mode, Play}
+import uk.gov.hmrc.play.config.RunMode
 import uk.gov.hmrc.preferencesadminfrontend.controllers.model.User
 
 class LoginService @Inject()(loginServiceConfig: LoginServiceConfiguration) {
@@ -29,12 +28,15 @@ class LoginService @Inject()(loginServiceConfig: LoginServiceConfiguration) {
   def isAuthorised(user: User): Boolean = loginServiceConfig.authorisedUsers.contains(user)
 }
 
-class LoginServiceConfiguration @Inject()(configuration: Configuration, runMode: RunMode) {
+class LoginServiceConfiguration @Inject()(val runModeConfiguration: Configuration,
+                                         val environment: Environment) extends RunMode {
+
+  override protected def mode: Mode.Mode = environment.mode
 
   def verifyConfiguration() = if (authorisedUsers.isEmpty) throw new Missing("Property users is empty")
 
   lazy val authorisedUsers: Seq[User] = {
-    configuration.getConfigSeq(s"${runMode.env}.users").fold(throw new Missing("Property users missing"))(_.map {
+    runModeConfiguration.getConfigSeq(s"${env}.users").fold(throw new Missing("Property users missing"))(_.map {
       userConfig: Configuration =>
         val encodedPwd = userConfig.getString("password").getOrElse(throw new Missing("Property password missing"))
         val decodedPwd = new String(BaseEncoding.base64().decode(encodedPwd))

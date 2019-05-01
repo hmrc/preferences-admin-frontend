@@ -16,13 +16,17 @@
 
 package uk.gov.hmrc.preferencesadminfrontend.connectors
 
+import akka.actor.ActorSystem
+import com.typesafe.config.Config
 import javax.inject.{Inject, Singleton}
+import play.api.Mode.Mode
+import play.api.{Configuration, Environment, Play}
 import play.api.http.Status
 import uk.gov.hmrc.http.hooks.HttpHook
 import uk.gov.hmrc.http.{HeaderCarrier, HttpGet, HttpPost, HttpResponse}
 import uk.gov.hmrc.play.audit.http.HttpAuditing
 import uk.gov.hmrc.play.config.AppName
-import uk.gov.hmrc.play.config.inject.ServicesConfig
+import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.play.http.ws.{WSGet, WSPost}
 import uk.gov.hmrc.preferencesadminfrontend.FrontendAuditConnector
 import uk.gov.hmrc.preferencesadminfrontend.model.{RescindmentAlertsResult, RescindmentRequest, RescindmentUpdateResult}
@@ -30,14 +34,20 @@ import uk.gov.hmrc.preferencesadminfrontend.model.{RescindmentAlertsResult, Resc
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class MessageConnector @Inject()(serviceConfiguration: ServicesConfig,
-                                 frontendAuditConnector: FrontendAuditConnector) extends HttpGet with WSGet
-  with HttpPost with WSPost with HttpAuditing with AppName {
+class MessageConnector @Inject()(frontendAuditConnector: FrontendAuditConnector,
+                                 environment: Environment,
+                                 val runModeConfiguration: Configuration,
+                                 val actorSystem: ActorSystem) extends HttpGet with WSGet
+  with HttpPost with WSPost with HttpAuditing with AppName with ServicesConfig {
+
+  override protected def mode: Mode = environment.mode
+  override def appNameConfiguration: Configuration = Play.current.configuration
+  override lazy val configuration: Option[Config] = None
 
   val hooks: Seq[HttpHook] = Seq()
   override val auditConnector = frontendAuditConnector
 
-  def serviceUrl: String = serviceConfiguration.baseUrl("message")
+  def serviceUrl: String = baseUrl("message")
 
   def addRescindments(rescindmentRequest: RescindmentRequest)
                      (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[RescindmentUpdateResult] = {
