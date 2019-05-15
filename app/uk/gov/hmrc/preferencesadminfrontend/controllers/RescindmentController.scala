@@ -53,7 +53,7 @@ class RescindmentController @Inject()(auditConnector: AuditConnector, rescindmen
           rescindmentRequest => {
             rescindmentService.addRescindments(rescindmentRequest).map(updateResult =>
               Ok(uk.gov.hmrc.preferencesadminfrontend.views.html.rescindment_send(
-                Rescindment().discardingErrors, updateResult.succeeded.toString)
+                Rescindment().discardingErrors, succeeded = updateResult.succeeded.toString)
               )
             )
           }
@@ -73,7 +73,7 @@ class RescindmentController @Inject()(auditConnector: AuditConnector, rescindmen
       implicit user =>
         rescindmentService.sendRescindmentAlerts().map(alertsResult =>
           Ok(uk.gov.hmrc.preferencesadminfrontend.views.html.rescindment_send(
-            Rescindment().discardingErrors, alertsResult.sent.toString, alertsResult.failed.toString
+            Rescindment().discardingErrors, sent = alertsResult.sent.toString, failed = alertsResult.failed.toString
           ))
         )
   }
