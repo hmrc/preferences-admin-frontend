@@ -137,13 +137,13 @@ class MessageConnectorSpec extends UnitSpec with ScalaFutures with GuiceOneAppPe
     "approveGmcBatch" should {
       "return a valid sequence of batches with status 200" in new TestCase {
         val result = messageConnectorHttpMock(expectedApproveGmcBatchPath, Json.obj(), Status.OK)
-          .approveGmcBatch(gmcBatch).futureValue
+          .approveGmcBatch(gmcBatchApproval).futureValue
         result.status shouldBe Status.OK
       }
 
       "return a BAD GATEWAY with an error message when an error is thrown" in new TestCase {
         val result = messageConnectorHttpMock(expectedApproveGmcBatchPath, new TimeoutException("timeout error"))
-          .approveGmcBatch(gmcBatch).futureValue
+          .approveGmcBatch(gmcBatchApproval).futureValue
         result.status shouldBe Status.BAD_GATEWAY
         result.body should include("timed out with message 'timeout error'")
       }
@@ -152,13 +152,13 @@ class MessageConnectorSpec extends UnitSpec with ScalaFutures with GuiceOneAppPe
     "rejectGmcBatch" should {
       "return a valid sequence of batches with status 200" in new TestCase {
         val result = messageConnectorHttpMock(expectedRejectGmcBatchPath, Json.obj(), Status.OK)
-          .rejectGmcBatch(gmcBatch).futureValue
+          .rejectGmcBatch(gmcBatchApproval).futureValue
         result.status shouldBe Status.OK
       }
 
       "return a BAD GATEWAY with an error message when an error is thrown" in new TestCase {
         val result = messageConnectorHttpMock(expectedRejectGmcBatchPath, new TimeoutException("timeout error"))
-          .rejectGmcBatch(gmcBatch).futureValue
+          .rejectGmcBatch(gmcBatchApproval).futureValue
         result.status shouldBe Status.BAD_GATEWAY
         result.body should include("timed out with message 'timeout error'")
       }
@@ -254,6 +254,14 @@ class MessageConnectorSpec extends UnitSpec with ScalaFutures with GuiceOneAppPe
       "2017-03-16",
       "newMessageAlert_SA359",
       Some(15778)
+    )
+
+    val gmcBatchApproval = GmcBatchApproval(
+      "123456789",
+      "SA359",
+      "2017-03-16",
+      "newMessageAlert_SA359",
+      "some reason"
     )
 
     def messageConnectorHttpMock(expectedPath: String, jsonBody: JsValue, status: Int): MessageConnector = {

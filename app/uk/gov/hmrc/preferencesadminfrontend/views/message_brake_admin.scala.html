@@ -101,11 +101,11 @@
                 <div class="column-full">
                     <div class="button-group">
 
-                            @form(action = routes.MessageBrakeController.approveBatch, 'class -> "button-form") {
-                                @TemplateHelper.getFormButton("approve","Approve",batchList,batchPreview.batchId)
+                            @form(action = routes.MessageBrakeController.showApproveBatchConfirmationPage(), 'class -> "button-form") {
+                                @TemplateHelper.getFormButton("approve", "Approve", batchList, batchPreview.batchId)
                             }
-                            @form(action = routes.MessageBrakeController.rejectBatch, 'class -> "button-form") {
-                                @TemplateHelper.getFormButton("reject","Reject",batchList,batchPreview.batchId)
+                            @form(action = routes.MessageBrakeController.showRejectBatchConfirmationPage(), 'class -> "button-form") {
+                                @TemplateHelper.getFormButton("reject", "Reject", batchList, batchPreview.batchId)
                             }
 
                     </div>

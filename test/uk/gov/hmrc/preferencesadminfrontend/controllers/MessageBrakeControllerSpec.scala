@@ -33,7 +33,7 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.preferencesadminfrontend.connectors.MessageConnector
 import uk.gov.hmrc.preferencesadminfrontend.controllers.model.User
-import uk.gov.hmrc.preferencesadminfrontend.model.{BatchMessagePreview, GmcBatch, MessagePreview}
+import uk.gov.hmrc.preferencesadminfrontend.model.{BatchMessagePreview, GmcBatch, GmcBatchApproval, MessagePreview}
 import uk.gov.hmrc.preferencesadminfrontend.services.MessageService
 import uk.gov.hmrc.preferencesadminfrontend.utils.{CSRFTest, SpecBase}
 
@@ -63,6 +63,14 @@ class MessageBrakeControllerSpec extends UnitSpec
     "2017-03-16",
     "newMessageAlert_SA359",
     Some(15778)
+  )
+
+  val gmcBatchApproval = GmcBatchApproval(
+    "123456789",
+    "SA359",
+    "2017-03-16",
+    "newMessageAlert_SA359",
+    "some reason"
   )
 
   val mockMessagePreview = MessagePreview(
@@ -126,62 +134,82 @@ class MessageBrakeControllerSpec extends UnitSpec
     }
   }
 
-  "approveBatch" should {
+  "confirmApproveBatch" should {
 
     "return 200 when the approve batch page is posted" in new MessageBrakeControllerTestCase {
-      val requestWithFormData = getRequestWithFormData(routes.MessageBrakeController.approveBatch())
-      when(mockMessageConnector.approveGmcBatch(ArgumentMatchers.eq(gmcBatch))(any[HeaderCarrier]))
+      val requestWithFormData = getRequestWithFormData(routes.MessageBrakeController.confirmApproveBatch())
+      when(mockMessageConnector.approveGmcBatch(ArgumentMatchers.eq(gmcBatchApproval))(any[HeaderCarrier]))
         .thenReturn(Future(HttpResponse(Status.OK)))
       when(mockMessageService.getGmcBatches()(any[HeaderCarrier],any[ExecutionContext])).thenReturn(Future.successful(Left(Seq(gmcBatch))))
-      private val result = messageBrakeController().approveBatch()(addToken(requestWithFormData))
+      private val result = messageBrakeController().confirmApproveBatch()(addToken(requestWithFormData))
       status(result) shouldBe Status.OK
     }
 
-    "return error when approveGmcBatch() fails" in new MessageBrakeControllerTestCase {
-      val requestWithFormData = getRequestWithFormData(routes.MessageBrakeController.approveBatch())
-      when(mockMessageConnector.approveGmcBatch(ArgumentMatchers.eq(gmcBatch))(any[HeaderCarrier]))
+    "return a BAD REQUEST (404) when the form payload is invalid" in new MessageBrakeControllerTestCase {
+      val fakeRequestWithSession = FakeRequest(routes.MessageBrakeController.confirmApproveBatch()).withSession(User.sessionKey -> "user")
+      val requestWithFormData = fakeRequestWithSession.withFormUrlEncodedBody("blah" -> "blah")
+      when(mockMessageConnector.approveGmcBatch(ArgumentMatchers.eq(gmcBatchApproval))(any[HeaderCarrier]))
         .thenReturn(Future(HttpResponse(Status.BAD_GATEWAY)))
       when(mockMessageService.getGmcBatches()(any[HeaderCarrier],any[ExecutionContext])).thenReturn(Future.successful(Left(Seq(gmcBatch))))
-      private val result = messageBrakeController().approveBatch()(addToken(requestWithFormData))
+      private val result = messageBrakeController().confirmApproveBatch()(addToken(requestWithFormData))
+      status(result) shouldBe Status.BAD_REQUEST
+    }
+
+    "return error when confirmApproveBatch() fails" in new MessageBrakeControllerTestCase {
+      val requestWithFormData = getRequestWithFormData(routes.MessageBrakeController.confirmApproveBatch())
+      when(mockMessageConnector.approveGmcBatch(ArgumentMatchers.eq(gmcBatchApproval))(any[HeaderCarrier]))
+        .thenReturn(Future(HttpResponse(Status.BAD_GATEWAY)))
+      when(mockMessageService.getGmcBatches()(any[HeaderCarrier],any[ExecutionContext])).thenReturn(Future.successful(Left(Seq(gmcBatch))))
+      private val result = messageBrakeController().confirmApproveBatch()(addToken(requestWithFormData))
       status(result) shouldBe Status.BAD_GATEWAY
     }
 
     "return error when getGmcBatches() fails" in new MessageBrakeControllerTestCase {
-      val requestWithFormData = getRequestWithFormData(routes.MessageBrakeController.approveBatch())
-      when(mockMessageConnector.approveGmcBatch(ArgumentMatchers.eq(gmcBatch))(any[HeaderCarrier]))
+      val requestWithFormData = getRequestWithFormData(routes.MessageBrakeController.confirmApproveBatch())
+      when(mockMessageConnector.approveGmcBatch(ArgumentMatchers.eq(gmcBatchApproval))(any[HeaderCarrier]))
         .thenReturn(Future(HttpResponse(Status.OK)))
       when(mockMessageService.getGmcBatches()(any[HeaderCarrier],any[ExecutionContext])).thenReturn(Future.successful(Right("error")))
-      private val result = messageBrakeController().approveBatch()(addToken(requestWithFormData))
+      private val result = messageBrakeController().confirmApproveBatch()(addToken(requestWithFormData))
       status(result) shouldBe Status.BAD_GATEWAY
     }
   }
 
-  "rejectBatch" should {
+  "confirmRejectBatch" should {
 
     "return 200 when the approve batch page is posted" in new MessageBrakeControllerTestCase {
-      val requestWithFormData = getRequestWithFormData(routes.MessageBrakeController.rejectBatch())
-      when(mockMessageConnector.rejectGmcBatch(ArgumentMatchers.eq(gmcBatch))(any[HeaderCarrier]))
+      val requestWithFormData = getRequestWithFormData(routes.MessageBrakeController.confirmRejectBatch())
+      when(mockMessageConnector.rejectGmcBatch(ArgumentMatchers.eq(gmcBatchApproval))(any[HeaderCarrier]))
         .thenReturn(Future(HttpResponse(Status.OK)))
       when(mockMessageService.getGmcBatches()(any[HeaderCarrier],any[ExecutionContext])).thenReturn(Future.successful(Left(Seq(gmcBatch))))
-      private val result = messageBrakeController().rejectBatch()(addToken(requestWithFormData))
+      private val result = messageBrakeController().confirmRejectBatch()(addToken(requestWithFormData))
       status(result) shouldBe Status.OK
     }
 
-    "return error when rejectGmcBatch() fails" in new MessageBrakeControllerTestCase {
-      val requestWithFormData = getRequestWithFormData(routes.MessageBrakeController.rejectBatch())
-      when(mockMessageConnector.rejectGmcBatch(ArgumentMatchers.eq(gmcBatch))(any[HeaderCarrier]))
+    "return a BAD REQUEST (404) when the form payload is invalid" in new MessageBrakeControllerTestCase {
+      val fakeRequestWithSession = FakeRequest(routes.MessageBrakeController.confirmRejectBatch()).withSession(User.sessionKey -> "user")
+      val requestWithFormData = fakeRequestWithSession.withFormUrlEncodedBody("blah" -> "blah")
+      when(mockMessageConnector.approveGmcBatch(ArgumentMatchers.eq(gmcBatchApproval))(any[HeaderCarrier]))
         .thenReturn(Future(HttpResponse(Status.BAD_GATEWAY)))
       when(mockMessageService.getGmcBatches()(any[HeaderCarrier],any[ExecutionContext])).thenReturn(Future.successful(Left(Seq(gmcBatch))))
-      private val result = messageBrakeController().rejectBatch()(addToken(requestWithFormData))
+      private val result = messageBrakeController().confirmRejectBatch()(addToken(requestWithFormData))
+      status(result) shouldBe Status.BAD_REQUEST
+    }
+
+    "return error when rejectGmcBatch() fails" in new MessageBrakeControllerTestCase {
+      val requestWithFormData = getRequestWithFormData(routes.MessageBrakeController.confirmRejectBatch())
+      when(mockMessageConnector.rejectGmcBatch(ArgumentMatchers.eq(gmcBatchApproval))(any[HeaderCarrier]))
+        .thenReturn(Future(HttpResponse(Status.BAD_GATEWAY)))
+      when(mockMessageService.getGmcBatches()(any[HeaderCarrier],any[ExecutionContext])).thenReturn(Future.successful(Left(Seq(gmcBatch))))
+      private val result = messageBrakeController().confirmRejectBatch()(addToken(requestWithFormData))
       status(result) shouldBe Status.BAD_GATEWAY
     }
 
     "return error when getGmcBatches() fails" in new MessageBrakeControllerTestCase {
-      val requestWithFormData = getRequestWithFormData(routes.MessageBrakeController.rejectBatch())
-      when(mockMessageConnector.rejectGmcBatch(ArgumentMatchers.eq(gmcBatch))(any[HeaderCarrier]))
+      val requestWithFormData = getRequestWithFormData(routes.MessageBrakeController.confirmRejectBatch())
+      when(mockMessageConnector.rejectGmcBatch(ArgumentMatchers.eq(gmcBatchApproval))(any[HeaderCarrier]))
         .thenReturn(Future(HttpResponse(Status.OK)))
       when(mockMessageService.getGmcBatches()(any[HeaderCarrier],any[ExecutionContext])).thenReturn(Future.successful(Right("error")))
-      private val result = messageBrakeController().rejectBatch()(addToken(requestWithFormData))
+      private val result = messageBrakeController().confirmRejectBatch()(addToken(requestWithFormData))
       status(result) shouldBe Status.BAD_GATEWAY
     }
   }
@@ -203,7 +231,8 @@ trait MessageBrakeControllerTestCase extends SpecBase with MockitoSugar {
       "formId" -> "SA359",
       "issueDate" -> "2017-03-16",
       "templateId" -> "newMessageAlert_SA359",
-      "count" -> "15778"
+      "count" -> "15778",
+      "reasonText" -> "some reason"
     )
   }
 }

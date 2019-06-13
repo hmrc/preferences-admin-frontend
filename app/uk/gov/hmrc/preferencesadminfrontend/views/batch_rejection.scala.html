@@ -1,0 +1,46 @@
+@*
+ * Copyright 2019 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.play.views.html.helpers._
+@import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
+@import uk.gov.hmrc.preferencesadminfrontend.controllers.routes
+@import uk.gov.hmrc.preferencesadminfrontend.model.GmcBatchApproval
+@import uk.gov.hmrc.preferencesadminfrontend.views.TemplateHelper
+
+@(gmcBatchApproval: Form[GmcBatchApproval])(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
+
+@uk.gov.hmrc.preferencesadminfrontend.views.html.main_template(title = "Batch Rejection", bodyClasses = None) {
+ <h1 class="heading-large">Batch Rejection</h1>
+ <div class="section">
+ @form(action = routes.MessageBrakeController.confirmRejectBatch) {
+  <div class='form-group @if(gmcBatchApproval("reasonText").hasErrors){form-group-error}'>
+   <label class="form-label" for="reasonText">Please enter a reason for rejecting this batch</label>
+   @gmcBatchApproval("reasonText").errors.map { error =>
+    <span class="error-message" id="error-message-reason-input">@messages(error.message)</span>
+   }
+   <textarea id="reasonText" name="reasonText" maxlength="120">@gmcBatchApproval("reasonText").value</textarea>
+  </div>
+  <fieldset>
+   <input type="submit" name="confirm" class="button" value="Confirm"/>
+   <input type="button" onclick="location.href='@routes.MessageBrakeController.showAdminPage';" class="button" value="Cancel"/>
+  </fieldset>
+  <input type="hidden" name="batchId" value='@gmcBatchApproval("batchId").value'/>
+  <input type="hidden" name="formId" value='@gmcBatchApproval("formId").value'/>
+  <input type="hidden" name="issueDate" value='@gmcBatchApproval("issueDate").value'/>
+  <input type="hidden" name="templateId" value='@gmcBatchApproval("templateId").value'/>
+ }
+ </div>
+}

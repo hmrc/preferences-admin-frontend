@@ -90,14 +90,14 @@ class MessageConnector @Inject()(frontendAuditConnector: FrontendAuditConnector,
     }
   }
 
-  def approveGmcBatch(batch: GmcBatch)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
-    POST[GmcBatch,HttpResponse](s"$serviceUrl/admin/message/brake/accept", batch).recover {
+  def approveGmcBatch(batch: GmcBatchApproval)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
+    POST[GmcBatchApproval,HttpResponse](s"$serviceUrl/admin/message/brake/accept", batch).recover {
       case e: Exception => HttpResponse(BAD_GATEWAY, None, Map(), Some(e.getMessage))
     }
   }
 
-  def rejectGmcBatch(batch: GmcBatch)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
-    POST[GmcBatch,HttpResponse](s"$serviceUrl/admin/message/brake/reject", batch).recover {
+  def rejectGmcBatch(batch: GmcBatchApproval)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
+    POST[GmcBatchApproval,HttpResponse](s"$serviceUrl/admin/message/brake/reject", batch).recover {
       case e: Exception => HttpResponse(BAD_GATEWAY, None, Map(), Some(e.getMessage))
     }
   }
