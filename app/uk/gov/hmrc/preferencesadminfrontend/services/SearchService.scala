@@ -50,7 +50,7 @@ class SearchService @Inject()(
       preferenceDetails.map { details =>
         val taxIdentifiers = entityResolverConnector.getTaxIdentifiers(details)
         taxIdentifiers.map { taxIds =>
-          Preference(details.genericPaperless, details.genericUpdatedAt, details.taxCreditsPaperless, details.taxCreditsUpdatedAt, details.email, taxIds)
+          Preference(details.entityId, details.genericPaperless, details.genericUpdatedAt, details.taxCreditsPaperless, details.taxCreditsUpdatedAt, details.email, taxIds)
         }
       }
     }
@@ -65,7 +65,7 @@ class SearchService @Inject()(
       taxIdentifiers   <- entityResolverConnector.getTaxIdentifiers(taxId)
     } yield
       preferenceDetail.map(details =>
-        Preference(details.genericPaperless, details.genericUpdatedAt, details.taxCreditsPaperless, details.taxCreditsUpdatedAt, details.email, taxIdentifiers))
+        Preference(details.entityId, details.genericPaperless, details.genericUpdatedAt, details.taxCreditsPaperless, details.taxCreditsUpdatedAt, details.email, taxIdentifiers))
 
     preferenceDetail map {
       case Some(preference) => List(preference)

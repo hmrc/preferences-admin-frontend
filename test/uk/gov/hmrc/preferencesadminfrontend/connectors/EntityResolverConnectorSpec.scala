@@ -145,7 +145,7 @@ class EntityResolverConnectorSpec extends UnitSpec with ScalaFutures with GuiceO
       result shouldBe defined
       result.get.genericPaperless shouldBe true
       result.get.taxCreditsPaperless shouldBe false
-      result.get.email shouldBe Some(Email("john.doe@digital.hmrc.gov.uk", false, None))
+      result.get.email shouldBe Some(Email("john.doe@digital.hmrc.gov.uk", false, None, None))
     }
 
     "return generic paperless preference false and email as 'None' if user is opted out for saUtr" in new TestCase {

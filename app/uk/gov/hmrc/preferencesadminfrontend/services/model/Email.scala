@@ -20,7 +20,7 @@ import org.joda.time.DateTime
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
-case class Email(address: String, verified: Boolean, verifiedOn: Option[DateTime])
+case class Email(address: String, verified: Boolean, verifiedOn: Option[DateTime], language: Option[String])
 
 object Email {
   implicit val dateFormatDefault = new Format[DateTime] {
@@ -32,9 +32,10 @@ object Email {
   implicit val reads: Reads[Email] = (
     (JsPath \ "email").read[String] and
       (JsPath \ "status").read[String] and
-      (JsPath \ "verifiedOn").readNullable[DateTime]
-  )((address, status, verifiedOn) => {
+      (JsPath \ "verifiedOn").readNullable[DateTime] and
+      (JsPath \ "language").readNullable[String]
+  )((address, status, verifiedOn, language) => {
     val verified = (status == "verified")
-    Email(address, verified, verifiedOn)
+    Email(address, verified, verifiedOn, language)
   })
 }

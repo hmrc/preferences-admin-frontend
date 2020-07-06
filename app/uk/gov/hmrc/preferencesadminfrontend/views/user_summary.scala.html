@@ -21,6 +21,10 @@
 <table>
     <tbody>
         <tr>
+            <td>Entity ID</td>
+            <td>@preference.entityId.getOrElse("Not available")</td>
+        </tr>
+        <tr>
             <td>Nino</td>
             <td>@preference.taxIdentifiers.find(id => id.name == "nino").fold("Not available")(_.value)</td>
         </tr>
@@ -51,6 +55,10 @@
                 <td>Email address</td>
                 <td>@email.address</td>
             </tr>
+            <tr>
+                <td>Language</td>
+                <td>@email.language.getOrElse("Not available - defaulted to English")</td>
+            </tr>
         @email.verifiedOn.map { date =>
             <tr>
                 <td>Date time Email Verified</td>
@@ -60,4 +68,5 @@
         }
     </tbody>
 </table>
+<br/><br/>
 }

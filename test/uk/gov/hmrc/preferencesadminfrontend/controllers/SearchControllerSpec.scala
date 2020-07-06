@@ -41,7 +41,7 @@ import uk.gov.hmrc.preferencesadminfrontend.connectors.OptedOut
 import uk.gov.hmrc.preferencesadminfrontend.controllers
 import uk.gov.hmrc.preferencesadminfrontend.controllers.model.User
 import uk.gov.hmrc.preferencesadminfrontend.services._
-import uk.gov.hmrc.preferencesadminfrontend.services.model.{ Email, Preference, TaxIdentifier }
+import uk.gov.hmrc.preferencesadminfrontend.services.model.{ Email, Preference, TaxIdentifier, EntityId }
 import uk.gov.hmrc.preferencesadminfrontend.utils.SpecBase
 
 import scala.concurrent.{ ExecutionContext, Future }
@@ -83,11 +83,12 @@ class SearchControllerSpec extends UnitSpec with ScalaFutures with GuiceOneAppPe
     "return a preference if tax identifier exists" in new SearchControllerTestCase {
 
       val preference = Preference(
+        entityId = Some(EntityId.generate),
         genericPaperless = true,
         genericUpdatedAt = genericUpdatedAt,
         taxCreditsPaperless = true,
         taxCreditsUpdatedAt = taxCreditsUpdatedAt,
-        Some(Email("john.doe@digital.hmrc.gov.uk", verified = true, verifiedOn = verifiedOn)),
+        Some(Email("john.doe@digital.hmrc.gov.uk", verified = true, verifiedOn = verifiedOn, language = Some("cy"))),
         Seq(TaxIdentifier("email", "john.doe@digital.hmrc.gov.uk"))
       )
       when(searchServiceMock.searchPreference(any())(any(), any(), any())).thenReturn(Future.successful(List(preference)))
@@ -102,11 +103,12 @@ class SearchControllerSpec extends UnitSpec with ScalaFutures with GuiceOneAppPe
 
     "return a preference if email address exists" in new SearchControllerTestCase {
       val preference = Preference(
+        entityId = Some(EntityId.generate),
         genericPaperless = true,
         genericUpdatedAt = genericUpdatedAt,
         taxCreditsPaperless = true,
         taxCreditsUpdatedAt = taxCreditsUpdatedAt,
-        Some(Email("test@test.com", verified = true, verifiedOn = verifiedOn)),
+        Some(Email("test@test.com", verified = true, verifiedOn = verifiedOn, language = None)),
         Seq(TaxIdentifier("email", "test@test.com"))
       )
       when(searchServiceMock.searchPreference(any())(any(), any(), any())).thenReturn(Future.successful(List(preference)))
@@ -131,11 +133,12 @@ class SearchControllerSpec extends UnitSpec with ScalaFutures with GuiceOneAppPe
     "include a hidden form to opt the user out" in new SearchControllerTestCase {
 
       val preference = Preference(
+        entityId = Some(EntityId.generate),
         genericPaperless = true,
         genericUpdatedAt = genericUpdatedAt,
         taxCreditsPaperless = true,
         taxCreditsUpdatedAt = taxCreditsUpdatedAt,
-        Some(Email("john.doe@digital.hmrc.gov.uk", verified = true, verifiedOn = verifiedOn)),
+        Some(Email("john.doe@digital.hmrc.gov.uk", verified = true, verifiedOn = verifiedOn, language = Some("en"))),
         Seq(TaxIdentifier("nino", "CE067583D"))
       )
       when(searchServiceMock.searchPreference(any())(any(), any(), any())).thenReturn(Future.successful(List(preference)))
@@ -160,11 +163,12 @@ class SearchControllerSpec extends UnitSpec with ScalaFutures with GuiceOneAppPe
 
     "call the search service with an uppercase taxIdentifier if a lowercase taxIdentifier is provided through the Form" in new SearchControllerTestCase {
       val preference = Preference(
+        entityId = Some(EntityId.generate),
         genericPaperless = true,
         genericUpdatedAt = genericUpdatedAt,
         taxCreditsPaperless = true,
         taxCreditsUpdatedAt = taxCreditsUpdatedAt,
-        Some(Email("john.doe@digital.hmrc.gov.uk", verified = true, verifiedOn = verifiedOn)),
+        Some(Email("john.doe@digital.hmrc.gov.uk", verified = true, verifiedOn = verifiedOn, language = Some("cy"))),
         Seq(TaxIdentifier("nino", "CE067583D"))
       )
       when(searchServiceMock.searchPreference(any())(any(), any(), any())).thenReturn(Future.successful(List(preference)))
@@ -187,11 +191,12 @@ class SearchControllerSpec extends UnitSpec with ScalaFutures with GuiceOneAppPe
     val verifiedOn = Some(new DateTime(2018, 2, 15, 0, 0, DateTimeZone.UTC))
     "redirect to the confirm page" in new SearchControllerTestCase with ScalaFutures {
       val preference = Preference(
+        entityId = Some(EntityId.generate),
         genericPaperless = true,
         genericUpdatedAt = genericUpdatedAt,
         taxCreditsPaperless = true,
         taxCreditsUpdatedAt = taxCreditsUpdatedAt,
-        Some(Email("john.doe@digital.hmrc.gov.uk", verified = true, verifiedOn = verifiedOn)),
+        Some(Email("john.doe@digital.hmrc.gov.uk", verified = true, verifiedOn = verifiedOn, language = None)),
         Seq()
       )
       when(searchServiceMock.optOut(ArgumentMatchers.eq(TaxIdentifier("nino", "CE067583D")), any())(any(), any(), any()))
