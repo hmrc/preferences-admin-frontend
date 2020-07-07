@@ -41,7 +41,7 @@ import uk.gov.hmrc.preferencesadminfrontend.connectors.OptedOut
 import uk.gov.hmrc.preferencesadminfrontend.controllers
 import uk.gov.hmrc.preferencesadminfrontend.controllers.model.User
 import uk.gov.hmrc.preferencesadminfrontend.services._
-import uk.gov.hmrc.preferencesadminfrontend.services.model.{ Email, Preference, TaxIdentifier, EntityId }
+import uk.gov.hmrc.preferencesadminfrontend.services.model.{ Email, EntityId, Preference, TaxIdentifier }
 import uk.gov.hmrc.preferencesadminfrontend.utils.SpecBase
 
 import scala.concurrent.{ ExecutionContext, Future }
