@@ -159,7 +159,7 @@ class SearchServiceSpec extends UnitSpec with MockitoSugar with ScalaFutures wit
   "createSearchEvent" should {
     "generate the correct event when the preference exists" in new SearchServiceTestCase {
       val preference = Preference(
-        entityId = Some(EntityId.generate),
+        entityId = Some(EntityId("383cfb1b-5f57-417b-9380-545f35c29a22")),
         genericPaperless = true,
         genericUpdatedAt = genericUpdatedAt,
         taxCreditsPaperless = true,
@@ -172,7 +172,7 @@ class SearchServiceSpec extends UnitSpec with MockitoSugar with ScalaFutures wit
       event.auditSource shouldBe "preferences-admin-frontend"
       event.auditType shouldBe "TxSucceeded"
       event.request.detail shouldBe Map(
-        "preference"   -> "{\"genericPaperless\":true,\"genericUpdatedAt\":1518652800000,\"taxCreditsPaperless\":true,\"taxCreditsUpdatedAt\":1518652800000,\"email\":{\"address\":\"john.doe@digital.hmrc.gov.uk\",\"verified\":true,\"verifiedOn\":1518652800000},\"taxIdentifiers\":[{\"name\":\"sautr\",\"value\":\"123\"},{\"name\":\"nino\",\"value\":\"ABC\"}]}",
+        "preference"   -> "{\"entityId\":\"383cfb1b-5f57-417b-9380-545f35c29a22\",\"genericPaperless\":true,\"genericUpdatedAt\":1518652800000,\"taxCreditsPaperless\":true,\"taxCreditsUpdatedAt\":1518652800000,\"email\":{\"address\":\"john.doe@digital.hmrc.gov.uk\",\"verified\":true,\"verifiedOn\":1518652800000},\"taxIdentifiers\":[{\"name\":\"sautr\",\"value\":\"123\"},{\"name\":\"nino\",\"value\":\"ABC\"}]}",
         "result"       -> "Found",
         "query"        -> "{\"name\":\"sautr\",\"value\":\"123\"}",
         "DataCallType" -> "request",
@@ -207,7 +207,7 @@ class SearchServiceSpec extends UnitSpec with MockitoSugar with ScalaFutures wit
       event.request.detail shouldBe Map(
         "optOutReason"       -> "my optOut reason",
         "query"              -> "{\"name\":\"sautr\",\"value\":\"123456789\"}",
-        "originalPreference" -> "{\"genericPaperless\":true,\"genericUpdatedAt\":1518652800000,\"taxCreditsPaperless\":false,\"taxCreditsUpdatedAt\":1518652800000,\"email\":{\"address\":\"john.doe@digital.hmrc.gov.uk\",\"verified\":true,\"verifiedOn\":1518652800000},\"taxIdentifiers\":[{\"name\":\"sautr\",\"value\":\"123456789\"},{\"name\":\"nino\",\"value\":\"CE067583D\"}]}",
+        "originalPreference" -> "{\"genericPaperless\":true,\"genericUpdatedAt\":1518652800000,\"taxCreditsPaperless\":false,\"taxCreditsUpdatedAt\":1518652800000,\"email\":{\"address\":\"john.doe@digital.hmrc.gov.uk\",\"verified\":true,\"verifiedOn\":1518652800000,\"language\":\"cy\"},\"taxIdentifiers\":[{\"name\":\"sautr\",\"value\":\"123456789\"},{\"name\":\"nino\",\"value\":\"CE067583D\"}]}",
         "DataCallType"       -> "request",
         "newPreference"      -> "{\"genericPaperless\":false,\"genericUpdatedAt\":1518652800000,\"taxCreditsPaperless\":false,\"taxCreditsUpdatedAt\":1518652800000,\"taxIdentifiers\":[{\"name\":\"sautr\",\"value\":\"123456789\"},{\"name\":\"nino\",\"value\":\"CE067583D\"}]}",
         "reasonOfFailure"    -> "Done",
@@ -322,7 +322,7 @@ class SearchServiceSpec extends UnitSpec with MockitoSugar with ScalaFutures wit
     val taxIdentifiers = Seq(validSaUtr, validNino)
 
     val optedInPreference = Preference(
-      entityId = Some(EntityId.generate),
+      entityId = None,
       genericPaperless = true,
       genericUpdatedAt = genericUpdatedAt,
       taxCreditsPaperless = false,
@@ -332,7 +332,7 @@ class SearchServiceSpec extends UnitSpec with MockitoSugar with ScalaFutures wit
     )
     val optedInPreferenceList = List(
       Preference(
-        entityId = Some(EntityId.generate),
+        entityId = None,
         genericPaperless = true,
         genericUpdatedAt = genericUpdatedAt,
         taxCreditsPaperless = false,
@@ -341,7 +341,7 @@ class SearchServiceSpec extends UnitSpec with MockitoSugar with ScalaFutures wit
         taxIdentifiers = taxIdentifiers
       ),
       Preference(
-        entityId = Some(EntityId.generate),
+        entityId = None,
         genericPaperless = true,
         genericUpdatedAt = genericUpdatedAt,
         taxCreditsPaperless = false,
@@ -352,7 +352,7 @@ class SearchServiceSpec extends UnitSpec with MockitoSugar with ScalaFutures wit
     )
 
     val optedOutPreference = Preference(
-      entityId = Some(EntityId.generate),
+      entityId = None,
       genericPaperless = false,
       genericUpdatedAt = genericUpdatedAt,
       taxCreditsPaperless = false,
