@@ -15,58 +15,71 @@
  *@
 
 @(preferences: List[uk.gov.hmrc.preferencesadminfrontend.services.model.Preference])(implicit request: Request[_], messages: Messages)
+<div id="user-summary">
+    <h2>User Summary</h2>
+    @for(preference <- preferences) {
+        <hr class="rounded">
+        <div class="extra-details tooltip">...
+            <span class="tooltip-content">
+                <table>
+                    <tbody>
+                        <tr>
+                            <td>Entity ID</td>
+                            <td>@preference.entityId.getOrElse("Not available")</td>
+                        </tr>
+                        @preference.email.map { email =>
+                            <tr>
+                                <td>Language</td>
+                                <td>@email.language.getOrElse("Not available - defaulted to English")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </span>
+        </div>
 
-@for(preference <- preferences){
-
-<table>
-    <tbody>
-        <tr>
-            <td>Entity ID</td>
-            <td>@preference.entityId.getOrElse("Not available")</td>
-        </tr>
-        <tr>
-            <td>Nino</td>
-            <td>@preference.taxIdentifiers.find(id => id.name == "nino").fold("Not available")(_.value)</td>
-        </tr>
-        <tr>
-            <td>SA Utr</td>
-            <td>@preference.taxIdentifiers.find(id => id.name == "sautr").fold("Not available")(_.value)</td>
-        </tr>
-        <tr>
-            <td><b>Opted @{if(preference.genericPaperless) "In" else if(preference.genericUpdatedAt.isEmpty) "In" else "Out"}</b>
-                @{if(preference.genericPaperless) "to" else if(preference.genericUpdatedAt.isEmpty) "to" else "of"} paperless for generic terms and conditions</td>
-            <td>
-            @preference.genericUpdatedAt.map { date =>
-                 @{org.joda.time.format.DateTimeFormat.forPattern("d MMMM yyyy a h:m:s's").print(date)}
-                }.getOrElse("No")
-            </td>
-        </tr>
-        <tr>
-            <td><b>Opted @{if(preference.taxCreditsPaperless) "In" else if(preference.taxCreditsUpdatedAt.isEmpty) "In" else "Out"}</b>
-                @{if(preference.taxCreditsPaperless) "to" else if(preference.taxCreditsUpdatedAt.isEmpty) "to" else "of"} paperless for tax credits terms and conditions</td>
-            <td>
-                @preference.taxCreditsUpdatedAt.map { date =>
-                @{org.joda.time.format.DateTimeFormat.forPattern("d MMMM yyyy a h:m:s's").print(date)}
-                }.getOrElse("No")
-            </td>
-        </tr>
-        @preference.email.map { email =>
-            <tr>
-                <td>Email address</td>
-                <td>@email.address</td>
-            </tr>
-            <tr>
-                <td>Language</td>
-                <td>@email.language.getOrElse("Not available - defaulted to English")</td>
-            </tr>
-        @email.verifiedOn.map { date =>
-            <tr>
-                <td>Date time Email Verified</td>
-                <td>@{org.joda.time.format.DateTimeFormat.forPattern("d MMMM yyyy a h:m:s").print(date)}s</td>
-            </tr>
-            }
-        }
-    </tbody>
-</table>
-<br/><br/>
-}
+        <table>
+            <tbody>
+                <tr>
+                    <td>Nino</td>
+                    <td>@preference.taxIdentifiers.find(id => id.name == "nino").fold("Not available")(_.value)</td>
+                </tr>
+                <tr>
+                    <td>SA Utr</td>
+                    <td>@preference.taxIdentifiers.find(id => id.name == "sautr").fold("Not available")(_.value)</td>
+                </tr>
+                <tr>
+                    <td><b>Opted @{if(preference.genericPaperless) "In" else if(preference.genericUpdatedAt.isEmpty) "In" else "Out"}</b>
+                        @{if(preference.genericPaperless) "to" else if(preference.genericUpdatedAt.isEmpty) "to" else "of"} paperless for generic terms and conditions</td>
+                    <td>
+                    @preference.genericUpdatedAt.map { date =>
+                         @{org.joda.time.format.DateTimeFormat.forPattern("d MMMM yyyy a h:m:s's").print(date)}
+                        }.getOrElse("No")
+                    </td>
+                </tr>
+                <tr>
+                    <td><b>Opted @{if(preference.taxCreditsPaperless) "In" else if(preference.taxCreditsUpdatedAt.isEmpty) "In" else "Out"}</b>
+                        @{if(preference.taxCreditsPaperless) "to" else if(preference.taxCreditsUpdatedAt.isEmpty) "to" else "of"} paperless for tax credits terms and conditions</td>
+                    <td>
+                        @preference.taxCreditsUpdatedAt.map { date =>
+                        @{org.joda.time.format.DateTimeFormat.forPattern("d MMMM yyyy a h:m:s's").print(date)}
+                        }.getOrElse("No")
+                    </td>
+                </tr>
+                @preference.email.map { email =>
+                    <tr>
+                        <td>Email address</td>
+                        <td>@email.address</td>
+                    </tr>
+                @email.verifiedOn.map { date =>
+                    <tr>
+                        <td>Date time Email Verified</td>
+                        <td>@{org.joda.time.format.DateTimeFormat.forPattern("d MMMM yyyy a h:m:s").print(date)}s</td>
+                    </tr>
+                    }
+                }
+            </tbody>
+        </table>
+        <br/><br/>
+    }
+</div>

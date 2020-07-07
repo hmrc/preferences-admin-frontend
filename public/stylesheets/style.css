@@ -61,3 +61,57 @@ a.menu.home, a.menu.home:visited, a.menu.home:hover, a.menu.home:active {
 .button-form {
     display: inline;
 }
+
+#user-summary hr.rounded {
+    border-top: 8px solid #bbb;
+    margin: 0;
+}
+
+#user-summary div.extra-details {
+    height: 21px;
+    width: 28px;
+    border: 1px solid #bbb;
+    float: right;
+    background-color: #bbb;
+    color: #fff;
+    font-size: 1em;
+    font-weight: bold;
+    line-height: 9px;
+    text-align: center;
+}
+
+#user-summary .tooltip {
+  position: relative;
+  display: inline-block;
+  border-bottom: 1px dotted black;
+}
+
+#user-summary .tooltip .tooltip-content {
+  visibility: hidden;
+  width: 370px;
+  background-color: #5a5a5a;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 3px 8px;
+  position: absolute;
+  z-index: 1;
+  bottom: 100%;
+  left: 50%;
+  margin-left: -370px;
+  opacity: 0;
+  transition: opacity 1s;
+}
+
+#user-summary .tooltip .tooltip-content table td {
+  font-size: 0.8em;
+}
+
+#user-summary .tooltip .tooltip-content table > tbody > tr:last-child > td {
+    border: none;
+}
+
+#user-summary .tooltip:hover .tooltip-content {
+  visibility: visible;
+  opacity: 1;
+}
