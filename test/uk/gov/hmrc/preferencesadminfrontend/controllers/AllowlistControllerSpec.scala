@@ -37,12 +37,12 @@ import uk.gov.hmrc.play.bootstrap.tools.Stubs.stubMessagesControllerComponents
 import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
 import uk.gov.hmrc.preferencesadminfrontend.connectors.MessageConnector
 import uk.gov.hmrc.preferencesadminfrontend.controllers.model.User
-import uk.gov.hmrc.preferencesadminfrontend.model.WhitelistEntry
+import uk.gov.hmrc.preferencesadminfrontend.model.AllowlistEntry
 import uk.gov.hmrc.preferencesadminfrontend.utils.SpecBase
 
 import scala.concurrent.{ ExecutionContext, Future }
 
-class WhitelistControllerSpec extends WordSpec with Matchers with MockitoSugar with GuiceOneAppPerSuite with SpecBase {
+class AllowlistControllerSpec extends WordSpec with Matchers with MockitoSugar with GuiceOneAppPerSuite with SpecBase {
   ControllerConfig.fromConfig(Configuration())
   val injector = app.injector
 
@@ -57,64 +57,64 @@ class WhitelistControllerSpec extends WordSpec with Matchers with MockitoSugar w
 
   app.injector.instanceOf[Configuration] should not be (null)
 
-  "showWhitelistPage" should {
+  "showAllowlistPage" should {
 
-    "return 200 (Ok) when a populated whitelist is successfully retrieved from the message service" in new WhitelistControllerTestCase {
-      private val fakeRequestWithSession = FakeRequest(routes.WhitelistController.showWhitelistPage()).withSession(User.sessionKey -> "user")
-      private val whitelistJson = Json.parse("""
+    "return 200 (Ok) when a populated allowlist is successfully retrieved from the message service" in new AllowlistControllerTestCase {
+      private val fakeRequestWithSession = FakeRequest(routes.AllowlistController.showAllowlistPage()).withSession(User.sessionKey -> "user")
+      private val allowlistJson = Json.parse("""
                                                |{
                                                | "formIdList" : ["SA359 2018","SA251 2018","SA370 2018"]
                                                |}
         """.stripMargin)
-      when(mockMessageConnector.getWhitelist()(any[HeaderCarrier])).thenReturn(
+      when(mockMessageConnector.getAllowlist()(any[HeaderCarrier])).thenReturn(
         Future.successful(
-          HttpResponse(Http.Status.OK, Some(whitelistJson))
+          HttpResponse(Http.Status.OK, Some(allowlistJson))
         )
       )
-      private val result = whitelistController.showWhitelistPage()(fakeRequestWithSession.withCSRFToken)
+      private val result = allowlistController.showAllowlistPage()(fakeRequestWithSession.withCSRFToken)
       status(result) shouldBe Status.OK
     }
 
-    "return 200 (Ok) when an empty whitelist is successfully retrieved from the message service" in new WhitelistControllerTestCase {
-      private val fakeRequestWithSession = FakeRequest(routes.WhitelistController.showWhitelistPage()).withSession(User.sessionKey -> "user")
-      private val whitelistJson = Json.parse("""
+    "return 200 (Ok) when an empty allowlist is successfully retrieved from the message service" in new AllowlistControllerTestCase {
+      private val fakeRequestWithSession = FakeRequest(routes.AllowlistController.showAllowlistPage()).withSession(User.sessionKey -> "user")
+      private val allowlistJson = Json.parse("""
                                                |{
                                                | "formIdList" : []
                                                |}
         """.stripMargin)
-      when(mockMessageConnector.getWhitelist()(any[HeaderCarrier])).thenReturn(
+      when(mockMessageConnector.getAllowlist()(any[HeaderCarrier])).thenReturn(
         Future.successful(
-          HttpResponse(Http.Status.OK, Some(whitelistJson))
+          HttpResponse(Http.Status.OK, Some(allowlistJson))
         )
       )
-      private val result = whitelistController.showWhitelistPage()(fakeRequestWithSession.withCSRFToken)
+      private val result = allowlistController.showAllowlistPage()(fakeRequestWithSession.withCSRFToken)
       status(result) shouldBe Status.OK
     }
 
-    "return 502 (Bad Gateway) when the message service returns an invalid whitelist" in new WhitelistControllerTestCase {
-      private val fakeRequestWithSession = FakeRequest(routes.WhitelistController.showWhitelistPage()).withSession(User.sessionKey -> "user")
-      private val whitelistJson = Json.parse("""
+    "return 502 (Bad Gateway) when the message service returns an invalid allowlist" in new AllowlistControllerTestCase {
+      private val fakeRequestWithSession = FakeRequest(routes.AllowlistController.showAllowlistPage()).withSession(User.sessionKey -> "user")
+      private val allowlistJson = Json.parse("""
                                                |{
                                                | "blah" : "blah"
                                                |}
         """.stripMargin)
-      when(mockMessageConnector.getWhitelist()(any[HeaderCarrier])).thenReturn(
+      when(mockMessageConnector.getAllowlist()(any[HeaderCarrier])).thenReturn(
         Future.successful(
-          HttpResponse(Http.Status.OK, Some(whitelistJson))
+          HttpResponse(Http.Status.OK, Some(allowlistJson))
         )
       )
-      private val result = whitelistController.showWhitelistPage()(fakeRequestWithSession.withCSRFToken)
+      private val result = allowlistController.showAllowlistPage()(fakeRequestWithSession.withCSRFToken)
       status(result) shouldBe Status.BAD_GATEWAY
     }
 
-    "return 502 (Bad Gateway) when the message service returns any other status" in new WhitelistControllerTestCase {
-      private val fakeRequestWithForm = FakeRequest(routes.WhitelistController.showWhitelistPage()).withSession(User.sessionKey -> "user")
-      when(mockMessageConnector.getWhitelist()(any[HeaderCarrier])).thenReturn(
+    "return 502 (Bad Gateway) when the message service returns any other status" in new AllowlistControllerTestCase {
+      private val fakeRequestWithForm = FakeRequest(routes.AllowlistController.showAllowlistPage()).withSession(User.sessionKey -> "user")
+      when(mockMessageConnector.getAllowlist()(any[HeaderCarrier])).thenReturn(
         Future.successful(
           HttpResponse(Http.Status.NOT_FOUND)
         )
       )
-      private val result = whitelistController.showWhitelistPage()(fakeRequestWithForm.withCSRFToken)
+      private val result = allowlistController.showAllowlistPage()(fakeRequestWithForm.withCSRFToken)
       status(result) shouldBe Status.BAD_GATEWAY
     }
 
@@ -122,8 +122,8 @@ class WhitelistControllerSpec extends WordSpec with Matchers with MockitoSugar w
 
   "confirmAdd" should {
 
-    "return 303 (Redirect) when a Form ID is successfully added via the message service" in new WhitelistControllerTestCase {
-      private val fakeRequestWithSession = FakeRequest(routes.WhitelistController.showWhitelistPage()).withSession(User.sessionKey -> "user")
+    "return 303 (Redirect) when a Form ID is successfully added via the message service" in new AllowlistControllerTestCase {
+      private val fakeRequestWithSession = FakeRequest(routes.AllowlistController.showAllowlistPage()).withSession(User.sessionKey -> "user")
       private val fakeRequestWithBody: FakeRequest[AnyContentAsJson] = fakeRequestWithSession.withJsonBody(
         Json.parse("""
                      |{
@@ -132,17 +132,17 @@ class WhitelistControllerSpec extends WordSpec with Matchers with MockitoSugar w
                      |}
           """.stripMargin)
       )
-      when(mockMessageConnector.addFormIdToWhitelist(any[WhitelistEntry])(any[HeaderCarrier])).thenReturn(
+      when(mockMessageConnector.addFormIdToAllowlist(any[AllowlistEntry])(any[HeaderCarrier])).thenReturn(
         Future.successful(
           HttpResponse(Http.Status.CREATED)
         )
       )
-      private val result = whitelistController.confirmAdd()(fakeRequestWithBody.withCSRFToken)
+      private val result = allowlistController.confirmAdd()(fakeRequestWithBody.withCSRFToken)
       status(result) shouldBe Status.SEE_OTHER
     }
 
-    "return 502 (Bad Gateway) when the message service returns any other status" in new WhitelistControllerTestCase {
-      private val fakeRequestWithSession = FakeRequest(routes.WhitelistController.showWhitelistPage()).withSession(User.sessionKey -> "user")
+    "return 502 (Bad Gateway) when the message service returns any other status" in new AllowlistControllerTestCase {
+      private val fakeRequestWithSession = FakeRequest(routes.AllowlistController.showAllowlistPage()).withSession(User.sessionKey -> "user")
       private val fakeRequestWithBody: FakeRequest[AnyContentAsJson] = fakeRequestWithSession.withJsonBody(
         Json.parse("""
                      |{
@@ -151,17 +151,17 @@ class WhitelistControllerSpec extends WordSpec with Matchers with MockitoSugar w
                      |}
           """.stripMargin)
       )
-      when(mockMessageConnector.addFormIdToWhitelist(any[WhitelistEntry])(any[HeaderCarrier])).thenReturn(
+      when(mockMessageConnector.addFormIdToAllowlist(any[AllowlistEntry])(any[HeaderCarrier])).thenReturn(
         Future.successful(
           HttpResponse(Http.Status.NOT_FOUND)
         )
       )
-      private val result = whitelistController.confirmAdd()(fakeRequestWithBody.withCSRFToken)
+      private val result = allowlistController.confirmAdd()(fakeRequestWithBody.withCSRFToken)
       status(result) shouldBe Status.BAD_GATEWAY
     }
 
-    "return 400 (Bad Request) when the Form ID JSON is not valid" in new WhitelistControllerTestCase {
-      private val fakeRequestWithSession = FakeRequest(routes.WhitelistController.showWhitelistPage()).withSession(User.sessionKey -> "user")
+    "return 400 (Bad Request) when the Form ID JSON is not valid" in new AllowlistControllerTestCase {
+      private val fakeRequestWithSession = FakeRequest(routes.AllowlistController.showAllowlistPage()).withSession(User.sessionKey -> "user")
       val fakeRequestWithBody: FakeRequest[AnyContentAsJson] = fakeRequestWithSession.withJsonBody(
         Json.parse("""
                      |{
@@ -169,15 +169,15 @@ class WhitelistControllerSpec extends WordSpec with Matchers with MockitoSugar w
                      |}
           """.stripMargin)
       )
-      private val result = whitelistController.confirmAdd()(fakeRequestWithBody.withCSRFToken)
+      private val result = allowlistController.confirmAdd()(fakeRequestWithBody.withCSRFToken)
       status(result) shouldBe Status.BAD_REQUEST
     }
   }
 
   "confirmDelete" should {
 
-    "return 303 (Redirect) when a Form ID is successfully deleted via the message service" in new WhitelistControllerTestCase {
-      private val fakeRequestWithSession = FakeRequest(routes.WhitelistController.showWhitelistPage()).withSession(User.sessionKey -> "user")
+    "return 303 (Redirect) when a Form ID is successfully deleted via the message service" in new AllowlistControllerTestCase {
+      private val fakeRequestWithSession = FakeRequest(routes.AllowlistController.showAllowlistPage()).withSession(User.sessionKey -> "user")
       private val fakeRequestWithBody: FakeRequest[AnyContentAsJson] = fakeRequestWithSession.withJsonBody(
         Json.parse("""
                      |{
@@ -186,17 +186,17 @@ class WhitelistControllerSpec extends WordSpec with Matchers with MockitoSugar w
                      |}
           """.stripMargin)
       )
-      when(mockMessageConnector.deleteFormIdFromWhitelist(any[WhitelistEntry])(any[HeaderCarrier])).thenReturn(
+      when(mockMessageConnector.deleteFormIdFromAllowlist(any[AllowlistEntry])(any[HeaderCarrier])).thenReturn(
         Future.successful(
           HttpResponse(Http.Status.OK)
         )
       )
-      private val result = whitelistController.confirmDelete()(fakeRequestWithBody.withCSRFToken)
+      private val result = allowlistController.confirmDelete()(fakeRequestWithBody.withCSRFToken)
       status(result) shouldBe Status.SEE_OTHER
     }
 
-    "return 502 (Bad Gateway) when the message service returns any other status" in new WhitelistControllerTestCase {
-      private val fakeRequestWithSession = FakeRequest(routes.WhitelistController.showWhitelistPage()).withSession(User.sessionKey -> "user")
+    "return 502 (Bad Gateway) when the message service returns any other status" in new AllowlistControllerTestCase {
+      private val fakeRequestWithSession = FakeRequest(routes.AllowlistController.showAllowlistPage()).withSession(User.sessionKey -> "user")
       private val fakeRequestWithBody: FakeRequest[AnyContentAsJson] = fakeRequestWithSession.withJsonBody(
         Json.parse("""
                      |{
@@ -205,17 +205,17 @@ class WhitelistControllerSpec extends WordSpec with Matchers with MockitoSugar w
                      |}
           """.stripMargin)
       )
-      when(mockMessageConnector.deleteFormIdFromWhitelist(any[WhitelistEntry])(any[HeaderCarrier])).thenReturn(
+      when(mockMessageConnector.deleteFormIdFromAllowlist(any[AllowlistEntry])(any[HeaderCarrier])).thenReturn(
         Future.successful(
           HttpResponse(Http.Status.NOT_FOUND)
         )
       )
-      private val result = whitelistController.confirmDelete()(fakeRequestWithBody.withCSRFToken)
+      private val result = allowlistController.confirmDelete()(fakeRequestWithBody.withCSRFToken)
       status(result) shouldBe Status.BAD_GATEWAY
     }
 
-    "return 400 (Bad Request) when the form ID JSON is not valid" in new WhitelistControllerTestCase {
-      private val fakeRequestWithSession = FakeRequest(routes.WhitelistController.showWhitelistPage()).withSession(User.sessionKey -> "user")
+    "return 400 (Bad Request) when the form ID JSON is not valid" in new AllowlistControllerTestCase {
+      private val fakeRequestWithSession = FakeRequest(routes.AllowlistController.showAllowlistPage()).withSession(User.sessionKey -> "user")
       val fakeRequestWithBody: FakeRequest[AnyContentAsJson] = fakeRequestWithSession.withJsonBody(
         Json.parse("""
                      |{
@@ -223,20 +223,20 @@ class WhitelistControllerSpec extends WordSpec with Matchers with MockitoSugar w
                      |}
           """.stripMargin)
       )
-      private val result = whitelistController.confirmDelete()(fakeRequestWithBody.withCSRFToken)
+      private val result = allowlistController.confirmDelete()(fakeRequestWithBody.withCSRFToken)
       status(result) shouldBe Status.BAD_REQUEST
     }
   }
 
 }
 
-trait WhitelistControllerTestCase extends SpecBase with MockitoSugar {
+trait AllowlistControllerTestCase extends SpecBase with MockitoSugar {
   implicit val stubbedMCC: MessagesControllerComponents = stubMessagesControllerComponents()
   implicit val ecc: ExecutionContext = stubbedMCC.executionContext
 
   val mockMessageConnector: MessageConnector = mock[MessageConnector]
 
-  def whitelistController()(implicit messages: MessagesApi, appConfig: AppConfig): WhitelistController =
-    new WhitelistController(mockMessageConnector, stubbedMCC)
+  def allowlistController()(implicit messages: MessagesApi, appConfig: AppConfig): AllowlistController =
+    new AllowlistController(mockMessageConnector, stubbedMCC)
 
 }

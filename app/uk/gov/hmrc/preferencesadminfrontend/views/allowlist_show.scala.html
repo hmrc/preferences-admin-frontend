@@ -17,24 +17,24 @@
 @import uk.gov.hmrc.play.views.html.helpers._
 @import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
 @import uk.gov.hmrc.preferencesadminfrontend.controllers.routes
-@import uk.gov.hmrc.preferencesadminfrontend.model.Whitelist
+@import uk.gov.hmrc.preferencesadminfrontend.model.Allowlist
 
-@(whitelist: Whitelist)(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
+@(allowlist: Allowlist)(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
 
-@uk.gov.hmrc.preferencesadminfrontend.views.html.main_template(title = "Message Form IDs Whitelist", bodyClasses = None) {
-    <h1 class="heading-large">Message Form IDs Whitelist</h1>
+@uk.gov.hmrc.preferencesadminfrontend.views.html.main_template(title = "Message Form IDs Allowlist", bodyClasses = None) {
+    <h1 class="heading-large">Message Form IDs Allowlist</h1>
     <h2 class="heading-medium">Form ID</h2>
-    @for(formId <- whitelist.formIdList.value) {
+    @for(formId <- allowlist.formIdList.value) {
         <div class="form-group">
-        @form(action = routes.WhitelistController.showWhitelistPage) {
+        @form(action = routes.AllowlistController.showAllowlistPage) {
             <input name="formId" class="form-control-1-4" type="text" value="@formId.as[String]" readonly/>
-            <button type="button" onclick="location.href='@routes.WhitelistController.deleteFormId(formId.as[String])';" class="button--alert">Delete Form</button>
+            <button type="button" onclick="location.href='@routes.AllowlistController.deleteFormId(formId.as[String])';" class="button--alert">Delete Form</button>
         }
         </div>
     }
-    @form(action = routes.WhitelistController.showWhitelistPage) {
+    @form(action = routes.AllowlistController.showAllowlistPage) {
         <div class="form-group">
-            <button type="button" onclick="location.href='@routes.WhitelistController.addFormId';" class="button">Add New Form</button>
+            <button type="button" onclick="location.href='@routes.AllowlistController.addFormId';" class="button">Add New Form</button>
         </div>
     }
 }

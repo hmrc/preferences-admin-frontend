@@ -13,11 +13,11 @@ GET         /rescindment                                uk.gov.hmrc.preferencesa
 GET         /rescindment/q                              uk.gov.hmrc.preferencesadminfrontend.controllers.RescindmentController.rescindment
 GET         /rescindment/send                           uk.gov.hmrc.preferencesadminfrontend.controllers.RescindmentController.showRescindmentAlertsPage
 GET         /rescindment/send/q                         uk.gov.hmrc.preferencesadminfrontend.controllers.RescindmentController.sendRescindmentAlerts
-GET         /whitelist                                  uk.gov.hmrc.preferencesadminfrontend.controllers.WhitelistController.showWhitelistPage
-GET         /whitelist/add                              uk.gov.hmrc.preferencesadminfrontend.controllers.WhitelistController.addFormId
-POST        /whitelist/add                              uk.gov.hmrc.preferencesadminfrontend.controllers.WhitelistController.confirmAdd
-GET         /whitelist/delete/:formId                   uk.gov.hmrc.preferencesadminfrontend.controllers.WhitelistController.deleteFormId(formId: String)
-POST        /whitelist/delete                           uk.gov.hmrc.preferencesadminfrontend.controllers.WhitelistController.confirmDelete
+GET         /allowlist                                  uk.gov.hmrc.preferencesadminfrontend.controllers.AllowlistController.showAllowlistPage
+GET         /allowlist/add                              uk.gov.hmrc.preferencesadminfrontend.controllers.AllowlistController.addFormId
+POST        /allowlist/add                              uk.gov.hmrc.preferencesadminfrontend.controllers.AllowlistController.confirmAdd
+GET         /allowlist/delete/:formId                   uk.gov.hmrc.preferencesadminfrontend.controllers.AllowlistController.deleteFormId(formId: String)
+POST        /allowlist/delete                           uk.gov.hmrc.preferencesadminfrontend.controllers.AllowlistController.confirmDelete
 GET         /message-brake                              uk.gov.hmrc.preferencesadminfrontend.controllers.MessageBrakeController.showAdminPage
 POST        /message-brake/preview                      uk.gov.hmrc.preferencesadminfrontend.controllers.MessageBrakeController.previewMessage
 GET         /message-brake/approve                      uk.gov.hmrc.preferencesadminfrontend.controllers.MessageBrakeController.showApproveBatchConfirmationPage

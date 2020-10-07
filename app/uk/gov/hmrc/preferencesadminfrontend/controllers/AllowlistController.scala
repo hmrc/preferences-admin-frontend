@@ -23,44 +23,44 @@ import play.api.mvc.{ Action, AnyContent, MessagesControllerComponents }
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
 import uk.gov.hmrc.preferencesadminfrontend.connectors.MessageConnector
-import uk.gov.hmrc.preferencesadminfrontend.model.Whitelist._
-import uk.gov.hmrc.preferencesadminfrontend.model.{ Whitelist, WhitelistEntry }
-import uk.gov.hmrc.preferencesadminfrontend.views.html.{ error_template, whitelist_add, whitelist_show }
+import uk.gov.hmrc.preferencesadminfrontend.model.Allowlist._
+import uk.gov.hmrc.preferencesadminfrontend.model.{ Allowlist, AllowlistEntry }
+import uk.gov.hmrc.preferencesadminfrontend.views.html.{ allowlist_add, allowlist_show, error_template }
 
 import scala.concurrent.{ ExecutionContext, Future }
 
-class WhitelistController @Inject()(messageConnector: MessageConnector, mcc: MessagesControllerComponents)(implicit appConfig: AppConfig, ec: ExecutionContext)
+class AllowlistController @Inject()(messageConnector: MessageConnector, mcc: MessagesControllerComponents)(implicit appConfig: AppConfig, ec: ExecutionContext)
     extends FrontendController(mcc) with I18nSupport {
 
-  def showWhitelistPage: Action[AnyContent] = AuthorisedAction.async { implicit request => implicit user =>
-    messageConnector.getWhitelist.map(response =>
+  def showAllowlistPage: Action[AnyContent] = AuthorisedAction.async { implicit request => implicit user =>
+    messageConnector.getAllowlist.map(response =>
       response.status match {
         case OK =>
-          Json.parse(response.body).validate[Whitelist].asOpt match {
-            case Some(whitelist) => Ok(whitelist_show(whitelist))
-            case None            => BadGateway(error_template("Error", "There was an error:", "The whitelist does not appear to be valid.", appConfig))
+          Json.parse(response.body).validate[Allowlist].asOpt match {
+            case Some(allowlist) => Ok(allowlist_show(allowlist))
+            case None            => BadGateway(error_template("Error", "There was an error:", "The allowlist does not appear to be valid.", appConfig))
           }
         case _ => BadGateway(error_template("Error", "There was an error:", response.body, appConfig))
     })
   }
 
   def addFormId: Action[AnyContent] = AuthorisedAction.async { implicit request => implicit user =>
-    Future.successful(Ok(uk.gov.hmrc.preferencesadminfrontend.views.html.whitelist_add(WhitelistEntry())))
+    Future.successful(Ok(uk.gov.hmrc.preferencesadminfrontend.views.html.allowlist_add(AllowlistEntry())))
   }
 
   def confirmAdd: Action[AnyContent] = AuthorisedAction.async { implicit request => implicit user =>
-    WhitelistEntry()
+    AllowlistEntry()
       .bindFromRequest()
       .fold(
         formWithErrors => {
-          Future.successful(BadRequest(whitelist_add(formWithErrors)))
+          Future.successful(BadRequest(allowlist_add(formWithErrors)))
         },
         addEntry => {
           messageConnector
-            .addFormIdToWhitelist(addEntry)
+            .addFormIdToAllowlist(addEntry)
             .map(response =>
               response.status match {
-                case CREATED => Redirect(routes.WhitelistController.showWhitelistPage())
+                case CREATED => Redirect(routes.AllowlistController.showAllowlistPage())
                 case _       => BadGateway(error_template("Error", "There was an error:", response.body, appConfig))
             })
         }
@@ -68,22 +68,22 @@ class WhitelistController @Inject()(messageConnector: MessageConnector, mcc: Mes
   }
 
   def deleteFormId(formId: String): Action[AnyContent] = AuthorisedAction.async { implicit request => implicit user =>
-    Future.successful(Ok(uk.gov.hmrc.preferencesadminfrontend.views.html.whitelist_delete(WhitelistEntry().fill(WhitelistEntry(formId, "")))))
+    Future.successful(Ok(uk.gov.hmrc.preferencesadminfrontend.views.html.allowlist_delete(AllowlistEntry().fill(AllowlistEntry(formId, "")))))
   }
 
   def confirmDelete: Action[AnyContent] = AuthorisedAction.async { implicit request => implicit user =>
-    WhitelistEntry()
+    AllowlistEntry()
       .bindFromRequest()
       .fold(
         formWithErrors => {
-          Future.successful(BadRequest(uk.gov.hmrc.preferencesadminfrontend.views.html.whitelist_delete(formWithErrors)))
+          Future.successful(BadRequest(uk.gov.hmrc.preferencesadminfrontend.views.html.allowlist_delete(formWithErrors)))
         },
         deleteEntry => {
           messageConnector
-            .deleteFormIdFromWhitelist(deleteEntry)
+            .deleteFormIdFromAllowlist(deleteEntry)
             .map(response =>
               response.status match {
-                case OK => Redirect(routes.WhitelistController.showWhitelistPage())
+                case OK => Redirect(routes.AllowlistController.showAllowlistPage())
                 case _  => BadGateway(error_template("Error", "There was an error:", response.body, appConfig))
             })
         }

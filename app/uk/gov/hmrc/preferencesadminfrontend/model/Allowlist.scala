@@ -18,8 +18,8 @@ package uk.gov.hmrc.preferencesadminfrontend.model
 
 import play.api.libs.json.{ JsArray, Json }
 
-case class Whitelist(formIdList: JsArray)
+case class Allowlist(formIdList: JsArray)
 
-object Whitelist {
-  implicit val format = Json.format[Whitelist]
+object Allowlist {
+  implicit val format = Json.format[Allowlist]
 }

@@ -79,68 +79,68 @@ class MessageConnectorSpec extends UnitSpec with ScalaFutures with MockitoSugar 
   }
   "GMC Batches Admin" should {
 
-    "getWhitelist" should {
+    "getAllowlist" should {
       "return a valid sequence of batches with status 200" in new TestCase {
-        val expectedPath = (s"$serviceUrl/admin/message/brake/gmc/whitelist")
+        val expectedPath = (s"$serviceUrl/admin/message/brake/gmc/allowlist")
         when(mockHttp.GET[HttpResponse](ArgumentMatchers.eq(expectedPath))(any(), any(), any()))
           .thenReturn(Future.successful(HttpResponse(Status.OK, Some(Json.obj()))))
-        val result = app.injector.instanceOf[MessageConnector].getWhitelist().futureValue
+        val result = app.injector.instanceOf[MessageConnector].getAllowlist().futureValue
         result.status shouldBe Status.OK
       }
 
       "return a BAD GATEWAY with an error message when an error is thrown" in new TestCase {
-        val expectedPath = (s"$serviceUrl/admin/message/brake/gmc/whitelist")
+        val expectedPath = (s"$serviceUrl/admin/message/brake/gmc/allowlist")
         when(mockHttp.GET[HttpResponse](ArgumentMatchers.eq(expectedPath))(any(), any(), any()))
           .thenReturn(Future.failed(new TimeoutException("timeout error")))
 
-        val result = app.injector.instanceOf[MessageConnector].getWhitelist().futureValue
+        val result = app.injector.instanceOf[MessageConnector].getAllowlist().futureValue
         result.status shouldBe Status.BAD_GATEWAY
         result.body should include("timeout error")
       }
     }
 
-    "addFormIdToWhitelist" should {
+    "addFormIdToAllowlist" should {
       "return a valid sequence of batches with status 200" in new TestCase {
-        val expectedPath = s"$serviceUrl/admin/message/brake/gmc/whitelist/add"
-        when(mockHttp.POST[WhitelistEntry, HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any(), any()))
+        val expectedPath = s"$serviceUrl/admin/message/brake/gmc/allowlist/add"
+        when(mockHttp.POST[AllowlistEntry, HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any(), any()))
           .thenReturn(Future.successful(HttpResponse(Status.OK, Some(Json.obj()))))
         val result = app.injector
           .instanceOf[MessageConnector]
-          .addFormIdToWhitelist(WhitelistEntry("SA316", "reason"))
+          .addFormIdToAllowlist(AllowlistEntry("SA316", "reason"))
           .futureValue
         result.status shouldBe Status.OK
       }
 
       "return a BAD GATEWAY with an error message when an error is thrown" in new TestCase {
-        val expectedPath = s"$serviceUrl/admin/message/brake/gmc/whitelist/add"
+        val expectedPath = s"$serviceUrl/admin/message/brake/gmc/allowlist/add"
 
-        when(mockHttp.POST[WhitelistEntry, HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any(), any()))
+        when(mockHttp.POST[AllowlistEntry, HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any(), any()))
           .thenReturn(Future.failed(new TimeoutException("timeout error")))
 
         val result = app.injector
           .instanceOf[MessageConnector]
-          .addFormIdToWhitelist(WhitelistEntry("SA316", "reason"))
+          .addFormIdToAllowlist(AllowlistEntry("SA316", "reason"))
           .futureValue
         result.status shouldBe Status.BAD_GATEWAY
         result.body should include("timeout error")
       }
     }
 
-    "deleteFormIdFromWhitelist" should {
+    "deleteFormIdFromAllowlist" should {
       "return a valid sequence of batches with status 200" in new TestCase {
-        val expectedPath = s"$serviceUrl/admin/message/brake/gmc/whitelist/delete"
-        when(mockHttp.POST[WhitelistEntry, HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any(), any()))
+        val expectedPath = s"$serviceUrl/admin/message/brake/gmc/allowlist/delete"
+        when(mockHttp.POST[AllowlistEntry, HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any(), any()))
           .thenReturn(Future.successful(HttpResponse(Status.OK, Some(Json.obj()))))
 
-        val result = app.injector.instanceOf[MessageConnector].deleteFormIdFromWhitelist(WhitelistEntry("SA316", "reason")).futureValue
+        val result = app.injector.instanceOf[MessageConnector].deleteFormIdFromAllowlist(AllowlistEntry("SA316", "reason")).futureValue
         result.status shouldBe Status.OK
       }
 
       "return a BAD GATEWAY with an error message when an error is thrown" in new TestCase {
-        val expectedPath = s"$serviceUrl/admin/message/brake/gmc/whitelist/delete"
-        when(mockHttp.POST[WhitelistEntry, HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any(), any()))
+        val expectedPath = s"$serviceUrl/admin/message/brake/gmc/allowlist/delete"
+        when(mockHttp.POST[AllowlistEntry, HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any(), any()))
           .thenReturn(Future.failed(new TimeoutException("timeout error")))
-        val result = app.injector.instanceOf[MessageConnector].deleteFormIdFromWhitelist(WhitelistEntry("SA316", "reason")).futureValue
+        val result = app.injector.instanceOf[MessageConnector].deleteFormIdFromAllowlist(AllowlistEntry("SA316", "reason")).futureValue
         result.status shouldBe Status.BAD_GATEWAY
         result.body should include("timeout error")
       }
@@ -234,9 +234,9 @@ class MessageConnectorSpec extends UnitSpec with ScalaFutures with MockitoSugar 
 
   trait TestCase extends MockitoSugar {
 
-    val expectedGetWhitelistPath = s"/admin/message/brake/gmc/whitelist"
-    val expectedAddFormIdToWhitelistPath = s"/admin/message/brake/gmc/whitelist/add"
-    val expectedDeleteFormIdFromWhitelistPath = s"/admin/message/brake/gmc/whitelist/delete"
+    val expectedGetAllowlistPath = s"/admin/message/brake/gmc/allowlist"
+    val expectedAddFormIdToAllowlistPath = s"/admin/message/brake/gmc/allowlist/add"
+    val expectedDeleteFormIdFromAllowlistPath = s"/admin/message/brake/gmc/allowlist/delete"
     val expectedGetGmcBatchesPath = s"/admin/message/brake/gmc/batches"
     val expectedGetRandomMessagePreviewPath = s"/admin/message/brake/random"
     val expectedApproveGmcBatchPath = s"/admin/message/brake/accept"
@@ -334,9 +334,9 @@ class MessageConnectorSpec extends UnitSpec with ScalaFutures with MockitoSugar 
       val mockHttp: DefaultHttpClient = mock[DefaultHttpClient]
       when(mockHttp.GET[HttpResponse](ArgumentMatchers.eq(expectedPath))(any(), any(), any()))
         .thenReturn(Future.successful(HttpResponse(status, Some(jsonBody))))
-      when(mockHttp.POST[WhitelistEntry, HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any(), any()))
+      when(mockHttp.POST[AllowlistEntry, HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any(), any()))
         .thenReturn(Future.successful(HttpResponse(status, Some(jsonBody))))
-      when(mockHttp.POST[WhitelistEntry, HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any(), any()))
+      when(mockHttp.POST[AllowlistEntry, HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any(), any()))
         .thenReturn(Future.successful(HttpResponse(status, Some(jsonBody))))
       when(mockHttp.POSTEmpty[RescindmentAlertsResult](ArgumentMatchers.eq(expectedPath))(any(), any(), any()))
         .thenReturn(Future.successful(RescindmentAlertsResult(1, 1, 1, 1)))
@@ -348,9 +348,9 @@ class MessageConnectorSpec extends UnitSpec with ScalaFutures with MockitoSugar 
       val mockHttp: DefaultHttpClient = mock[DefaultHttpClient]
       when(mockHttp.GET[HttpResponse](ArgumentMatchers.eq(expectedPath))(any(), any(), any()))
         .thenReturn(Future.failed(error))
-      when(mockHttp.POST[WhitelistEntry, HttpResponse](ArgumentMatchers.eq(expectedPath), any())(any(), any(), any(), any()))
+      when(mockHttp.POST[AllowlistEntry, HttpResponse](ArgumentMatchers.eq(expectedPath), any())(any(), any(), any(), any()))
         .thenReturn(Future.failed(error))
-      when(mockHttp.POST[WhitelistEntry, HttpResponse](ArgumentMatchers.eq(expectedPath), any())(any(), any(), any(), any()))
+      when(mockHttp.POST[AllowlistEntry, HttpResponse](ArgumentMatchers.eq(expectedPath), any())(any(), any(), any(), any()))
         .thenReturn(Future.failed(error))
       when(mockHttp.POSTEmpty[RescindmentAlertsResult](ArgumentMatchers.eq(expectedPath))(any(), any(), any()))
         .thenReturn(Future.failed(error))

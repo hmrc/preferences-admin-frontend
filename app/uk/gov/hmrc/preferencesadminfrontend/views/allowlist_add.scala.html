@@ -17,26 +17,31 @@
 @import uk.gov.hmrc.play.views.html.helpers._
 @import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
 @import uk.gov.hmrc.preferencesadminfrontend.controllers.routes
-@import uk.gov.hmrc.preferencesadminfrontend.model.WhitelistEntry
+@import uk.gov.hmrc.preferencesadminfrontend.model.AllowlistEntry
 
-@(entryForm: Form[WhitelistEntry])(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
+@(entryForm: Form[AllowlistEntry])(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
 
-@uk.gov.hmrc.preferencesadminfrontend.views.html.main_template(title = "Message Form IDs Whitelist", bodyClasses = None) {
-    <h1 class="heading-large">Message Form IDs Whitelist</h1>
+@uk.gov.hmrc.preferencesadminfrontend.views.html.main_template(title = "Message Form IDs Allowlist", bodyClasses = None) {
+    <h1 class="heading-large">Message Form IDs Allowlist</h1>
     <div class="section">
-        @form(action = routes.WhitelistController.confirmDelete) {
+        @form(action = routes.AllowlistController.confirmAdd) {
+            <div class='form-group @if(entryForm("formId").hasErrors){form-group-error}'>
+                <label class="form-label" for="formId">Form ID</label>
+                @entryForm("formId").errors.map { error =>
+                    <span class="error-message" id="error-message-formId-input">@messages(error.message)</span>
+                }
+                <input class="form-control" id="formId" type="text" name="formId" value='@{entryForm("formId").value}'/>
+            </div>
             <div class='form-group @if(entryForm("reasonText").hasErrors){form-group-error}'>
-                <label class="form-label" for="reasonText">Please enter a reason for deleting the form ID @{entryForm("formId").value}</label>
+                <label class="form-label" for="reasonText">Please enter a reason for adding the form ID</label>
                 @entryForm("reasonText").errors.map { error =>
                     <span class="error-message" id="error-message-reason-input">@messages(error.message)</span>
                 }
                 <textarea id="reasonText" name="reasonText" maxlength="120">@entryForm("reasonText").value</textarea>
             </div>
-            <h2 class="heading-medium">Are you sure you want to delete this form?</h2>
             <fieldset>
-                <input type="hidden" name="formId" value='@{entryForm("formId").value}'/>
                 <input type="submit" name="confirm" class="button" value="Confirm"/>
-                <input type="button" onclick="location.href='@routes.WhitelistController.showWhitelistPage';" class="button" value="Cancel"/>
+                <input type="button" onclick="location.href='@routes.AllowlistController.showAllowlistPage';" class="button" value="Cancel"/>
             </fieldset>
         }
     </div>

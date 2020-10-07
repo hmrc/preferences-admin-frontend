@@ -36,18 +36,18 @@ class MessageConnector @Inject()(http: HttpClient, val servicesConfig: ServicesC
   def sendRescindmentAlerts()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[RescindmentAlertsResult] =
     http.POSTEmpty[RescindmentAlertsResult](s"$serviceUrl/admin/send-rescindment-alerts")
 
-  def getWhitelist()(implicit hc: HeaderCarrier): Future[HttpResponse] =
-    http.GET[HttpResponse](s"$serviceUrl/admin/message/brake/gmc/whitelist").recover {
+  def getAllowlist()(implicit hc: HeaderCarrier): Future[HttpResponse] =
+    http.GET[HttpResponse](s"$serviceUrl/admin/message/brake/gmc/allowlist").recover {
       case e: Exception => HttpResponse(BAD_GATEWAY, None, Map(), Some(e.getMessage))
     }
 
-  def addFormIdToWhitelist(formIdEntry: WhitelistEntry)(implicit hc: HeaderCarrier): Future[HttpResponse] =
-    http.POST[WhitelistEntry, HttpResponse](s"$serviceUrl/admin/message/brake/gmc/whitelist/add", formIdEntry).recover {
+  def addFormIdToAllowlist(formIdEntry: AllowlistEntry)(implicit hc: HeaderCarrier): Future[HttpResponse] =
+    http.POST[AllowlistEntry, HttpResponse](s"$serviceUrl/admin/message/brake/gmc/allowlist/add", formIdEntry).recover {
       case e: Exception => HttpResponse(BAD_GATEWAY, None, Map(), Some(e.getMessage))
     }
 
-  def deleteFormIdFromWhitelist(formIdEntry: WhitelistEntry)(implicit hc: HeaderCarrier): Future[HttpResponse] =
-    http.POST[WhitelistEntry, HttpResponse](s"$serviceUrl/admin/message/brake/gmc/whitelist/delete", formIdEntry).recover {
+  def deleteFormIdFromAllowlist(formIdEntry: AllowlistEntry)(implicit hc: HeaderCarrier): Future[HttpResponse] =
+    http.POST[AllowlistEntry, HttpResponse](s"$serviceUrl/admin/message/brake/gmc/allowlist/delete", formIdEntry).recover {
       case e: Exception => HttpResponse(BAD_GATEWAY, None, Map(), Some(e.getMessage))
     }
 

@@ -21,9 +21,9 @@ import play.api.data.Forms._
 import play.api.data.validation.{ Constraint, Invalid, Valid, ValidationError }
 import play.api.libs.json.{ Json, OWrites, Reads }
 
-case class WhitelistEntry(formId: String, reasonText: String)
+case class AllowlistEntry(formId: String, reasonText: String)
 
-object WhitelistEntry {
+object AllowlistEntry {
 
   val reasonTextConstraint: Constraint[String] = Constraint("constraints.reasonText")({ reasonText =>
     if (reasonText.isEmpty) {
@@ -35,13 +35,13 @@ object WhitelistEntry {
     }
   })
 
-  implicit val writes: OWrites[WhitelistEntry] = Json.writes[WhitelistEntry]
+  implicit val writes: OWrites[AllowlistEntry] = Json.writes[AllowlistEntry]
 
-  def apply(): Form[WhitelistEntry] = Form(
+  def apply(): Form[AllowlistEntry] = Form(
     mapping(
       "formId"     -> nonEmptyTextWithError("A form ID is required"),
       "reasonText" -> text.verifying(reasonTextConstraint)
-    )(WhitelistEntry.apply)(WhitelistEntry.unapply)
+    )(AllowlistEntry.apply)(AllowlistEntry.unapply)
   )
 
   def nonEmptyTextWithError(error: String): Mapping[String] =
