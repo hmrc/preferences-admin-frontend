@@ -31,7 +31,7 @@ import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
 import uk.gov.hmrc.preferencesadminfrontend.controllers.model.User
 import uk.gov.hmrc.preferencesadminfrontend.services.LoginService
-import uk.gov.hmrc.time.DateTimeUtils
+import java.time.Instant
 
 import scala.concurrent.{ ExecutionContext, Future }
 
@@ -44,7 +44,7 @@ class LoginController @Inject()(loginService: LoginService, auditConnector: Audi
   val showLoginPage = Action.async { implicit request =>
     implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(request.headers)
 
-    val sessionUpdated = request.session + ("ts" -> DateTimeUtils.now.getMillis.toString)
+    val sessionUpdated = request.session + ("ts" -> Instant.now.toEpochMilli.toString)
     Future.successful(Ok(uk.gov.hmrc.preferencesadminfrontend.views.html.login(userForm)).withSession(sessionUpdated))
   }
 
@@ -56,7 +56,7 @@ class LoginController @Inject()(loginService: LoginService, auditConnector: Audi
       userData => {
         if (loginService.isAuthorised(userData)) {
           auditConnector.sendEvent(createLoginEvent(userData.username, true))
-          val sessionUpdated = request.session + (User.sessionKey -> userData.username) + ("ts" -> DateTimeUtils.now.getMillis.toString)
+          val sessionUpdated = request.session + (User.sessionKey -> userData.username) + ("ts" -> Instant.now.toEpochMilli.toString)
           Future.successful(Redirect(routes.HomeController.showHomePage()).withSession(sessionUpdated))
         } else {
           auditConnector.sendEvent(createLoginEvent(userData.username, false))

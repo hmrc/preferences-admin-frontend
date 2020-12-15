@@ -10,11 +10,11 @@ object FrontendBuild extends Build with MicroService {
 
   val compile = Seq(
     ws,
-    "uk.gov.hmrc" %% "bootstrap-play-26"  % "1.1.0",
-    "uk.gov.hmrc" %% "govuk-template"     % "5.39.0-play-26",
+    "uk.gov.hmrc" %% "bootstrap-play-26"  % "2.2.0",
+    "uk.gov.hmrc" %% "govuk-template"     % "5.60.0-play-26",
     "uk.gov.hmrc" %% "play-partials"      % "6.9.0-play-26",
     "com.typesafe.play"      %% "play-json-joda"           % "2.6.13",
-    "uk.gov.hmrc" %% "play-ui"      % "8.3.0-play-26"
+    "uk.gov.hmrc" %% "play-ui"      % "8.18.0-play-26"
   )
 
   def test(scope: String = "test") = Seq(
@@ -27,6 +27,6 @@ object FrontendBuild extends Build with MicroService {
     "org.scalatestplus.play" %% "scalatestplus-play" % "3.1.0" % scope,
     "org.mockito" % "mockito-core" % "2.7.20" % scope,
     "org.scalamock" %% "scalamock-scalatest-support" % "3.5.0" % scope,
-    "uk.gov.hmrc" %% "bootstrap-play-26" % "1.1.0" % scope classifier "tests"
+    "uk.gov.hmrc" %% "bootstrap-play-26" % "2.2.0" % scope classifier "tests"
     )
 }
