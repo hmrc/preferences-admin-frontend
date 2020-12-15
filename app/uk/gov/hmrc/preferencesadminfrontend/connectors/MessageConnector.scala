@@ -22,6 +22,7 @@ import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import uk.gov.hmrc.preferencesadminfrontend.model._
+import play.api.libs.json._
 
 import scala.concurrent.{ ExecutionContext, Future }
 
@@ -68,6 +69,11 @@ class MessageConnector @Inject()(http: HttpClient, val servicesConfig: ServicesC
 
   def rejectGmcBatch(batch: GmcBatchApproval)(implicit hc: HeaderCarrier): Future[HttpResponse] =
     http.POST[GmcBatchApproval, HttpResponse](s"$serviceUrl/admin/message/brake/reject", batch).recover {
+      case e: Exception => HttpResponse(BAD_GATEWAY, None, Map(), Some(e.getMessage))
+    }
+
+  def sendMessage(body: JsValue)(implicit hc: HeaderCarrier): Future[HttpResponse] =
+    http.POST[JsValue, HttpResponse](s"$serviceUrl/messages", body).recover {
       case e: Exception => HttpResponse(BAD_GATEWAY, None, Map(), Some(e.getMessage))
     }
 
