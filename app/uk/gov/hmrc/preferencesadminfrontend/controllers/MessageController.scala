@@ -59,7 +59,7 @@ class MessageController @Inject()(preferenceService: PreferenceService,    messa
             Ok(send_messages(SendMessage(), s))
           ))
 
-        // Ok(send_messages(SendMessage(), ss)))
+
               })
         }
 

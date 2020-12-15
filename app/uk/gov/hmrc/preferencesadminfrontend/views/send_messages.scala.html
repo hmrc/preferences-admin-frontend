@@ -47,10 +47,14 @@
         <th>UTR</th>
             <th>Status</th>
         </tr>
+
+        @for(s <- status) {
         <tr>
-            <td>utr samplw</td>
-            <td>bounced</td>
+            <td>@{s.utr}</td>
+            <td>@{s.paperless}</td>
         </tr>
+        }
+
     </table>
 
 
