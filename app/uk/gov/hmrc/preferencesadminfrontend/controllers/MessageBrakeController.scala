@@ -118,4 +118,13 @@ class MessageBrakeController @Inject()(messageConnector: MessageConnector, messa
   private def returnError(error: String)(implicit request: Request[_]): Result =
     BadGateway(error_template("Error", "There was an error:", error, appConfig))
 
+  def sendMessage(email: String, utr: String): Action[AnyContent] = AuthorisedAction.async { implicit request => implicit user =>
+    messageService
+      .sendPenalyChargeApplologyMessage(email, utr)
+      .map(r =>
+        r match {
+          case Right(b)     => Ok(b)
+          case Left((a, b)) => Ok(a + b)
+      })
+  }
 }

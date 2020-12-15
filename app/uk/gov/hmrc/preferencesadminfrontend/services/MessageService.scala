@@ -16,14 +16,19 @@
 
 package uk.gov.hmrc.preferencesadminfrontend.services
 
+import java.util.UUID
+
+import org.apache.commons.codec.binary.Base64
 import javax.inject.Inject
 import play.api.http.Status._
-import play.api.libs.json.Json
+import play.api.libs.json.{ JsError, JsObject, JsSuccess, Json, __ }
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.preferencesadminfrontend.connectors.MessageConnector
 import uk.gov.hmrc.preferencesadminfrontend.model.{ BatchMessagePreview, GmcBatch, MessagePreview }
 
 import scala.concurrent.{ ExecutionContext, Future }
+import scala.io.Source
+import uk.gov.hmrc.templates.views.html.penaltyChargeApologies
 
 class MessageService @Inject()(messageConnector: MessageConnector) {
 
@@ -50,5 +55,36 @@ class MessageService @Inject()(messageConnector: MessageConnector) {
             }
           case _ => Right(response.body)
       })
+
+  type ResponseStatus = Int
+  type ResponseBody = String
+  type MessageId = String
+
+  val messageContent = Base64.encodeBase64String(penaltyChargeApologies().toString().getBytes("UTF-8"))
+
+  def sendPenalyChargeApplologyMessage(email: String, sautr: String)(
+    implicit hc: HeaderCarrier,
+    ec: ExecutionContext): Future[Either[(ResponseStatus, ResponseBody), String]] = {
+    val aMessage: JsObject = Json
+      .parse(
+        Source.fromURL(getClass.getResource("/message.json")).mkString
+      )
+      .as[JsObject]
+      .deepMerge(Json.obj("content" -> messageContent))
+      .deepMerge(Json.obj("recipient" -> Map("taxIdentifier" -> Map("value" -> sautr))))
+      .deepMerge(Json.obj("recipient" -> Map("email" -> email)))
+      .deepMerge(Json.obj("externalRef" -> Map("id" -> UUID.randomUUID().toString)))
+
+    messageConnector
+      .sendMessage(aMessage)
+      .map(response =>
+        response.status match {
+          case CREATED =>
+            response.json.validate((__ \ 'id).json.pick) match {
+              case JsSuccess(value, path) => Right(Json.stringify(value))
+            }
+          case _ => Left((response.status, response.body))
+      })
+  }
 
 }
