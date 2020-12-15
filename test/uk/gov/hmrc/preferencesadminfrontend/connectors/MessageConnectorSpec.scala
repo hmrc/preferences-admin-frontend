@@ -39,6 +39,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class MessageConnectorSpec extends UnitSpec with ScalaFutures with MockitoSugar with GuiceOneAppPerSuite {
+
   import play.api.inject._
 
   val mockHttp: DefaultHttpClient = mock[DefaultHttpClient]
@@ -55,6 +56,7 @@ class MessageConnectorSpec extends UnitSpec with ScalaFutures with MockitoSugar 
     .build()
 
   def serviceUrl: String = app.injector.instanceOf[ServicesConfig].baseUrl("message")
+
   "Rescindments" should {
 
     "addRescindments" should {
@@ -232,6 +234,26 @@ class MessageConnectorSpec extends UnitSpec with ScalaFutures with MockitoSugar 
     }
   }
 
+  "sendMessage" should {
+    "return 200 on successful call to message" in new TestCase {
+      val expectedPath = s"$serviceUrl/messages"
+      when(mockHttp.POST[JsValue, HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any(), any()))
+        .thenReturn(Future.successful(HttpResponse(Status.OK, Some(Json.obj()))))
+
+      val result = app.injector.instanceOf[MessageConnector].sendMessage(JsString("")).futureValue
+      result.status shouldBe Status.OK
+    }
+
+    "return a BAD GATEWAY with an error message when an error is thrown" in new TestCase {
+      val expectedPath = s"$serviceUrl/messages"
+      when(mockHttp.POST[JsValue, HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any(), any()))
+        .thenReturn(Future.failed(new TimeoutException("timeout error")))
+      val result = app.injector.instanceOf[MessageConnector].sendMessage(JsString("")).futureValue
+      result.status shouldBe Status.BAD_GATEWAY
+      result.body should include("timeout error")
+    }
+  }
+
   trait TestCase extends MockitoSugar {
 
     val expectedGetAllowlistPath = s"/admin/message/brake/gmc/allowlist"
@@ -330,6 +352,7 @@ class MessageConnectorSpec extends UnitSpec with ScalaFutures with MockitoSugar 
     )
 
     lazy val mockServicesConfig: ServicesConfig = mock[ServicesConfig]
+
     def messageConnectorHttpMock(expectedPath: String, jsonBody: JsValue, status: Int): MessageConnector = {
       val mockHttp: DefaultHttpClient = mock[DefaultHttpClient]
       when(mockHttp.GET[HttpResponse](ArgumentMatchers.eq(expectedPath))(any(), any(), any()))
@@ -357,4 +380,5 @@ class MessageConnectorSpec extends UnitSpec with ScalaFutures with MockitoSugar 
       new MessageConnector(mockHttp, mockServicesConfig)
     }
   }
+
 }

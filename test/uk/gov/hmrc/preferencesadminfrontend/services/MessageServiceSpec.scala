@@ -22,7 +22,7 @@ import org.mockito.Mockito._
 import org.scalatest.concurrent.{ IntegrationPatience, ScalaFutures }
 import org.scalatest.mockito.MockitoSugar
 import play.api.http.Status
-import play.api.libs.json.Json
+import play.api.libs.json.{ JsString, JsValue, Json }
 import uk.gov.hmrc.http.{ HeaderCarrier, HttpResponse }
 import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.preferencesadminfrontend.model._
@@ -105,6 +105,21 @@ class MessageServiceSpec extends UnitSpec with MockitoSugar with ScalaFutures wi
             |  "issueDate" : "05 APR 2019",
             |  "taxIdentifierName" : "sautr"
             |}""".stripMargin)
+    }
+  }
+
+  "sendAddHocMessage" should {
+    "return a message id if successfully created" in new MessageServiceTestCase {
+      val messageId = "messageid"
+      val response = HttpResponse(Status.CREATED, Some(Json.obj(("id" -> "messageid"))))
+      when(messageConnectorMock.sendMessage(any())(any())).thenReturn(Future.successful(response))
+      messageService.sendPenalyChargeApologyMessage("foo@test.com", "1234567890").futureValue shouldBe Right(""""messageid"""")
+    }
+    "return error on message creation failure" in new MessageServiceTestCase {
+      val errorMessage = "error message"
+      val response = HttpResponse(Status.BAD_REQUEST, errorMessage)
+      when(messageConnectorMock.sendMessage(any())(any())).thenReturn(Future.successful(response))
+      messageService.sendPenalyChargeApologyMessage("foo@test.com", "1234567890").futureValue shouldBe (Left((Status.BAD_REQUEST, errorMessage)))
     }
   }
 

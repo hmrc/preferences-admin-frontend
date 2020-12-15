@@ -17,7 +17,7 @@
 package uk.gov.hmrc.preferencesadminfrontend.services
 
 import javax.inject.{ Inject, Singleton }
-import org.joda.time.DateTime
+import java.time.Instant
 import play.api.Configuration
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.HeaderCarrier
@@ -128,12 +128,12 @@ class SearchService @Inject()(
       request = DataCall(
         tags = Map("transactionName" -> "Manual opt out from paperless"),
         detail = details + ("DataCallType" -> "request"),
-        generatedAt = DateTime.now()
+        generatedAt = Instant.now()
       ),
       response = DataCall(
         tags = Map("transactionName" -> "Manual opt out from paperless"),
         detail = details + ("DataCallType" -> "response"),
-        generatedAt = DateTime.now()
+        generatedAt = Instant.now()
       )
     )
   }
@@ -153,12 +153,12 @@ class SearchService @Inject()(
       request = DataCall(
         tags = Map("transactionName" -> "Paperless opt out search"),
         detail = details + ("DataCallType" -> "request"),
-        generatedAt = DateTime.now()
+        generatedAt = Instant.now()
       ),
       response = DataCall(
         tags = Map("transactionName" -> "Paperless opt out search"),
         detail = details + ("DataCallType" -> "response"),
-        generatedAt = DateTime.now()
+        generatedAt = Instant.now()
       )
     )
   }

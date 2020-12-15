@@ -1,0 +1,16 @@
+{
+  "externalRef": {
+    "id": "TOBEREPLACED",
+    "source": "preferences-admin-frontend"
+  },
+  "recipient": {
+    "taxIdentifier": {
+      "name": "sautr",
+      "value": "TOBEREPLACED"
+    },
+   "email":"TOBEREPLACED"
+  },
+  "messageType": "penaltyChargeApologies",
+  "subject": "We have charged you a penalty by mistake",
+  "content": "TOBEREPLACED"
+}
