@@ -23,15 +23,21 @@ import uk.gov.hmrc.preferencesadminfrontend.services.model.TaxIdentifier
 import javax.inject.Inject
 import scala.concurrent.ExecutionContext
 
-class PreferenceService @Inject()(entityResolver: EntityResolverConnector) {
+class PreferenceService @Inject()(entityResolver: EntityResolverConnector, messageService: MessageService) {
 
   def getPreference(utr: String)(implicit hc: HeaderCarrier, ec: ExecutionContext) = {
 
     for {
       preferenceDetails <- entityResolver.getPreferenceDetails(TaxIdentifier("sautr", utr))
-
       status = preferenceDetails match {
-        case Some(preference) => MessageStatus(utr, true, preference.genericPaperless)
+        case Some(preference) =>
+                   preference.email match {
+                     case Some(email) => {
+                       messageService.sendPenalyChargeApologyMessage(email.address, utr)
+                       MessageStatus(utr, true, preference.genericPaperless)
+                     }
+                     case _ =>  MessageStatus(utr, true, preference.genericPaperless)
+                   }
         case _ => MessageStatus(utr, false, false)
       }
     } yield status
