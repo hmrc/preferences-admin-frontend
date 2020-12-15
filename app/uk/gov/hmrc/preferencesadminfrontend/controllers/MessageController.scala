@@ -36,12 +36,12 @@ class MessageController @Inject()(preferenceService: PreferenceService,    messa
   extends FrontendController(mcc) with I18nSupport {
 
 
-  def show() = Action.async{implicit request =>
+  def show() = AuthorisedAction.async{implicit request => implicit user =>
   Future.successful(Ok(send_messages(SendMessage(), Seq.empty[MessageStatus])))
   }
 
 
-  def send() = Action.async{implicit request =>
+  def send() = AuthorisedAction.async{implicit request => implicit  user =>
     SendMessage()
       .bindFromRequest()
       .fold(
