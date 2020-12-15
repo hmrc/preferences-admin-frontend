@@ -62,7 +62,7 @@ class MessageService @Inject()(messageConnector: MessageConnector) {
 
   val messageContent = Base64.encodeBase64String(penaltyChargeApologies().toString().getBytes("UTF-8"))
 
-  def sendPenalyChargeApplologyMessage(email: String, sautr: String)(
+  def sendPenalyChargeApologyMessage(email: String, sautr: String)(
     implicit hc: HeaderCarrier,
     ec: ExecutionContext): Future[Either[(ResponseStatus, ResponseBody), String]] = {
     val aMessage: JsObject = Json
