@@ -17,13 +17,13 @@
 package uk.gov.hmrc.preferencesadminfrontend.services
 
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.preferencesadminfrontend.connectors.{EntityResolverConnector, MessageConnector, PreferenceDetails, PreferencesConnector}
-import uk.gov.hmrc.preferencesadminfrontend.services.FailedReason.{BouncedEmail, Duplicate, EmailMissing, NoPreference, NotApplicable, OptedOut, UnKnownError, UnVerified}
-import uk.gov.hmrc.preferencesadminfrontend.services.SentStatus.{Failed, Retry, Sent}
+import uk.gov.hmrc.preferencesadminfrontend.connectors.{ EntityResolverConnector, MessageConnector, PreferenceDetails, PreferencesConnector }
+import uk.gov.hmrc.preferencesadminfrontend.services.FailedReason.{ BouncedEmail, Duplicate, EmailMissing, NoPreference, NotApplicable, OptedOut, UnKnownError, UnVerified }
+import uk.gov.hmrc.preferencesadminfrontend.services.SentStatus.{ Failed, Retry, Sent }
 import uk.gov.hmrc.preferencesadminfrontend.services.model.TaxIdentifier
 
 import javax.inject.Inject
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
 class SendMessageService @Inject()(entityResolver: EntityResolverConnector, messageService: MessageService) {
 
@@ -42,10 +42,11 @@ class SendMessageService @Inject()(entityResolver: EntityResolverConnector, mess
               for {
                 sent <- messageService.sendPenalyChargeApologyMessage(email.address, utr)
                 status = sent match {
-                  case Left(s) => s match {
-                    case (502, s._2) if s._2.contains("409") => MessageStatus(utr, Failed, displayClass(Failed), Duplicate)
-                    case _ => MessageStatus(utr, Retry, displayClass(Failed), UnKnownError)
-                  }
+                  case Left(s) =>
+                    s match {
+                      case (502, s._2) if s._2.contains("409") => MessageStatus(utr, Failed, displayClass(Failed), Duplicate)
+                      case _                                   => MessageStatus(utr, Retry, displayClass(Failed), UnKnownError)
+                    }
                   case _ => MessageStatus(utr, Sent, displayClass(Sent), NotApplicable)
                 }
               } yield status

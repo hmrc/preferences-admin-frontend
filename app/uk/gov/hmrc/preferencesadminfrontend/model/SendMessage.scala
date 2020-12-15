@@ -17,9 +17,9 @@
 package uk.gov.hmrc.preferencesadminfrontend.model
 
 import play.api.data.Form
-import play.api.data.Forms.{mapping, text}
-import play.api.data.validation.{Constraint, Invalid, Valid}
-import play.api.libs.json.{Json, OWrites}
+import play.api.data.Forms.{ mapping, text }
+import play.api.data.validation.{ Constraint, Invalid, Valid }
+import play.api.libs.json.{ Json, OWrites }
 
 case class SendMessage(utrs: String)
 

@@ -23,13 +23,13 @@ import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
 import uk.gov.hmrc.preferencesadminfrontend.model.SendMessage
 import uk.gov.hmrc.preferencesadminfrontend.model.SendMessage.listParser
 import uk.gov.hmrc.preferencesadminfrontend.services.SendMessageService
-import uk.gov.hmrc.preferencesadminfrontend.views.html.{message_status, send_messages}
+import uk.gov.hmrc.preferencesadminfrontend.views.html.{ message_status, send_messages }
 import javax.inject.Inject
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
-class MessageController @Inject()(
-  sendMessageService: SendMessageService,
-  mcc: MessagesControllerComponents)(implicit appConfig: AppConfig, ec: ExecutionContext)
+class MessageController @Inject()(sendMessageService: SendMessageService, mcc: MessagesControllerComponents)(
+  implicit appConfig: AppConfig,
+  ec: ExecutionContext)
     extends FrontendController(mcc) with I18nSupport {
 
   def show() = AuthorisedAction.async { implicit request => implicit user =>
@@ -44,9 +44,9 @@ class MessageController @Inject()(
           Future.successful(BadRequest(send_messages(formWithErrors)))
         },
         input => {
-         Future.sequence(listParser(input.utrs).map(sendMessageService.sendMessage)).map{ result =>
-           Ok(message_status(result))
-         }
+          Future.sequence(listParser(input.utrs).map(sendMessageService.sendMessage)).map { result =>
+            Ok(message_status(result))
+          }
         }
       )
   }
