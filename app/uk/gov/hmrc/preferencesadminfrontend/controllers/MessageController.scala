@@ -16,24 +16,19 @@
 
 package uk.gov.hmrc.preferencesadminfrontend.controllers
 
-import play.api.data.Form
 import play.api.i18n.I18nSupport
 import play.api.mvc.MessagesControllerComponents
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
-import uk.gov.hmrc.preferencesadminfrontend.connectors.{ MessageConnector, PreferencesConnector }
-import uk.gov.hmrc.preferencesadminfrontend.model.SendMessage.utrList
-import uk.gov.hmrc.preferencesadminfrontend.model.{ AllowlistEntry, SendMessage }
-import uk.gov.hmrc.preferencesadminfrontend.services.{ MessageService, MessageStatus, PreferenceService }
-
+import uk.gov.hmrc.preferencesadminfrontend.model.SendMessage
+import uk.gov.hmrc.preferencesadminfrontend.model.SendMessage.listParser
+import uk.gov.hmrc.preferencesadminfrontend.services.SendMessageService
+import uk.gov.hmrc.preferencesadminfrontend.views.html.{message_status, send_messages}
 import javax.inject.Inject
-import scala.concurrent.{ ExecutionContext, Future }
-import uk.gov.hmrc.preferencesadminfrontend.views.html.{ allowlist_add, error_template, message_status, send_messages }
+import scala.concurrent.{ExecutionContext, Future}
 
 class MessageController @Inject()(
-  preferenceService: PreferenceService,
-  messageConnector: MessageConnector,
-  messageService: MessageService,
+  sendMessageService: SendMessageService,
   mcc: MessagesControllerComponents)(implicit appConfig: AppConfig, ec: ExecutionContext)
     extends FrontendController(mcc) with I18nSupport {
 
@@ -48,16 +43,11 @@ class MessageController @Inject()(
         formWithErrors => {
           Future.successful(BadRequest(send_messages(formWithErrors)))
         },
-        send => {
-          val result: List[String] = utrList(send.utrs)
-          val s = result.map(preferenceService.getPreference)
-
-          val ss = Future.sequence(s)
-
-          ss.map(s => Ok(message_status(s)))
-
+        input => {
+         Future.sequence(listParser(input.utrs).map(sendMessageService.sendMessage)).map{ result =>
+           Ok(message_status(result))
+         }
         }
       )
   }
-
 }

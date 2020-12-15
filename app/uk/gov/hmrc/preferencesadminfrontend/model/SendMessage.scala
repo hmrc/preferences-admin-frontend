@@ -16,23 +16,21 @@
 
 package uk.gov.hmrc.preferencesadminfrontend.model
 
-import play.api.data.Forms.{ mapping, nonEmptyText, optional, text }
-import play.api.data.{ Form, Forms, Mapping }
-import play.api.data.validation.{ Constraint, Invalid, Valid, ValidationError }
-import play.api.libs.json.{ Json, OWrites }
-import uk.gov.hmrc.preferencesadminfrontend.model.AllowlistEntry.{ nonEmptyTextWithError, reasonTextConstraint }
-import uk.gov.hmrc.preferencesadminfrontend.services.MessageStatus
+import play.api.data.Form
+import play.api.data.Forms.{mapping, text}
+import play.api.data.validation.{Constraint, Invalid, Valid}
+import play.api.libs.json.{Json, OWrites}
 
 case class SendMessage(utrs: String)
 
 object SendMessage {
 
-  def utrList(utrs: String) = utrs.trim.split("\r").toList.map(_.trim)
+  def listParser(utrs: String) = utrs.trim.split("\r").toList.map(_.trim)
 
   val sizeConstraint: Constraint[String] = Constraint("constraints.size")({ size =>
     if (size.trim.isEmpty) {
       Invalid("Can't send empty content")
-    } else if (utrList(size).length > 100)
+    } else if (listParser(size).length > 100)
       Invalid("Can't send more than 100 UTR's at once")
     else {
       Valid
@@ -46,5 +44,4 @@ object SendMessage {
       "utrs" -> text.verifying(sizeConstraint)
     )(SendMessage.apply)(SendMessage.unapply)
   )
-
 }
