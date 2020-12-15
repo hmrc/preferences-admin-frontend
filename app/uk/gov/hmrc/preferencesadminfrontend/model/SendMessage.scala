@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.preferencesadminfrontend.model
 
-import play.api.data.Forms.{mapping, nonEmptyText, optional, text}
-import play.api.data.{Form, Forms, Mapping}
-import play.api.data.validation.{Constraint, Invalid, Valid, ValidationError}
-import play.api.libs.json.{Json, OWrites}
-import uk.gov.hmrc.preferencesadminfrontend.model.AllowlistEntry.{nonEmptyTextWithError, reasonTextConstraint}
+import play.api.data.Forms.{ mapping, nonEmptyText, optional, text }
+import play.api.data.{ Form, Forms, Mapping }
+import play.api.data.validation.{ Constraint, Invalid, Valid, ValidationError }
+import play.api.libs.json.{ Json, OWrites }
+import uk.gov.hmrc.preferencesadminfrontend.model.AllowlistEntry.{ nonEmptyTextWithError, reasonTextConstraint }
 import uk.gov.hmrc.preferencesadminfrontend.services.MessageStatus
 
 case class SendMessage(utrs: String)
@@ -31,12 +31,8 @@ object SendMessage {
 
   def apply(): Form[SendMessage] = Form(
     mapping(
-        "utrs" -> text
+      "utrs" -> text
     )(SendMessage.apply)(SendMessage.unapply)
   )
 
-
 }
-
-
-
