@@ -44,10 +44,10 @@ class SendMessageServiceSpec extends UnitSpec with MockitoSugar with ScalaFuture
         .futureValue shouldBe (MessageStatus("1111111111", "unsuccessful", "red", "Duplicate UTR (message already sent)"))
     }
 
-    "return Message status Retry if response failed with any other reason other than conflict" in new TestCase {
+    "return Message status Please Retry if response failed with any other reason other than conflict" in new TestCase {
       when(messageService.sendPenalyChargeApologyMessage(any(), any())(any(), any())).thenReturn(Future.successful(Left(500, "unexpected error")))
       val sendMessageService = new SendMessageService(entityResolver, messageService)
-      sendMessageService.sendMessage("1111111111").futureValue shouldBe (MessageStatus("1111111111", "Retry", "red", "Unknown error"))
+      sendMessageService.sendMessage("1111111111").futureValue shouldBe (MessageStatus("1111111111", "Please Retry", "red", "Comms Failed 50x"))
     }
 
     "return Message status Failed if preference status has email bounced" in new TestCase {

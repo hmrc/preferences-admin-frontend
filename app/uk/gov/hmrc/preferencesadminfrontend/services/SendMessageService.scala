@@ -68,11 +68,11 @@ object FailedReason {
   val NoPreference = "No Preference record"
   val Duplicate = "Duplicate UTR (message already sent)"
   val EmailMissing = "Email missing"
-  val UnKnownError = "Unknown error"
+  val UnKnownError = "Comms Failed 50x"
 }
 
 object SentStatus {
   val Sent = "Sent"
   val Failed = "unsuccessful"
-  val Retry = "Retry"
+  val Retry = "Please Retry"
 }
