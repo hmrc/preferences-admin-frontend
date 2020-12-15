@@ -24,3 +24,5 @@ GET         /message-brake/approve                      uk.gov.hmrc.preferencesa
 GET         /message-brake/reject                       uk.gov.hmrc.preferencesadminfrontend.controllers.MessageBrakeController.showRejectBatchConfirmationPage
 POST        /message-brake/approve/confirmation         uk.gov.hmrc.preferencesadminfrontend.controllers.MessageBrakeController.confirmApproveBatch
 POST        /message-brake/reject/confirmation          uk.gov.hmrc.preferencesadminfrontend.controllers.MessageBrakeController.confirmRejectBatch
+GET         /send-message                               uk.gov.hmrc.preferencesadminfrontend.controllers.MessageController.show
+POST         /send-message                               uk.gov.hmrc.preferencesadminfrontend.controllers.MessageController.send
