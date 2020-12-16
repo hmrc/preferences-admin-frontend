@@ -38,7 +38,7 @@ class MessageController @Inject()(
     extends FrontendController(mcc) with I18nSupport {
 
   def show() = AuthorisedAction.async { implicit request => implicit user =>
-    Future.successful(Ok(send_messages(SendMessage(), Seq.empty[MessageStatus])))
+    Future.successful(Ok(send_messages(SendMessage())))
   }
 
   def send() = AuthorisedAction.async { implicit request => implicit user =>
