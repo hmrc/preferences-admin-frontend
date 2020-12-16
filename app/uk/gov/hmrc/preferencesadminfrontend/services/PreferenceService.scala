@@ -34,8 +34,8 @@ class PreferenceService @Inject()(entityResolver: EntityResolverConnector, messa
       preferenceDetails match {
         case Some(preference) =>
           (preference.genericPaperless, preference.email) match {
-            case (_, Some(email)) if (email.hasBounces) =>
-              Future.successful(MessageStatus(utr, preference.genericPaperless, Failed, displayClass(Failed), BouncedEmail))
+//            case (_, Some(email)) if (email.hasBounces) =>
+//              Future.successful(MessageStatus(utr, preference.genericPaperless, Failed, displayClass(Failed), BouncedEmail))
             case (_, Some(email)) if (!email.verified) =>
               Future.successful(MessageStatus(utr, preference.genericPaperless, Failed, displayClass(Failed), UnVerified))
             case (true, Some(email)) =>
