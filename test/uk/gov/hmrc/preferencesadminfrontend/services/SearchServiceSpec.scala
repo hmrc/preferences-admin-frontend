@@ -164,7 +164,7 @@ class SearchServiceSpec extends UnitSpec with MockitoSugar with ScalaFutures wit
         genericUpdatedAt = genericUpdatedAt,
         taxCreditsPaperless = true,
         taxCreditsUpdatedAt = taxCreditsUpdatedAt,
-        email = Some(Email(address = "john.doe@digital.hmrc.gov.uk", verified = true, verifiedOn = verifiedOn, language = None)),
+        email = Some(Email(address = "john.doe@digital.hmrc.gov.uk", verified = true, verifiedOn = verifiedOn, language = None, false)),
         taxIdentifiers = Seq(TaxIdentifier("sautr", "123"), TaxIdentifier("nino", "ABC"))
       )
       val event = searchService.createSearchEvent("me", TaxIdentifier("sautr", "123"), Some(preference))
@@ -172,7 +172,7 @@ class SearchServiceSpec extends UnitSpec with MockitoSugar with ScalaFutures wit
       event.auditSource shouldBe "preferences-admin-frontend"
       event.auditType shouldBe "TxSucceeded"
       event.request.detail shouldBe Map(
-        "preference"   -> "{\"entityId\":\"383cfb1b-5f57-417b-9380-545f35c29a22\",\"genericPaperless\":true,\"genericUpdatedAt\":1518652800000,\"taxCreditsPaperless\":true,\"taxCreditsUpdatedAt\":1518652800000,\"email\":{\"address\":\"john.doe@digital.hmrc.gov.uk\",\"verified\":true,\"verifiedOn\":1518652800000},\"taxIdentifiers\":[{\"name\":\"sautr\",\"value\":\"123\"},{\"name\":\"nino\",\"value\":\"ABC\"}]}",
+        "preference"   -> "{\"entityId\":\"383cfb1b-5f57-417b-9380-545f35c29a22\",\"genericPaperless\":true,\"genericUpdatedAt\":1518652800000,\"taxCreditsPaperless\":true,\"taxCreditsUpdatedAt\":1518652800000,\"email\":{\"address\":\"john.doe@digital.hmrc.gov.uk\",\"verified\":true,\"verifiedOn\":1518652800000,\"hasBounces\":false},\"taxIdentifiers\":[{\"name\":\"sautr\",\"value\":\"123\"},{\"name\":\"nino\",\"value\":\"ABC\"}]}",
         "result"       -> "Found",
         "query"        -> "{\"name\":\"sautr\",\"value\":\"123\"}",
         "DataCallType" -> "request",
@@ -207,7 +207,7 @@ class SearchServiceSpec extends UnitSpec with MockitoSugar with ScalaFutures wit
       event.request.detail shouldBe Map(
         "optOutReason"       -> "my optOut reason",
         "query"              -> "{\"name\":\"sautr\",\"value\":\"123456789\"}",
-        "originalPreference" -> "{\"genericPaperless\":true,\"genericUpdatedAt\":1518652800000,\"taxCreditsPaperless\":false,\"taxCreditsUpdatedAt\":1518652800000,\"email\":{\"address\":\"john.doe@digital.hmrc.gov.uk\",\"verified\":true,\"verifiedOn\":1518652800000,\"language\":\"cy\"},\"taxIdentifiers\":[{\"name\":\"sautr\",\"value\":\"123456789\"},{\"name\":\"nino\",\"value\":\"CE067583D\"}]}",
+        "originalPreference" -> "{\"genericPaperless\":true,\"genericUpdatedAt\":1518652800000,\"taxCreditsPaperless\":false,\"taxCreditsUpdatedAt\":1518652800000,\"email\":{\"address\":\"john.doe@digital.hmrc.gov.uk\",\"verified\":true,\"verifiedOn\":1518652800000,\"language\":\"cy\",\"hasBounces\":false},\"taxIdentifiers\":[{\"name\":\"sautr\",\"value\":\"123456789\"},{\"name\":\"nino\",\"value\":\"CE067583D\"}]}",
         "DataCallType"       -> "request",
         "newPreference"      -> "{\"genericPaperless\":false,\"genericUpdatedAt\":1518652800000,\"taxCreditsPaperless\":false,\"taxCreditsUpdatedAt\":1518652800000,\"taxIdentifiers\":[{\"name\":\"sautr\",\"value\":\"123456789\"},{\"name\":\"nino\",\"value\":\"CE067583D\"}]}",
         "reasonOfFailure"    -> "Done",
@@ -294,7 +294,7 @@ class SearchServiceSpec extends UnitSpec with MockitoSugar with ScalaFutures wit
     val taxCreditsUpdatedAt = Some(new DateTime(2018, 2, 15, 0, 0, DateTimeZone.UTC))
     val verifiedOn = Some(new DateTime(2018, 2, 15, 0, 0, DateTimeZone.UTC))
 
-    val verifiedEmail = Email("john.doe@digital.hmrc.gov.uk", verified = true, verifiedOn = verifiedOn, language = Some("cy"))
+    val verifiedEmail = Email("john.doe@digital.hmrc.gov.uk", verified = true, verifiedOn = verifiedOn, language = Some("cy"), false)
 
     def preferenceDetails(genericPaperless: Boolean, taxCreditsPaperless: Boolean) = {
       val email = if (genericPaperless | taxCreditsPaperless) Some(verifiedEmail) else None

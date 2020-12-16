@@ -88,7 +88,7 @@ class SearchControllerSpec extends UnitSpec with ScalaFutures with GuiceOneAppPe
         genericUpdatedAt = genericUpdatedAt,
         taxCreditsPaperless = true,
         taxCreditsUpdatedAt = taxCreditsUpdatedAt,
-        Some(Email("john.doe@digital.hmrc.gov.uk", verified = true, verifiedOn = verifiedOn, language = Some("cy"))),
+        Some(Email("john.doe@digital.hmrc.gov.uk", verified = true, verifiedOn = verifiedOn, language = Some("cy"), hasBounces = false)),
         Seq(TaxIdentifier("email", "john.doe@digital.hmrc.gov.uk"))
       )
       when(searchServiceMock.searchPreference(any())(any(), any(), any())).thenReturn(Future.successful(List(preference)))
@@ -108,7 +108,7 @@ class SearchControllerSpec extends UnitSpec with ScalaFutures with GuiceOneAppPe
         genericUpdatedAt = genericUpdatedAt,
         taxCreditsPaperless = true,
         taxCreditsUpdatedAt = taxCreditsUpdatedAt,
-        Some(Email("test@test.com", verified = true, verifiedOn = verifiedOn, language = None)),
+        Some(Email("test@test.com", verified = true, verifiedOn = verifiedOn, language = None, false)),
         Seq(TaxIdentifier("email", "test@test.com"))
       )
       when(searchServiceMock.searchPreference(any())(any(), any(), any())).thenReturn(Future.successful(List(preference)))
@@ -138,7 +138,7 @@ class SearchControllerSpec extends UnitSpec with ScalaFutures with GuiceOneAppPe
         genericUpdatedAt = genericUpdatedAt,
         taxCreditsPaperless = true,
         taxCreditsUpdatedAt = taxCreditsUpdatedAt,
-        Some(Email("john.doe@digital.hmrc.gov.uk", verified = true, verifiedOn = verifiedOn, language = Some("en"))),
+        Some(Email("john.doe@digital.hmrc.gov.uk", verified = true, verifiedOn = verifiedOn, language = Some("en"), hasBounces = false)),
         Seq(TaxIdentifier("nino", "CE067583D"))
       )
       when(searchServiceMock.searchPreference(any())(any(), any(), any())).thenReturn(Future.successful(List(preference)))
@@ -168,7 +168,7 @@ class SearchControllerSpec extends UnitSpec with ScalaFutures with GuiceOneAppPe
         genericUpdatedAt = genericUpdatedAt,
         taxCreditsPaperless = true,
         taxCreditsUpdatedAt = taxCreditsUpdatedAt,
-        Some(Email("john.doe@digital.hmrc.gov.uk", verified = true, verifiedOn = verifiedOn, language = Some("cy"))),
+        Some(Email("john.doe@digital.hmrc.gov.uk", verified = true, verifiedOn = verifiedOn, language = Some("cy"), false)),
         Seq(TaxIdentifier("nino", "CE067583D"))
       )
       when(searchServiceMock.searchPreference(any())(any(), any(), any())).thenReturn(Future.successful(List(preference)))
@@ -196,7 +196,7 @@ class SearchControllerSpec extends UnitSpec with ScalaFutures with GuiceOneAppPe
         genericUpdatedAt = genericUpdatedAt,
         taxCreditsPaperless = true,
         taxCreditsUpdatedAt = taxCreditsUpdatedAt,
-        Some(Email("john.doe@digital.hmrc.gov.uk", verified = true, verifiedOn = verifiedOn, language = None)),
+        Some(Email("john.doe@digital.hmrc.gov.uk", verified = true, verifiedOn = verifiedOn, language = None, false)),
         Seq()
       )
       when(searchServiceMock.optOut(ArgumentMatchers.eq(TaxIdentifier("nino", "CE067583D")), any())(any(), any(), any()))

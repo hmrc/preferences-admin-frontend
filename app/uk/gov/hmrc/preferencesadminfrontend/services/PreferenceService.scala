@@ -34,9 +34,9 @@ class PreferenceService @Inject()(entityResolver: EntityResolverConnector, messa
       preferenceDetails match {
         case Some(preference) =>
           (preference.genericPaperless, preference.email) match {
-//            case (_, Some(email)) if (email.hasBounces) =>
-//              Future.successful(MessageStatus(utr, preference.genericPaperless, Failed, displayClass(Failed), BouncedEmail))
-            case (_, Some(email)) if (!email.verified) =>
+            case (_, Some(email)) if (email.hasBounces) =>
+              Future.successful(MessageStatus(utr, preference.genericPaperless, Failed, displayClass(Failed), BouncedEmail))
+            case (_, Some(email)) if (email.verifiedOn.isEmpty) =>
               Future.successful(MessageStatus(utr, preference.genericPaperless, Failed, displayClass(Failed), UnVerified))
             case (true, Some(email)) =>
               for {
@@ -63,9 +63,9 @@ trait FailedReason
 object FailedReason {
   val NotApplicable = "N/A"
   val UnVerified = "unverified"
-  val BouncedEmail = "bounced email"
+  val BouncedEmail = "preference state-bounced"
   val OptedOut = "opted-out"
-  val NoPreference = "No Preference"
+  val NoPreference = "No Preference record"
   val Duplicate = "Duplicate UTR (message already sent)"
   val EmailMissing = "Email missing"
 }
