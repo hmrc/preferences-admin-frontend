@@ -11,6 +11,7 @@
    "email":"TOBEREPLACED"
   },
   "messageType": "penaltyChargeApologies",
+  "validFrom": "2020-05-04",
   "subject": "We have charged you a penalty by mistake",
   "content": "TOBEREPLACED"
 }
