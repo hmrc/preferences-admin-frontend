@@ -27,11 +27,23 @@ case class SendMessage(utrs: String)
 
 object SendMessage {
 
+  def utrList(utrs: String) = utrs.trim.split("\r").toList.map(_.trim)
+
+  val sizeConstraint: Constraint[String] = Constraint("constraints.size")({ size =>
+    if (size.trim.isEmpty) {
+      Invalid("Can't send empty content")
+    } else if (utrList(size).length > 100)
+      Invalid("Can't send more than 100 UTR's at once")
+    else {
+      Valid
+    }
+  })
+
   implicit val writes: OWrites[SendMessage] = Json.writes[SendMessage]
 
   def apply(): Form[SendMessage] = Form(
     mapping(
-      "utrs" -> text
+      "utrs" -> text.verifying(sizeConstraint)
     )(SendMessage.apply)(SendMessage.unapply)
   )
 

@@ -22,12 +22,13 @@ import play.api.mvc.MessagesControllerComponents
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
 import uk.gov.hmrc.preferencesadminfrontend.connectors.{ MessageConnector, PreferencesConnector }
+import uk.gov.hmrc.preferencesadminfrontend.model.SendMessage.utrList
 import uk.gov.hmrc.preferencesadminfrontend.model.{ AllowlistEntry, SendMessage }
 import uk.gov.hmrc.preferencesadminfrontend.services.{ MessageService, MessageStatus, PreferenceService }
 
 import javax.inject.Inject
 import scala.concurrent.{ ExecutionContext, Future }
-import uk.gov.hmrc.preferencesadminfrontend.views.html.{ allowlist_add, error_template, send_messages }
+import uk.gov.hmrc.preferencesadminfrontend.views.html.{ allowlist_add, error_template, message_status, send_messages }
 
 class MessageController @Inject()(
   preferenceService: PreferenceService,
@@ -45,21 +46,18 @@ class MessageController @Inject()(
       .bindFromRequest()
       .fold(
         formWithErrors => {
-          println("error")
-          Future.successful(BadRequest(send_messages(formWithErrors, Seq.empty[MessageStatus])))
+          Future.successful(BadRequest(send_messages(formWithErrors)))
         },
         send => {
           val result: List[String] = utrList(send.utrs)
           val s = result.map(preferenceService.getPreference)
 
-          val ss: Future[List[MessageStatus]] = Future.sequence(s)
+          val ss = Future.sequence(s)
 
-          ss.map((s => Ok(send_messages(SendMessage(), s))))
+          ss.map(s => Ok(message_status(s)))
 
         }
       )
   }
-
-  private def utrList(utrs: String) = utrs.split("\r").toList.map(_.trim).distinct
 
 }

@@ -20,39 +20,26 @@
 @import uk.gov.hmrc.preferencesadminfrontend.model.SendMessage
 @import uk.gov.hmrc.preferencesadminfrontend.services._
 
-@(sendMessage: Form[SendMessage])(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
+@(status: Seq[MessageStatus])(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
 
 @uk.gov.hmrc.preferencesadminfrontend.views.html.main_template(title = "Send message by UTR's", bodyClasses = None) {
-<h1 class="heading-large">Send messages by UTR's</h1>
+<h1 class="heading-large">Messages sent status</h1>
+<h3 class="heading-medium">Please make a copy before closing this window, we loose this information</h3>
 
 <div class="section">
-    @form(action = routes.MessageController.send) {
-    <div class='form-group @if(sendMessage("utrs").hasErrors){form-group-error}'>
-        <label class="form-label" for="utrs">Enter UTR list upto 100</label>
-
-
-        @sendMessage("utrs").errors.map { error =>
-        <span class="error-message" id="error-message-utr-list">@{error.message}</span>
+    <table>
+        <tr>
+            <th>UTR</th>
+            <th>Status</th>
+            <th>Failed Reason</th>
+        </tr>
+        @for(s <- status) {
+        <tr>
+            <td>@{s.utr}</td>
+            <td style="color:@{s.displayClass}">@{s.status}</td>
+            <td>@{s.reason}</td>
+        </tr>
         }
-
-        <textarea id="utrs" name="utrs" style="width: 50%; height:700px">
-            @sendMessage("utrs").value
-
-        </textarea>
-
-    </div>
-
-
-
-
-
-
-<fieldset>
-    @if(appConfig.featureFlag == "true") {
-    <input type="submit" name="confirm" class="button" value="Send"/>
-    }
-    <input type="button" onclick="location.href='@routes.MessageController.show';" class="button" value="Cancel"/>
-</fieldset>
-}
+    </table>
 </div>
 }
