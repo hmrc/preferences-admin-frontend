@@ -145,7 +145,7 @@ class EntityResolverConnectorSpec extends UnitSpec with ScalaFutures with GuiceO
       result shouldBe defined
       result.get.genericPaperless shouldBe true
       result.get.taxCreditsPaperless shouldBe false
-      result.get.email shouldBe Some(Email("john.doe@digital.hmrc.gov.uk", false, None, None))
+      result.get.email shouldBe Some(Email("john.doe@digital.hmrc.gov.uk", false, None, None, false))
     }
 
     "return generic paperless preference false and email as 'None' if user is opted out for saUtr" in new TestCase {
@@ -308,7 +308,8 @@ class EntityResolverConnectorSpec extends UnitSpec with ScalaFutures with GuiceO
                     |    "email": "john.doe@digital.hmrc.gov.uk",
                     |    "status": "${if (emailVerified) "verified" else ""}",
                     |    $verifiedOnDateStr
-                    |    "mailboxFull": false
+                    |    "mailboxFull": false,
+                    |    "hasBounces":false
                     |  }
                     |}
        """.stripMargin)
@@ -332,7 +333,8 @@ class EntityResolverConnectorSpec extends UnitSpec with ScalaFutures with GuiceO
                     |    "email": "john.doe@digital.hmrc.gov.uk",
                     |    "status": "${if (emailVerified) "verified" else ""}",
                     |    $verifiedOnDateStr
-                    |    "mailboxFull": false
+                    |    "mailboxFull": false,
+                    |    "hasBounces":false
                     |  }
                     |}
        """.stripMargin)
@@ -359,7 +361,8 @@ class EntityResolverConnectorSpec extends UnitSpec with ScalaFutures with GuiceO
                     |    "email": "john.doe@digital.hmrc.gov.uk",
                     |    "status": "${if (emailVerified) "verified" else ""}",
                     |    $verifiedOnDateStr
-                    |    "mailboxFull": false
+                    |    "mailboxFull": false,
+                    |    "hasBounces":false
                     |  }
                     |}
        """.stripMargin)
