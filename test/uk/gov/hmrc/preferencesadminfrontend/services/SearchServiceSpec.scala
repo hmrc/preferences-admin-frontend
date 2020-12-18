@@ -164,7 +164,7 @@ class SearchServiceSpec extends UnitSpec with MockitoSugar with ScalaFutures wit
         genericUpdatedAt = genericUpdatedAt,
         taxCreditsPaperless = true,
         taxCreditsUpdatedAt = taxCreditsUpdatedAt,
-        email = Some(Email(address = "john.doe@digital.hmrc.gov.uk", verified = true, verifiedOn = verifiedOn, language = None, false)),
+        email = Some(Email(address = "john.doe@digital.hmrc.gov.uk", verified = true, verifiedOn = verifiedOn, language = None, false, None)),
         taxIdentifiers = Seq(TaxIdentifier("sautr", "123"), TaxIdentifier("nino", "ABC"))
       )
       val event = searchService.createSearchEvent("me", TaxIdentifier("sautr", "123"), Some(preference))
@@ -294,23 +294,23 @@ class SearchServiceSpec extends UnitSpec with MockitoSugar with ScalaFutures wit
     val taxCreditsUpdatedAt = Some(new DateTime(2018, 2, 15, 0, 0, DateTimeZone.UTC))
     val verifiedOn = Some(new DateTime(2018, 2, 15, 0, 0, DateTimeZone.UTC))
 
-    val verifiedEmail = Email("john.doe@digital.hmrc.gov.uk", verified = true, verifiedOn = verifiedOn, language = Some("cy"), false)
+    val verifiedEmail = Email("john.doe@digital.hmrc.gov.uk", verified = true, verifiedOn = verifiedOn, language = Some("cy"), false, None)
 
     def preferenceDetails(genericPaperless: Boolean, taxCreditsPaperless: Boolean) = {
       val email = if (genericPaperless | taxCreditsPaperless) Some(verifiedEmail) else None
-      Some(PreferenceDetails(genericPaperless, genericUpdatedAt, taxCreditsPaperless, taxCreditsUpdatedAt, email))
+      Some(PreferenceDetails(genericPaperless, genericUpdatedAt, None, taxCreditsPaperless, taxCreditsUpdatedAt, email))
     }
 
     def preferenceDetails(genericPaperless: Boolean, taxCreditsPaperless: Boolean, entityId: EntityId) = {
       val email = if (genericPaperless | taxCreditsPaperless) Some(verifiedEmail) else None
-      List(PreferenceDetails(genericPaperless, genericUpdatedAt, taxCreditsPaperless, taxCreditsUpdatedAt, email))
+      List(PreferenceDetails(genericPaperless, genericUpdatedAt, None, taxCreditsPaperless, taxCreditsUpdatedAt, email))
     }
 
     def multiplepreferenceDetails(genericPaperless: Boolean, taxCreditsPaperless: Boolean, entityId: EntityId) = {
       val email = if (genericPaperless | taxCreditsPaperless) Some(verifiedEmail) else None
       List(
-        PreferenceDetails(genericPaperless, genericUpdatedAt, taxCreditsPaperless, taxCreditsUpdatedAt, email),
-        PreferenceDetails(genericPaperless, genericUpdatedAt, taxCreditsPaperless, taxCreditsUpdatedAt, email)
+        PreferenceDetails(genericPaperless, genericUpdatedAt, None, taxCreditsPaperless, taxCreditsUpdatedAt, email),
+        PreferenceDetails(genericPaperless, genericUpdatedAt, None, taxCreditsPaperless, taxCreditsUpdatedAt, email)
       )
     }
 

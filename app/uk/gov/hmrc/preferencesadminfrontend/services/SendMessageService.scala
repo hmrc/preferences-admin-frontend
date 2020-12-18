@@ -18,8 +18,8 @@ package uk.gov.hmrc.preferencesadminfrontend.services
 
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.preferencesadminfrontend.connectors.{ EntityResolverConnector, MessageConnector, PreferenceDetails, PreferencesConnector }
-import uk.gov.hmrc.preferencesadminfrontend.services.FailedReason.{ BouncedEmail, Duplicate, EmailMissing, NoPreference, NotApplicable, OptedOut, UnKnownError, UnVerified }
-import uk.gov.hmrc.preferencesadminfrontend.services.SentStatus.{ Failed, Retry, Sent }
+import uk.gov.hmrc.preferencesadminfrontend.services.FailedReason.{ BouncedEmail, Duplicate, EmailIssueIdentified, EmailMissing, NoPreference, NotApplicable, OptedOut, UnKnownError, UnVerified }
+import uk.gov.hmrc.preferencesadminfrontend.services.SentStatus.{ Failed, Retry, SendPaper, Sent }
 import uk.gov.hmrc.preferencesadminfrontend.services.model.TaxIdentifier
 
 import javax.inject.Inject
@@ -33,12 +33,15 @@ class SendMessageService @Inject()(entityResolver: EntityResolverConnector, mess
     } yield
       preferenceDetails match {
         case Some(preference) =>
-          (preference.genericPaperless, preference.email) match {
-            case (_, Some(email)) if (email.hasBounces) =>
+          (preference.isPaperless, preference.genericPaperless, preference.email) match {
+            case (_, true, Some(email)) if (email.pendingEmail.nonEmpty) =>
+              Future.successful(MessageStatus(utr, SendPaper, displayClass(Failed), EmailIssueIdentified))
+            case (_, _, Some(email)) if (email.hasBounces) =>
               Future.successful(MessageStatus(utr, Failed, displayClass(Failed), BouncedEmail))
-            case (_, Some(email)) if (email.verifiedOn.isEmpty) =>
+            case (_, _, Some(email)) if (email.verifiedOn.isEmpty) =>
               Future.successful(MessageStatus(utr, Failed, displayClass(Failed), UnVerified))
-            case (true, Some(email)) =>
+
+            case (Some(true), true, Some(email)) if (email.pendingEmail.isEmpty) =>
               for {
                 sent <- messageService.sendPenalyChargeApologyMessage(email.address, utr)
                 status = sent match {
@@ -50,7 +53,8 @@ class SendMessageService @Inject()(entityResolver: EntityResolverConnector, mess
                   case _ => MessageStatus(utr, Sent, displayClass(Sent), NotApplicable)
                 }
               } yield status
-            case (false, _) => Future.successful(MessageStatus(utr, Failed, displayClass(Failed), OptedOut))
+            case (_, false, _) => Future.successful(MessageStatus(utr, Failed, displayClass(Failed), OptedOut))
+            case _             => Future.successful(MessageStatus(utr, Failed, displayClass(Failed), EmailMissing))
           }
         case _ => Future.successful(MessageStatus(utr, Failed, displayClass(Failed), NoPreference))
       }).flatMap(identity)
@@ -68,6 +72,7 @@ object FailedReason {
   val NoPreference = "No Preference record"
   val Duplicate = "Duplicate UTR (message already sent)"
   val EmailMissing = "Email missing"
+  val EmailIssueIdentified = "Email issue identified"
   val UnKnownError = "Comms Failed 50x"
 }
 
@@ -75,4 +80,5 @@ object SentStatus {
   val Sent = "Sent"
   val Failed = "unsuccessful"
   val Retry = "Please Retry"
+  val SendPaper = "Send Paper"
 }

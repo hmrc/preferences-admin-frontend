@@ -125,6 +125,7 @@ object Entity {
 case class PreferenceDetails(
   genericPaperless: Boolean,
   genericUpdatedAt: Option[DateTime],
+  isPaperless: Option[Boolean],
   taxCreditsPaperless: Boolean,
   taxCreditsUpdatedAt: Option[DateTime],
   email: Option[Email],
@@ -150,10 +151,11 @@ object PreferenceDetails {
   implicit val reads: Reads[PreferenceDetails] = (
     (JsPath \ "termsAndConditions" \ "generic").readNullable[JsValue].map(_.fold(false)(m => (m \ "accepted").as[Boolean])) and
       (JsPath \ "termsAndConditions" \ "generic").readNullable[JsValue].map(_.fold(None: Option[DateTime])(m => (m \ "updatedAt").asOpt[DateTime])) and
+      (JsPath \ "termsAndConditions" \ "generic").readNullable[JsValue].map(_.fold(None: Option[Boolean])(m => (m \ "paperless").asOpt[Boolean])) and
       (JsPath \ "termsAndConditions" \ "taxCredits").readNullable[JsValue].map(_.fold(false)(m => (m \ "accepted").as[Boolean])) and
       (JsPath \ "termsAndConditions" \ "taxCredits").readNullable[JsValue].map(_.fold(None: Option[DateTime])(m => (m \ "updatedAt").asOpt[DateTime])) and
       (JsPath \ "email").readNullable[Email] and
       (JsPath \ "entityId").readNullable[EntityId]
-  )((genericPaperless, genericUpdatedAt, taxCreditsPaperless, taxCreditsUpdatedAt, email, entityId) =>
-    PreferenceDetails(genericPaperless, genericUpdatedAt, taxCreditsPaperless, taxCreditsUpdatedAt, email, entityId))
+  )((genericPaperless, genericUpdatedAt, isPaperless, taxCreditsPaperless, taxCreditsUpdatedAt, email, entityId) =>
+    PreferenceDetails(genericPaperless, genericUpdatedAt, isPaperless, taxCreditsPaperless, taxCreditsUpdatedAt, email, entityId))
 }

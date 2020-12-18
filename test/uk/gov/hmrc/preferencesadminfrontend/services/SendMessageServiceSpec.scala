@@ -44,6 +44,23 @@ class SendMessageServiceSpec extends UnitSpec with MockitoSugar with ScalaFuture
         .futureValue shouldBe (MessageStatus("1111111111", "unsuccessful", "red", "Duplicate UTR (message already sent)"))
     }
 
+    "return Message status Failed and Send paper if isPaperless is true and there is pendingEmail" in new TestCase {
+      override val testEmail = Email("test@test.com", true, Some(testDate), None, hasBounces = false, pendingEmail = Some("pendingemail@email.com"))
+      when(entityResolver.getPreferenceDetails(any())(any(), any()))
+        .thenReturn(Future.successful(Some(PreferenceDetails(true, Some(testDate), isPaperless = Some(true), false, None, Some(testEmail), None))))
+      val sendMessageService = new SendMessageService(entityResolver, messageService)
+      sendMessageService
+        .sendMessage("1111111111")
+        .futureValue shouldBe (MessageStatus("1111111111", "Send Paper", "red", "Email issue identified"))
+    }
+
+    "return Message status Failed if isPaperless is false" in new TestCase {
+      when(entityResolver.getPreferenceDetails(any())(any(), any()))
+        .thenReturn(Future.successful(Some(PreferenceDetails(false, Some(testDate), isPaperless = Some(false), false, None, Some(testEmail), None))))
+      val sendMessageService = new SendMessageService(entityResolver, messageService)
+      sendMessageService.sendMessage("1111111111").futureValue shouldBe (MessageStatus("1111111111", "unsuccessful", "red", "opted-out"))
+    }
+
     "return Message status Please Retry if response failed with any other reason other than conflict" in new TestCase {
       when(messageService.sendPenalyChargeApologyMessage(any(), any())(any(), any())).thenReturn(Future.successful(Left(500, "unexpected error")))
       val sendMessageService = new SendMessageService(entityResolver, messageService)
@@ -51,23 +68,23 @@ class SendMessageServiceSpec extends UnitSpec with MockitoSugar with ScalaFuture
     }
 
     "return Message status Failed if preference status has email bounced" in new TestCase {
-      override val testEmail = Email("test@test.com", false, Some(testDate), None, hasBounces = true)
+      override val testEmail = Email("test@test.com", false, Some(testDate), None, hasBounces = true, None)
       when(entityResolver.getPreferenceDetails(any())(any(), any()))
-        .thenReturn(Future.successful(Some(PreferenceDetails(true, Some(testDate), false, None, Some(testEmail), None))))
+        .thenReturn(Future.successful(Some(PreferenceDetails(true, Some(testDate), Some(true), false, None, Some(testEmail), None))))
       val sendMessageService = new SendMessageService(entityResolver, messageService)
       sendMessageService.sendMessage("1111111111").futureValue shouldBe (MessageStatus("1111111111", "unsuccessful", "red", "preference state-bounced"))
     }
 
     "return Message status Failed if preference status has email verifiedOn date is missing" in new TestCase {
-      override val testEmail = Email("test@test.com", verified = false, verifiedOn = None, None, hasBounces = false)
+      override val testEmail = Email("test@test.com", verified = false, verifiedOn = None, None, hasBounces = false, None)
       when(entityResolver.getPreferenceDetails(any())(any(), any()))
-        .thenReturn(Future.successful(Some(PreferenceDetails(true, Some(testDate), false, None, Some(testEmail), None))))
+        .thenReturn(Future.successful(Some(PreferenceDetails(true, Some(testDate), Some(true), false, None, Some(testEmail), None))))
       val sendMessageService = new SendMessageService(entityResolver, messageService)
       sendMessageService.sendMessage("1111111111").futureValue shouldBe (MessageStatus("1111111111", "unsuccessful", "red", "unverified"))
     }
 
     "return Message status Failed if preference record is missing" in new TestCase {
-      override val testEmail = Email("test@test.com", verified = false, verifiedOn = None, None, hasBounces = false)
+      override val testEmail = Email("test@test.com", verified = false, verifiedOn = None, None, hasBounces = false, None)
       when(entityResolver.getPreferenceDetails(any())(any(), any())).thenReturn(Future.successful(None))
       val sendMessageService = new SendMessageService(entityResolver, messageService)
       sendMessageService.sendMessage("1111111111").futureValue shouldBe (MessageStatus("1111111111", "unsuccessful", "red", "No Preference record"))
@@ -75,7 +92,7 @@ class SendMessageServiceSpec extends UnitSpec with MockitoSugar with ScalaFuture
 
     "return Message status Failed if preference is opted out" in new TestCase {
       when(entityResolver.getPreferenceDetails(any())(any(), any()))
-        .thenReturn(Future.successful(Some(PreferenceDetails(genericPaperless = false, Some(testDate), false, None, None, None))))
+        .thenReturn(Future.successful(Some(PreferenceDetails(genericPaperless = false, Some(testDate), Some(true), false, None, None, None))))
       val sendMessageService = new SendMessageService(entityResolver, messageService)
       sendMessageService.sendMessage("1111111111").futureValue shouldBe (MessageStatus("1111111111", "unsuccessful", "red", "opted-out"))
     }
@@ -88,11 +105,11 @@ class SendMessageServiceSpec extends UnitSpec with MockitoSugar with ScalaFuture
     implicit val hc: HeaderCarrier = HeaderCarrier()
 
     val testDate = DateTime.now.minus(20000)
-    val testEmail = Email("test@test.com", true, Some(testDate), None, false)
+    val testEmail = Email("test@test.com", true, Some(testDate), None, hasBounces = false, pendingEmail = None)
     val testEntityId = "1111111"
 
     when(entityResolver.getPreferenceDetails(any())(any(), any()))
-      .thenReturn(Future.successful(Some(PreferenceDetails(true, Some(testDate), false, None, Some(testEmail), None))))
+      .thenReturn(Future.successful(Some(PreferenceDetails(true, Some(testDate), isPaperless = Some(true), false, None, Some(testEmail), None))))
     when(messageService.sendPenalyChargeApologyMessage(any(), any())(any(), any())).thenReturn(Future.successful(Right("messageId")))
   }
 }
