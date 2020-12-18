@@ -34,17 +34,9 @@
         <span class="error-message" id="error-message-utr-list">@{error.message}</span>
         }
 
-        <textarea id="utrs" name="utrs" style="width: 50%; height:700px">
-            @sendMessage("utrs").value
-
-        </textarea>
+        <textarea id="utrs" name="utrs" style="width: 50%; height:700px">@sendMessage("utrs").value</textarea>
 
     </div>
-
-
-
-
-
 
 <fieldset>
     @if(appConfig.featureFlag == "true") {
