@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,11 +26,10 @@ import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.Status
 import play.api.i18n.MessagesApi
-import play.api.mvc.{ AnyContentAsEmpty, AnyContentAsFormUrlEncoded, Call, MessagesControllerComponents }
+import play.api.mvc.{ AnyContentAsEmpty, AnyContentAsFormUrlEncoded, Call }
 import play.api.test.CSRFTokenHelper._
 import play.api.test.FakeRequest
 import uk.gov.hmrc.http.{ HeaderCarrier, HttpResponse }
-import uk.gov.hmrc.play.bootstrap.tools.Stubs.stubMessagesControllerComponents
 import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
 import uk.gov.hmrc.preferencesadminfrontend.connectors.MessageConnector
@@ -216,7 +215,6 @@ class MessageBrakeControllerSpec extends UnitSpec with Matchers with MockitoSuga
 
 trait MessageBrakeControllerTestCase extends SpecBase with MockitoSugar {
 
-  implicit val stubbedMCC: MessagesControllerComponents = stubMessagesControllerComponents()
   implicit val ecc: ExecutionContext = stubbedMCC.executionContext
   val mockMessageConnector: MessageConnector = mock[MessageConnector]
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,14 +18,34 @@ package uk.gov.hmrc.preferencesadminfrontend.utils
 
 import org.mockito.ArgumentMatcher
 import org.scalatest.mockito.MockitoSugar
+import play.api.i18n.Lang
+import play.api.mvc.{ AnyContent, ControllerComponents, DefaultActionBuilder, DefaultMessagesActionBuilderImpl, DefaultMessagesControllerComponents, MessagesActionBuilder, MessagesControllerComponents }
+import play.api.test.Helpers.{ stubBodyParser, stubControllerComponents, stubLangs, stubMessagesApi }
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.MergedDataEvent
 import uk.gov.hmrc.preferencesadminfrontend.connectors.{ EntityResolverConnector, MessageConnector, PreferencesConnector }
 import uk.gov.hmrc.preferencesadminfrontend.controllers.model.User
 
+import scala.concurrent.ExecutionContext
+import scala.concurrent.ExecutionContext.Implicits.global
+
 trait SpecBase extends MockitoSugar {
 
   implicit val user = User("me", "mySecretPassword")
+  val messagesActionBuilder: MessagesActionBuilder = new DefaultMessagesActionBuilderImpl(stubBodyParser[AnyContent](), stubMessagesApi())
+  val cc: ControllerComponents = stubControllerComponents()
+
+  implicit val stubbedMCC: MessagesControllerComponents = DefaultMessagesControllerComponents(
+    messagesActionBuilder,
+    DefaultActionBuilder(stubBodyParser[AnyContent]()),
+    cc.parsers,
+    stubMessagesApi(
+      messages = Map("en" ->
+        Map("error.preference_not_found" -> "No paperless preference found for that identifier."))),
+    stubLangs(Seq(Lang("en"))),
+    cc.fileMimeTypes,
+    ExecutionContext.global
+  )
 
   val auditConnectorMock = mock[AuditConnector]
   val entityResolverConnectorMock = mock[EntityResolverConnector]

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Configuration
 import play.api.http.Status
 import play.api.i18n.{ Lang, MessagesApi }
-import play.api.mvc.MessagesControllerComponents
+import play.api.mvc.{ AnyContent, DefaultActionBuilder, DefaultMessagesControllerComponents, MessagesControllerComponents }
 import play.api.test.CSRFTokenHelper._
 import play.api.test.Helpers.{ headers, _ }
 import play.api.test.{ FakeRequest, Helpers }
@@ -216,15 +216,6 @@ class SearchControllerSpec extends UnitSpec with ScalaFutures with GuiceOneAppPe
 
 trait SearchControllerTestCase extends SpecBase with MockitoSugar {
 
-  import uk.gov.hmrc.play.bootstrap.tools.Stubs.stubMessagesControllerComponents
-
-  implicit val stubbedMCC: MessagesControllerComponents =
-    stubMessagesControllerComponents(
-      langs = stubLangs(Seq(Lang("en"))),
-      messagesApi = stubMessagesApi(
-        messages = Map("en" ->
-          Map("error.preference_not_found" -> "No paperless preference found for that identifier.")))
-    )
   implicit val ecc: ExecutionContext = stubbedMCC.executionContext
 
   val searchServiceMock = mock[SearchService]
