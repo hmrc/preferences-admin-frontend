@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -164,9 +164,6 @@ class RescindmentControllerSpec extends UnitSpec with ScalaFutures with GuiceOne
 }
 
 trait RescindmentTestCase extends SpecBase with MockitoSugar {
-  import uk.gov.hmrc.play.bootstrap.tools.Stubs.stubMessagesControllerComponents
-
-  implicit val stubbedMCC: MessagesControllerComponents = stubMessagesControllerComponents()
   implicit val ecc: ExecutionContext = stubbedMCC.executionContext
 
   val rescindmentServiceMock = mock[RescindmentService]

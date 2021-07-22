@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -244,21 +244,33 @@ class EntityResolverConnectorSpec extends UnitSpec with ScalaFutures with GuiceO
     lazy val servicesConfig = app.injector.instanceOf[ServicesConfig]
     def entityConnectorGetEntityMock(expectedPath: String, jsonBody: JsValue): EntityResolverConnector = {
       val mockHttp: DefaultHttpClient = mock[DefaultHttpClient]
-      when(mockHttp.GET[Option[Entity]](ArgumentMatchers.eq(expectedPath))(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any()))
+      when(
+        mockHttp.GET[Option[Entity]](ArgumentMatchers.eq(expectedPath), ArgumentMatchers.any(), ArgumentMatchers.any())(
+          ArgumentMatchers.any(),
+          ArgumentMatchers.any(),
+          ArgumentMatchers.any()))
         .thenReturn(Future.successful(Some(jsonBody.as[Entity])))
       new EntityResolverConnector(mockHttp, servicesConfig)
     }
 
     def entityConnectorGetPreferenceDetailsMock(expectedPath: String, jsonBody: JsValue): EntityResolverConnector = {
       val mockHttp: DefaultHttpClient = mock[DefaultHttpClient]
-      when(mockHttp.GET[Option[PreferenceDetails]](ArgumentMatchers.eq(expectedPath))(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any()))
+      when(
+        mockHttp.GET[Option[PreferenceDetails]](ArgumentMatchers.eq(expectedPath), ArgumentMatchers.any(), ArgumentMatchers.any())(
+          ArgumentMatchers.any(),
+          ArgumentMatchers.any(),
+          ArgumentMatchers.any()))
         .thenReturn(Future.successful(Some(jsonBody.as[PreferenceDetails])))
       new EntityResolverConnector(mockHttp, servicesConfig)
     }
 
     def entityConnectorGetMock(expectedPath: String, error: Throwable): EntityResolverConnector = {
       val mockHttp: DefaultHttpClient = mock[DefaultHttpClient]
-      when(mockHttp.GET(ArgumentMatchers.eq(expectedPath))(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any()))
+      when(
+        mockHttp.GET(ArgumentMatchers.eq(expectedPath), ArgumentMatchers.any(), ArgumentMatchers.any())(
+          ArgumentMatchers.any(),
+          ArgumentMatchers.any(),
+          ArgumentMatchers.any()))
         .thenReturn(Future.failed(error))
       new EntityResolverConnector(mockHttp, servicesConfig)
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,6 @@
  */
 
 package uk.gov.hmrc.preferencesadminfrontend.connectors
-
-import java.util.concurrent.TimeoutException
 
 import akka.actor.ActorSystem
 import org.mockito.ArgumentMatchers
@@ -35,6 +33,7 @@ import uk.gov.hmrc.play.bootstrap.http.{ DefaultHttpClient, HttpClient }
 import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.preferencesadminfrontend.model._
 
+import java.util.concurrent.TimeoutException
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -84,7 +83,7 @@ class MessageConnectorSpec extends UnitSpec with ScalaFutures with MockitoSugar 
     "getAllowlist" should {
       "return a valid sequence of batches with status 200" in new TestCase {
         val expectedPath = (s"$serviceUrl/admin/message/brake/gmc/allowlist")
-        when(mockHttp.GET[HttpResponse](ArgumentMatchers.eq(expectedPath))(any(), any(), any()))
+        when(mockHttp.GET[HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any()))
           .thenReturn(Future.successful(HttpResponse(Status.OK, Some(Json.obj()))))
         val result = app.injector.instanceOf[MessageConnector].getAllowlist().futureValue
         result.status shouldBe Status.OK
@@ -92,7 +91,7 @@ class MessageConnectorSpec extends UnitSpec with ScalaFutures with MockitoSugar 
 
       "return a BAD GATEWAY with an error message when an error is thrown" in new TestCase {
         val expectedPath = (s"$serviceUrl/admin/message/brake/gmc/allowlist")
-        when(mockHttp.GET[HttpResponse](ArgumentMatchers.eq(expectedPath))(any(), any(), any()))
+        when(mockHttp.GET[HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any()))
           .thenReturn(Future.failed(new TimeoutException("timeout error")))
 
         val result = app.injector.instanceOf[MessageConnector].getAllowlist().futureValue
@@ -151,7 +150,7 @@ class MessageConnectorSpec extends UnitSpec with ScalaFutures with MockitoSugar 
     "getGmcBatches" should {
       "return a valid sequence of batches with status 200" in new TestCase {
         val expectedPath = s"$serviceUrl/admin/message/brake/gmc/batches"
-        when(mockHttp.GET[HttpResponse](ArgumentMatchers.eq(expectedPath))(any(), any(), any()))
+        when(mockHttp.GET[HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any()))
           .thenReturn(Future.successful(HttpResponse(Status.OK, Some(getGmcBatchesResultJson))))
 
         val result = app.injector.instanceOf[MessageConnector].getGmcBatches().futureValue
@@ -161,7 +160,7 @@ class MessageConnectorSpec extends UnitSpec with ScalaFutures with MockitoSugar 
 
       "return a BAD GATEWAY with an error message when an error is thrown" in new TestCase {
         val expectedPath = s"$serviceUrl/admin/message/brake/gmc/batches"
-        when(mockHttp.GET[HttpResponse](ArgumentMatchers.eq(expectedPath))(any(), any(), any()))
+        when(mockHttp.GET[HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any()))
           .thenReturn(Future.failed(new TimeoutException("timeout error")))
         val result = app.injector.instanceOf[MessageConnector].getGmcBatches().futureValue
         result.status shouldBe Status.BAD_GATEWAY
@@ -355,7 +354,7 @@ class MessageConnectorSpec extends UnitSpec with ScalaFutures with MockitoSugar 
 
     def messageConnectorHttpMock(expectedPath: String, jsonBody: JsValue, status: Int): MessageConnector = {
       val mockHttp: DefaultHttpClient = mock[DefaultHttpClient]
-      when(mockHttp.GET[HttpResponse](ArgumentMatchers.eq(expectedPath))(any(), any(), any()))
+      when(mockHttp.GET[HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any()))
         .thenReturn(Future.successful(HttpResponse(status, Some(jsonBody))))
       when(mockHttp.POST[AllowlistEntry, HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any(), any()))
         .thenReturn(Future.successful(HttpResponse(status, Some(jsonBody))))
@@ -369,7 +368,7 @@ class MessageConnectorSpec extends UnitSpec with ScalaFutures with MockitoSugar 
 
     def messageConnectorHttpMock(expectedPath: String, error: Throwable): MessageConnector = {
       val mockHttp: DefaultHttpClient = mock[DefaultHttpClient]
-      when(mockHttp.GET[HttpResponse](ArgumentMatchers.eq(expectedPath))(any(), any(), any()))
+      when(mockHttp.GET[HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any()))
         .thenReturn(Future.failed(error))
       when(mockHttp.POST[AllowlistEntry, HttpResponse](ArgumentMatchers.eq(expectedPath), any())(any(), any(), any(), any()))
         .thenReturn(Future.failed(error))
