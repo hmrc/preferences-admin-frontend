@@ -1,5 +1,5 @@
 @*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,14 +14,19 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.play.views.html.helpers._
+@import uk.gov.hmrc.govukfrontend.views.html.components._
+@import uk.gov.hmrc.govukfrontend.views.html.components.implicits._
 @import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
 @import uk.gov.hmrc.preferencesadminfrontend.controllers.routes
 @import uk.gov.hmrc.preferencesadminfrontend.model.AllowlistEntry
 
+@this(
+layout: Layout,
+form: FormWithCSRF,
+govukTextarea: GovukTextarea)
 @(entryForm: Form[AllowlistEntry])(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
 
-@uk.gov.hmrc.preferencesadminfrontend.views.html.main_template(title = "Message Form IDs Allowlist", bodyClasses = None) {
+@layout(pageTitle = Some("Message Form IDs Allowlist")) {
     <h1 class="heading-large">Message Form IDs Allowlist</h1>
     <div class="section">
         @form(action = routes.AllowlistController.confirmAdd) {

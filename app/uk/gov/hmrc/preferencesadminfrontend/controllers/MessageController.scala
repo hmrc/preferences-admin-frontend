@@ -16,36 +16,41 @@
 
 package uk.gov.hmrc.preferencesadminfrontend.controllers
 
+import play.api.Logging
 import play.api.i18n.I18nSupport
 import play.api.mvc.MessagesControllerComponents
-import uk.gov.hmrc.play.bootstrap.controller.FrontendController
+import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
 import uk.gov.hmrc.preferencesadminfrontend.model.SendMessage
 import uk.gov.hmrc.preferencesadminfrontend.model.SendMessage.listParser
 import uk.gov.hmrc.preferencesadminfrontend.services.SendMessageService
 import uk.gov.hmrc.preferencesadminfrontend.views.html.{ message_status, send_messages }
+
 import javax.inject.Inject
 import scala.concurrent.{ ExecutionContext, Future }
 
-class MessageController @Inject()(sendMessageService: SendMessageService, mcc: MessagesControllerComponents)(
-  implicit appConfig: AppConfig,
-  ec: ExecutionContext)
-    extends FrontendController(mcc) with I18nSupport {
+class MessageController @Inject()(
+  authorisedAction: AuthorisedAction,
+  messageStatusView: message_status,
+  sendMessagesView: send_messages,
+  sendMessageService: SendMessageService,
+  mcc: MessagesControllerComponents)(implicit appConfig: AppConfig, ec: ExecutionContext)
+    extends FrontendController(mcc) with I18nSupport with Logging {
 
-  def show() = AuthorisedAction.async { implicit request => implicit user =>
-    Future.successful(Ok(send_messages(SendMessage())))
+  def show() = authorisedAction.async { implicit request => implicit user =>
+    Future.successful(Ok(sendMessagesView(SendMessage())))
   }
 
-  def send() = AuthorisedAction.async { implicit request => implicit user =>
+  def send() = authorisedAction.async { implicit request => implicit user =>
     SendMessage()
       .bindFromRequest()
       .fold(
         formWithErrors => {
-          Future.successful(BadRequest(send_messages(formWithErrors)))
+          Future.successful(BadRequest(sendMessagesView(formWithErrors)))
         },
         input => {
           Future.sequence(listParser(input.utrs).map(sendMessageService.sendMessage)).map { result =>
-            Ok(message_status(result))
+            Ok(messageStatusView(result))
           }
         }
       )

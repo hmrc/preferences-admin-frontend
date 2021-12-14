@@ -14,11 +14,12 @@
  * limitations under the License.
  *@
 
-@()(implicit request: Request[_])
-@import helper._
-@import uk.gov.hmrc.preferencesadminfrontend.controllers.routes
-<li>
-    @form(action = CSRF(routes.LoginController.logoutAction)) {
-        <button class="linkButton" type="submit" id="logout">Logout</button>
-    }
-</li>
+@import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
+
+@this(layout: Layout)
+
+@(pageTitle: String, heading: String, message: String)(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
+@layout(pageTitle = Some(pageTitle)) {
+    <h1 class="govuk-heading-xl">@{Text(heading).asHtml}</h1>
+    <p class="govuk-body">@{Text(message).asHtml}</p>
+}

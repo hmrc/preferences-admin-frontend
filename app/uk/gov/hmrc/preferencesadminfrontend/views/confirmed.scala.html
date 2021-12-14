@@ -1,5 +1,5 @@
 @*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,9 +14,10 @@
  * limitations under the License.
  *@
 
+@this(layout: Layout)
 @(preference: List[uk.gov.hmrc.preferencesadminfrontend.services.model.Preference])(implicit request: Request[_], messages: Messages, appConfig: uk.gov.hmrc.preferencesadminfrontend.config.AppConfig)
 
-@uk.gov.hmrc.preferencesadminfrontend.views.html.main_template(title = "User Summary", bodyClasses = None) {
+@layout(pageTitle = Some("User Summary")) {
 
     <div class="transaction-banner--complete">
         <h1 class="transaction-banner__heading">User manually opted out</h1>

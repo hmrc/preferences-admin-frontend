@@ -16,31 +16,39 @@
 
 package uk.gov.hmrc.preferencesadminfrontend.controllers
 
+import play.api.Logging
+
 import javax.inject.Inject
 import play.api.i18n.I18nSupport
 import play.api.mvc._
-import uk.gov.hmrc.play.bootstrap.controller.FrontendController
+import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
 import uk.gov.hmrc.preferencesadminfrontend.connectors.MessageConnector
 import uk.gov.hmrc.preferencesadminfrontend.model.{ GmcBatch, GmcBatchApproval }
 import uk.gov.hmrc.preferencesadminfrontend.services.MessageService
-import uk.gov.hmrc.preferencesadminfrontend.views.html.{ batch_approval, batch_rejection, error_template, message_brake_admin }
+import uk.gov.hmrc.preferencesadminfrontend.views.html.{ ErrorTemplate, batch_approval, batch_rejection, message_brake_admin }
 
 import scala.concurrent.{ ExecutionContext, Future }
 
-class MessageBrakeController @Inject()(messageConnector: MessageConnector, messageService: MessageService, mcc: MessagesControllerComponents)(
-  implicit appConfig: AppConfig,
-  ec: ExecutionContext)
-    extends FrontendController(mcc) with I18nSupport {
+class MessageBrakeController @Inject()(
+  authorisedAction: AuthorisedAction,
+  messageConnector: MessageConnector,
+  messageService: MessageService,
+  mcc: MessagesControllerComponents,
+  errorTemplateView: ErrorTemplate,
+  batchApprovalView: batch_approval,
+  batchRejectionView: batch_rejection,
+  messageBrakeAdminView: message_brake_admin)(implicit appConfig: AppConfig, ec: ExecutionContext)
+    extends FrontendController(mcc) with I18nSupport with Logging {
 
-  def showAdminPage: Action[AnyContent] = AuthorisedAction.async { implicit request => implicit user =>
+  def showAdminPage: Action[AnyContent] = authorisedAction.async { implicit request => implicit user =>
     messageService.getGmcBatches.map {
-      case Left(batches) => Ok(message_brake_admin(batches))
+      case Left(batches) => Ok(messageBrakeAdminView(batches))
       case Right(error)  => returnError(error)
     }
   }
 
-  def previewMessage: Action[AnyContent] = AuthorisedAction.async { implicit request => implicit user =>
+  def previewMessage: Action[AnyContent] = authorisedAction.async { implicit request => implicit user =>
     val batch = GmcBatch().bindFromRequest().get
     for {
       gmcBatches     <- messageService.getGmcBatches()
@@ -49,7 +57,7 @@ class MessageBrakeController @Inject()(messageConnector: MessageConnector, messa
       gmcBatches match {
         case Left(batches) =>
           messagePreview match {
-            case Left(preview) => Ok(message_brake_admin(batches, Some(preview)))
+            case Left(preview) => Ok(messageBrakeAdminView(batches, Some(preview)))
             case Right(error)  => returnError(error)
           }
         case Right(error) => returnError(error)
@@ -57,20 +65,20 @@ class MessageBrakeController @Inject()(messageConnector: MessageConnector, messa
     }
   }
 
-  def showApproveBatchConfirmationPage(): Action[AnyContent] = AuthorisedAction.async { implicit request => implicit user =>
-    Future.successful(Ok(batch_approval(GmcBatchApproval().bindFromRequest().discardingErrors)))
+  def showApproveBatchConfirmationPage(): Action[AnyContent] = authorisedAction.async { implicit request => implicit user =>
+    Future.successful(Ok(batchApprovalView(GmcBatchApproval().bindFromRequest().discardingErrors)))
   }
 
-  def showRejectBatchConfirmationPage(): Action[AnyContent] = AuthorisedAction.async { implicit request => implicit user =>
-    Future.successful(Ok(batch_rejection(GmcBatchApproval().bindFromRequest().discardingErrors)))
+  def showRejectBatchConfirmationPage(): Action[AnyContent] = authorisedAction.async { implicit request => implicit user =>
+    Future.successful(Ok(batchRejectionView(GmcBatchApproval().bindFromRequest().discardingErrors)))
   }
 
-  def confirmApproveBatch: Action[AnyContent] = AuthorisedAction.async { implicit request => implicit user =>
+  def confirmApproveBatch: Action[AnyContent] = authorisedAction.async { implicit request => implicit user =>
     GmcBatchApproval()
       .bindFromRequest()
       .fold(
         formWithErrors => {
-          Future.successful(BadRequest(batch_approval(formWithErrors)))
+          Future.successful(BadRequest(batchApprovalView(formWithErrors)))
         },
         gmcBatchApproval => {
           for {
@@ -80,7 +88,7 @@ class MessageBrakeController @Inject()(messageConnector: MessageConnector, messa
             result.status match {
               case OK =>
                 batchesResult match {
-                  case Left(batches) => Ok(message_brake_admin(batches))
+                  case Left(batches) => Ok(messageBrakeAdminView(batches))
                   case Right(error)  => returnError(error)
                 }
               case _ => returnError("Failed to approve batch.")
@@ -90,12 +98,12 @@ class MessageBrakeController @Inject()(messageConnector: MessageConnector, messa
       )
   }
 
-  def confirmRejectBatch: Action[AnyContent] = AuthorisedAction.async { implicit request => implicit user =>
+  def confirmRejectBatch: Action[AnyContent] = authorisedAction.async { implicit request => implicit user =>
     GmcBatchApproval()
       .bindFromRequest()
       .fold(
         formWithErrors => {
-          Future.successful(BadRequest(batch_rejection(formWithErrors)))
+          Future.successful(BadRequest(batchRejectionView(formWithErrors)))
         },
         gmcBatchApproval => {
           for {
@@ -105,7 +113,7 @@ class MessageBrakeController @Inject()(messageConnector: MessageConnector, messa
             result.status match {
               case OK =>
                 batchesResult match {
-                  case Left(batches) => Ok(message_brake_admin(batches))
+                  case Left(batches) => Ok(messageBrakeAdminView(batches))
                   case Right(error)  => returnError(error)
                 }
               case _ => returnError("Failed to reject batch.")
@@ -116,6 +124,6 @@ class MessageBrakeController @Inject()(messageConnector: MessageConnector, messa
   }
 
   private def returnError(error: String)(implicit request: Request[_]): Result =
-    BadGateway(error_template("Error", "There was an error:", error, appConfig))
+    BadGateway(errorTemplateView("Error", "There was an error:", error))
 
 }

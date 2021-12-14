@@ -1,5 +1,5 @@
 @*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,15 +14,19 @@
  * limitations under the License.
  *@
 
+@import uk.gov.hmrc.govukfrontend.views.html.components._
+@import uk.gov.hmrc.govukfrontend.views.html.components.implicits._
 @import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
 @import uk.gov.hmrc.preferencesadminfrontend.controllers.routes
-@import uk.gov.hmrc.play.views.html.helpers._
 
 
-@(search: Form[_])(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
+@this(
+layout: Layout,
+form: FormWithCSRF,
+govukInput: GovukInput)
+@(searchForm: Form[_])(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
 
-
-@uk.gov.hmrc.preferencesadminfrontend.views.html.main_template(title = "Customer Identification", bodyClasses = None) {
+@layout(pageTitle = Some("Customer Identification")) {
     <h1>Customer Identification</h1>
     @form(action = routes.SearchController.search()) {
         <fieldset class="">
@@ -41,12 +45,14 @@
                 <input id="name-email" type="radio"  name="name" value="email">
                 <span class="heading-small">Email Id</span>
             </label>
-            
-            @input(search("value"),
-                '_label -> "Identifier",
-                '_divClass -> "form-field",
-                '_type -> "text",
-                '_inputClass -> "input--medium input--cleared"
+
+            @govukInput(
+                Input(
+                    label = Label(
+                        classes = "govuk-label--l",
+                        content = Text("Identifier")
+                    )
+                ).withFormField(searchForm("value"))
             )
         </fieldset>
         <div class="form-field">

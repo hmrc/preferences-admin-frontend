@@ -16,44 +16,53 @@
 
 package uk.gov.hmrc.preferencesadminfrontend.controllers
 
+import play.api.Logging
+
 import javax.inject.Inject
 import play.api.i18n.I18nSupport
 import play.api.libs.json.Json
 import play.api.mvc.{ Action, AnyContent, MessagesControllerComponents }
-import uk.gov.hmrc.play.bootstrap.controller.FrontendController
+import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
 import uk.gov.hmrc.preferencesadminfrontend.connectors.MessageConnector
 import uk.gov.hmrc.preferencesadminfrontend.model.Allowlist._
 import uk.gov.hmrc.preferencesadminfrontend.model.{ Allowlist, AllowlistEntry }
-import uk.gov.hmrc.preferencesadminfrontend.views.html.{ allowlist_add, allowlist_show, error_template }
+import uk.gov.hmrc.preferencesadminfrontend.views.html.{ ErrorTemplate, allowlist_add, allowlist_delete, allowlist_show }
 
 import scala.concurrent.{ ExecutionContext, Future }
 
-class AllowlistController @Inject()(messageConnector: MessageConnector, mcc: MessagesControllerComponents)(implicit appConfig: AppConfig, ec: ExecutionContext)
-    extends FrontendController(mcc) with I18nSupport {
+class AllowlistController @Inject()(
+  authorisedAction: AuthorisedAction,
+  messageConnector: MessageConnector,
+  mcc: MessagesControllerComponents,
+  errorTemplateView: ErrorTemplate,
+  allowlistAddView: allowlist_add,
+  allowlistShowView: allowlist_show,
+  allowlistDeleteView: allowlist_delete)(implicit appConfig: AppConfig, ec: ExecutionContext)
+    extends FrontendController(mcc) with I18nSupport with Logging {
 
-  def showAllowlistPage: Action[AnyContent] = AuthorisedAction.async { implicit request => implicit user =>
+  def showAllowlistPage: Action[AnyContent] = authorisedAction.async { implicit request => implicit user =>
     messageConnector.getAllowlist.map(response =>
       response.status match {
         case OK =>
           Json.parse(response.body).validate[Allowlist].asOpt match {
-            case Some(allowlist) => Ok(allowlist_show(allowlist))
-            case None            => BadGateway(error_template("Error", "There was an error:", "The allowlist does not appear to be valid.", appConfig))
+            case Some(allowlist) => Ok(allowlistShowView(allowlist))
+            case None            => BadGateway(errorTemplateView("Error", "There was an error:", "The allowlist does not appear to be valid."))
           }
-        case _ => BadGateway(error_template("Error", "There was an error:", response.body, appConfig))
+        case _ => BadGateway(errorTemplateView("Error", "There was an error:", response.body))
     })
   }
 
-  def addFormId: Action[AnyContent] = AuthorisedAction.async { implicit request => implicit user =>
-    Future.successful(Ok(uk.gov.hmrc.preferencesadminfrontend.views.html.allowlist_add(AllowlistEntry())))
+  def addFormId: Action[AnyContent] = authorisedAction.async { implicit request => implicit user =>
+    Future.successful(Ok(allowlistAddView(AllowlistEntry())))
   }
 
-  def confirmAdd: Action[AnyContent] = AuthorisedAction.async { implicit request => implicit user =>
+  def confirmAdd: Action[AnyContent] = authorisedAction.async { implicit request => implicit user =>
     AllowlistEntry()
       .bindFromRequest()
       .fold(
         formWithErrors => {
-          Future.successful(BadRequest(allowlist_add(formWithErrors)))
+          Future.successful(BadRequest(allowlistAddView(formWithErrors)))
         },
         addEntry => {
           messageConnector
@@ -61,22 +70,22 @@ class AllowlistController @Inject()(messageConnector: MessageConnector, mcc: Mes
             .map(response =>
               response.status match {
                 case CREATED => Redirect(routes.AllowlistController.showAllowlistPage())
-                case _       => BadGateway(error_template("Error", "There was an error:", response.body, appConfig))
+                case _       => BadGateway(errorTemplateView("Error", "There was an error:", response.body))
             })
         }
       )
   }
 
-  def deleteFormId(formId: String): Action[AnyContent] = AuthorisedAction.async { implicit request => implicit user =>
-    Future.successful(Ok(uk.gov.hmrc.preferencesadminfrontend.views.html.allowlist_delete(AllowlistEntry().fill(AllowlistEntry(formId, "")))))
+  def deleteFormId(formId: String): Action[AnyContent] = authorisedAction.async { implicit request => implicit user =>
+    Future.successful(Ok(allowlistDeleteView(AllowlistEntry().fill(AllowlistEntry(formId, "")))))
   }
 
-  def confirmDelete: Action[AnyContent] = AuthorisedAction.async { implicit request => implicit user =>
+  def confirmDelete: Action[AnyContent] = authorisedAction.async { implicit request => implicit user =>
     AllowlistEntry()
       .bindFromRequest()
       .fold(
         formWithErrors => {
-          Future.successful(BadRequest(uk.gov.hmrc.preferencesadminfrontend.views.html.allowlist_delete(formWithErrors)))
+          Future.successful(BadRequest(allowlistDeleteView(formWithErrors)))
         },
         deleteEntry => {
           messageConnector
@@ -84,7 +93,7 @@ class AllowlistController @Inject()(messageConnector: MessageConnector, mcc: Mes
             .map(response =>
               response.status match {
                 case OK => Redirect(routes.AllowlistController.showAllowlistPage())
-                case _  => BadGateway(error_template("Error", "There was an error:", response.body, appConfig))
+                case _  => BadGateway(errorTemplateView("Error", "There was an error:", response.body))
             })
         }
       )

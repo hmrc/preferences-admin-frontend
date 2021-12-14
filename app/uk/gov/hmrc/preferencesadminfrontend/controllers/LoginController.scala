@@ -17,42 +17,47 @@
 package uk.gov.hmrc.preferencesadminfrontend.controllers
 
 import javax.inject.{ Inject, Singleton }
-import play.api.Configuration
+import play.api.{ Configuration, Logging }
 import play.api.data.Form
 import play.api.data.Forms.{ mapping, _ }
 import play.api.i18n.I18nSupport
 import play.api.mvc._
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.HeaderCarrierConverter
+import uk.gov.hmrc.play.http.HeaderCarrierConverter
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.DataEvent
 import uk.gov.hmrc.play.bootstrap.config.AppName
-import uk.gov.hmrc.play.bootstrap.controller.FrontendController
+import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
 import uk.gov.hmrc.preferencesadminfrontend.controllers.model.User
 import uk.gov.hmrc.preferencesadminfrontend.services.LoginService
-import java.time.Instant
+import uk.gov.hmrc.preferencesadminfrontend.views.html.login
 
+import java.time.Instant
 import scala.concurrent.{ ExecutionContext, Future }
 
 @Singleton
-class LoginController @Inject()(loginService: LoginService, auditConnector: AuditConnector, config: Configuration, mcc: MessagesControllerComponents)(
-  implicit appConfig: AppConfig,
-  ec: ExecutionContext)
-    extends FrontendController(mcc) with I18nSupport {
+class LoginController @Inject()(
+  authorisedAction: AuthorisedAction,
+  loginService: LoginService,
+  auditConnector: AuditConnector,
+  config: Configuration,
+  mcc: MessagesControllerComponents,
+  loginView: login)(implicit appConfig: AppConfig, ec: ExecutionContext)
+    extends FrontendController(mcc) with I18nSupport with Logging {
 
-  val showLoginPage = Action.async { implicit request =>
-    implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(request.headers)
+  val showLoginPage: Action[AnyContent] = Action.async { implicit request =>
+    implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequestAndSession(request, request.session)
 
     val sessionUpdated = request.session + ("ts" -> Instant.now.toEpochMilli.toString)
-    Future.successful(Ok(uk.gov.hmrc.preferencesadminfrontend.views.html.login(userForm)).withSession(sessionUpdated))
+    Future.successful(Ok(loginView(userForm)).withSession(sessionUpdated))
   }
 
-  val login = Action.async { implicit request =>
-    implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(request.headers)
+  val loginAction = Action.async { implicit request =>
+    implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequestAndSession(request, request.session)
 
     userForm.bindFromRequest.fold(
-      formWithErrors => Future.successful(BadRequest(uk.gov.hmrc.preferencesadminfrontend.views.html.login(formWithErrors))),
+      formWithErrors => Future.successful(BadRequest(loginView(formWithErrors))),
       userData => {
         if (loginService.isAuthorised(userData)) {
           auditConnector.sendEvent(createLoginEvent(userData.username, true))
@@ -61,14 +66,14 @@ class LoginController @Inject()(loginService: LoginService, auditConnector: Audi
         } else {
           auditConnector.sendEvent(createLoginEvent(userData.username, false))
           val userFormWithErrors = userForm.fill(userData).withGlobalError("error.credentials.invalid")
-          Future.successful(Unauthorized(uk.gov.hmrc.preferencesadminfrontend.views.html.login(userFormWithErrors)))
+          Future.successful(Unauthorized(loginView(userFormWithErrors)))
         }
       }
     )
   }
 
-  val logout = AuthorisedAction.async { implicit request => user =>
-    implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(request.headers)
+  val logoutAction = authorisedAction.async { implicit request => user =>
+    implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequestAndSession(request, request.session)
     auditConnector.sendEvent(createLogoutEvent(user.username))
     Future.successful(Redirect(routes.LoginController.showLoginPage()).withSession(Session()))
   }

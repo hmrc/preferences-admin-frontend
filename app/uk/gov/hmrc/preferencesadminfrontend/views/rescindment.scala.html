@@ -1,5 +1,5 @@
 @*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,56 +14,69 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.play.views.html.helpers._
+@import uk.gov.hmrc.govukfrontend.views.html.components._
+@import uk.gov.hmrc.govukfrontend.views.html.components.implicits._
 @import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
 @import uk.gov.hmrc.preferencesadminfrontend.controllers.routes
 @import uk.gov.hmrc.preferencesadminfrontend.model.RescindmentRequest
-@import uk.gov.hmrc.preferencesadminfrontend.model.RescindmentUpdateResult
-@import uk.gov.hmrc.preferencesadminfrontend.model.RescindmentAlertsResult
 
-@(rescindment: Form[RescindmentRequest])(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
+@this(
+    layout: Layout,
+    form: FormWithCSRF,
+    govukInput: GovukInput)
+@(rescindmentForm: Form[RescindmentRequest])(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
 
-@uk.gov.hmrc.preferencesadminfrontend.views.html.main_template(title = "Rescindment", bodyClasses = None) {
+@layout(pageTitle = Some("Rescindment")) {
     <h1>Rescindment - Updating</h1>
-    @form(action = routes.RescindmentController.rescindment()) {
-        <fieldset @if(rescindment.hasGlobalErrors) { class="form-field--error" }>
-            @for(error <- rescindment.globalErrors) {
+    @form(action = routes.RescindmentController.rescindmentAction()) {
+        <fieldset @if(rescindmentForm.hasGlobalErrors) { class="form-field--error" }>
+            @for(error <- rescindmentForm.globalErrors) {
                 <span class="error-notification">@Messages(error.message)</span>
             }
 
-            @input(rescindment("batchId"),
-                '_label -> "Batch Id",
-                '_divClass -> "form-field",
-                '_type -> "text",
-                '_inputClass -> "input--medium input--cleared"
+            @govukInput(
+                Input(
+                    label = Label(
+                        classes = "govuk-label--l",
+                        content = Text("Batch Id")
+                    )
+                ).withFormField(rescindmentForm("batchId"))
             )
 
-            @input(rescindment("formId"),
-                '_label -> "Form Id",
-                '_divClass -> "form-field",
-                '_type -> "text",
-                '_inputClass -> "input--medium input--cleared"
+            @govukInput(
+                Input(
+                    label = Label(
+                        classes = "govuk-label--l",
+                        content = Text("Form Id")
+                    )
+                ).withFormField(rescindmentForm("formId"))
             )
 
-            @input(rescindment("reference"),
-                '_label -> "Reference",
-                '_divClass -> "form-field",
-                '_type -> "text",
-                '_inputClass -> "input--medium input--cleared"
+            @govukInput(
+                Input(
+                    label = Label(
+                        classes = "govuk-label--l",
+                        content = Text("Reference")
+                    )
+                ).withFormField(rescindmentForm("reference"))
             )
 
-            @input(rescindment("date"),
-                '_label -> "Date (YYYY-MM-DD)",
-                '_divClass -> "form-field",
-                '_type -> "text",
-                '_inputClass -> "input--medium input--cleared"
+            @govukInput(
+                Input(
+                    label = Label(
+                        classes = "govuk-label--l",
+                        content = Text("Date (YYYY-MM-DD)")
+                    )
+                ).withFormField(rescindmentForm("date"))
             )
 
-            @input(rescindment("emailTemplateId"),
-                '_label -> "Email Template",
-                '_divClass -> "form-field",
-                '_type -> "text",
-                '_inputClass -> "input--medium input--cleared"
+            @govukInput(
+                Input(
+                    label = Label(
+                        classes = "govuk-label--l",
+                        content = Text("Email Template")
+                    )
+                ).withFormField(rescindmentForm("emailTemplateId"))
             )
         </fieldset>
         <div class="form-field">

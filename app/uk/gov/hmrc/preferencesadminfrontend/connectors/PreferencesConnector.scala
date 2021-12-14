@@ -20,18 +20,17 @@ import akka.actor.ActorSystem
 import javax.inject.{ Inject, Singleton }
 import play.api.{ Configuration, Environment }
 import uk.gov.hmrc.http._
-import uk.gov.hmrc.play.bootstrap.audit.DefaultAuditConnector
+import uk.gov.hmrc.play.audit.DefaultAuditChannel
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-import uk.gov.hmrc.play.bootstrap.http.DefaultHttpClient
 import uk.gov.hmrc.preferencesadminfrontend.services.model.TaxIdentifier
 
 import scala.concurrent.{ ExecutionContext, Future }
 
 @Singleton
 class PreferencesConnector @Inject()(
-  frontendAuditConnector: DefaultAuditConnector,
+  frontendAuditConnector: DefaultAuditChannel,
   environment: Environment,
-  val http: DefaultHttpClient,
+  val httpClient: HttpClient,
   val runModeConfiguration: Configuration,
   val servicesConfig: ServicesConfig,
   val actorSystem: ActorSystem) {
@@ -41,7 +40,7 @@ class PreferencesConnector @Inject()(
   def serviceUrl = servicesConfig.baseUrl("preferences")
 
   def getPreferenceDetails(taxId: TaxIdentifier)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[List[PreferenceDetails]] =
-    http.GET[List[PreferenceDetails]](s"$serviceUrl/preferences/email/${taxId.value}").recover {
+    httpClient.GET[List[PreferenceDetails]](s"$serviceUrl/preferences/email/${taxId.value}").recover {
       case _: BadRequestException => Nil
     }
 }

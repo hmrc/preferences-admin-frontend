@@ -18,30 +18,29 @@ package uk.gov.hmrc.preferencesadminfrontend.services
 
 import org.mockito.Mockito._
 import org.scalatest.concurrent.{ IntegrationPatience, ScalaFutures }
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.play.PlaySpec
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.preferencesadminfrontend.model.{ RescindmentAlertsResult, RescindmentRequest, RescindmentUpdateResult }
 import uk.gov.hmrc.preferencesadminfrontend.utils.SpecBase
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class RescindmentServiceSpec extends UnitSpec with MockitoSugar with ScalaFutures with IntegrationPatience {
+class RescindmentServiceSpec extends PlaySpec with ScalaFutures with IntegrationPatience {
 
   implicit val hc = HeaderCarrier()
 
   "addRescindments" should {
     "return a valid update result" in new RescindmentServiceTestCase {
       when(messageConnectorMock.addRescindments(rescindmentRequest)).thenReturn(Future.successful(rescindmentUpdateResult))
-      rescindmentService.addRescindments(rescindmentRequest).futureValue shouldBe rescindmentUpdateResult
+      rescindmentService.addRescindments(rescindmentRequest).futureValue mustBe rescindmentUpdateResult
     }
   }
 
   "sendRescindmentAlerts" should {
     "return a valid alert result" in new RescindmentServiceTestCase {
       when(messageConnectorMock.sendRescindmentAlerts()).thenReturn(Future.successful(rescindmentAlertsResult))
-      rescindmentService.sendRescindmentAlerts().futureValue shouldBe rescindmentAlertsResult
+      rescindmentService.sendRescindmentAlerts().futureValue mustBe rescindmentAlertsResult
     }
   }
 

@@ -19,8 +19,8 @@ package uk.gov.hmrc.preferencesadminfrontend.controllers
 import akka.stream.Materializer
 import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito.when
-import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{ Matchers, WordSpec }
+import org.scalatestplus.mockito.MockitoSugar.mock
+import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Configuration
 import play.api.http.Status
@@ -38,10 +38,11 @@ import uk.gov.hmrc.preferencesadminfrontend.connectors.MessageConnector
 import uk.gov.hmrc.preferencesadminfrontend.controllers.model.User
 import uk.gov.hmrc.preferencesadminfrontend.model.AllowlistEntry
 import uk.gov.hmrc.preferencesadminfrontend.utils.SpecBase
+import uk.gov.hmrc.preferencesadminfrontend.views.html.{ ErrorTemplate, allowlist_add, allowlist_delete, allowlist_show }
 
 import scala.concurrent.{ ExecutionContext, Future }
 
-class AllowlistControllerSpec extends WordSpec with Matchers with MockitoSugar with GuiceOneAppPerSuite with SpecBase {
+class AllowlistControllerSpec extends PlaySpec with GuiceOneAppPerSuite with SpecBase {
   ControllerConfig.fromConfig(Configuration())
   val injector = app.injector
 
@@ -54,7 +55,7 @@ class AllowlistControllerSpec extends WordSpec with Matchers with MockitoSugar w
 
   implicit val hc: HeaderCarrier = mock[HeaderCarrier]
 
-  app.injector.instanceOf[Configuration] should not be (null)
+  app.injector.instanceOf[Configuration] must not be (null)
 
   "showAllowlistPage" should {
 
@@ -71,7 +72,7 @@ class AllowlistControllerSpec extends WordSpec with Matchers with MockitoSugar w
         )
       )
       private val result = allowlistController.showAllowlistPage()(fakeRequestWithSession.withCSRFToken)
-      status(result) shouldBe Status.OK
+      status(result) mustBe Status.OK
     }
 
     "return 200 (Ok) when an empty allowlist is successfully retrieved from the message service" in new AllowlistControllerTestCase {
@@ -87,7 +88,7 @@ class AllowlistControllerSpec extends WordSpec with Matchers with MockitoSugar w
         )
       )
       private val result = allowlistController.showAllowlistPage()(fakeRequestWithSession.withCSRFToken)
-      status(result) shouldBe Status.OK
+      status(result) mustBe Status.OK
     }
 
     "return 502 (Bad Gateway) when the message service returns an invalid allowlist" in new AllowlistControllerTestCase {
@@ -103,18 +104,18 @@ class AllowlistControllerSpec extends WordSpec with Matchers with MockitoSugar w
         )
       )
       private val result = allowlistController.showAllowlistPage()(fakeRequestWithSession.withCSRFToken)
-      status(result) shouldBe Status.BAD_GATEWAY
+      status(result) mustBe Status.BAD_GATEWAY
     }
 
     "return 502 (Bad Gateway) when the message service returns any other status" in new AllowlistControllerTestCase {
       private val fakeRequestWithForm = FakeRequest(routes.AllowlistController.showAllowlistPage()).withSession(User.sessionKey -> "user")
       when(mockMessageConnector.getAllowlist()(any[HeaderCarrier])).thenReturn(
         Future.successful(
-          HttpResponse(Http.Status.NOT_FOUND)
+          HttpResponse(Http.Status.NOT_FOUND, "not found")
         )
       )
       private val result = allowlistController.showAllowlistPage()(fakeRequestWithForm.withCSRFToken)
-      status(result) shouldBe Status.BAD_GATEWAY
+      status(result) mustBe Status.BAD_GATEWAY
     }
 
   }
@@ -137,7 +138,7 @@ class AllowlistControllerSpec extends WordSpec with Matchers with MockitoSugar w
         )
       )
       private val result = allowlistController.confirmAdd()(fakeRequestWithBody.withCSRFToken)
-      status(result) shouldBe Status.SEE_OTHER
+      status(result) mustBe Status.SEE_OTHER
     }
 
     "return 502 (Bad Gateway) when the message service returns any other status" in new AllowlistControllerTestCase {
@@ -152,11 +153,11 @@ class AllowlistControllerSpec extends WordSpec with Matchers with MockitoSugar w
       )
       when(mockMessageConnector.addFormIdToAllowlist(any[AllowlistEntry])(any[HeaderCarrier])).thenReturn(
         Future.successful(
-          HttpResponse(Http.Status.NOT_FOUND)
+          HttpResponse(Http.Status.NOT_FOUND, "not found")
         )
       )
       private val result = allowlistController.confirmAdd()(fakeRequestWithBody.withCSRFToken)
-      status(result) shouldBe Status.BAD_GATEWAY
+      status(result) mustBe Status.BAD_GATEWAY
     }
 
     "return 400 (Bad Request) when the Form ID JSON is not valid" in new AllowlistControllerTestCase {
@@ -169,7 +170,7 @@ class AllowlistControllerSpec extends WordSpec with Matchers with MockitoSugar w
           """.stripMargin)
       )
       private val result = allowlistController.confirmAdd()(fakeRequestWithBody.withCSRFToken)
-      status(result) shouldBe Status.BAD_REQUEST
+      status(result) mustBe Status.BAD_REQUEST
     }
   }
 
@@ -191,7 +192,7 @@ class AllowlistControllerSpec extends WordSpec with Matchers with MockitoSugar w
         )
       )
       private val result = allowlistController.confirmDelete()(fakeRequestWithBody.withCSRFToken)
-      status(result) shouldBe Status.SEE_OTHER
+      status(result) mustBe Status.SEE_OTHER
     }
 
     "return 502 (Bad Gateway) when the message service returns any other status" in new AllowlistControllerTestCase {
@@ -206,11 +207,11 @@ class AllowlistControllerSpec extends WordSpec with Matchers with MockitoSugar w
       )
       when(mockMessageConnector.deleteFormIdFromAllowlist(any[AllowlistEntry])(any[HeaderCarrier])).thenReturn(
         Future.successful(
-          HttpResponse(Http.Status.NOT_FOUND)
+          HttpResponse(Http.Status.NOT_FOUND, "not found")
         )
       )
       private val result = allowlistController.confirmDelete()(fakeRequestWithBody.withCSRFToken)
-      status(result) shouldBe Status.BAD_GATEWAY
+      status(result) mustBe Status.BAD_GATEWAY
     }
 
     "return 400 (Bad Request) when the form ID JSON is not valid" in new AllowlistControllerTestCase {
@@ -223,18 +224,30 @@ class AllowlistControllerSpec extends WordSpec with Matchers with MockitoSugar w
           """.stripMargin)
       )
       private val result = allowlistController.confirmDelete()(fakeRequestWithBody.withCSRFToken)
-      status(result) shouldBe Status.BAD_REQUEST
+      status(result) mustBe Status.BAD_REQUEST
     }
   }
 
-}
+  class AllowlistControllerTestCase extends SpecBase {
+    implicit val ecc: ExecutionContext = stubbedMCC.executionContext
 
-trait AllowlistControllerTestCase extends SpecBase with MockitoSugar {
-  implicit val ecc: ExecutionContext = stubbedMCC.executionContext
+    val errorTemplateView: ErrorTemplate = app.injector.instanceOf[ErrorTemplate]
+    val authorisedAction: AuthorisedAction = app.injector.instanceOf[AuthorisedAction]
+    val allowlistAddView: allowlist_add = app.injector.instanceOf[allowlist_add]
+    val allowlistShowView: allowlist_show = app.injector.instanceOf[allowlist_show]
+    val allowlistDeleteView: allowlist_delete = app.injector.instanceOf[allowlist_delete]
+    val mockMessageConnector: MessageConnector = mock[MessageConnector]
 
-  val mockMessageConnector: MessageConnector = mock[MessageConnector]
+    def allowlistController()(implicit messages: MessagesApi, appConfig: AppConfig): AllowlistController =
+      new AllowlistController(
+        authorisedAction,
+        mockMessageConnector,
+        stubbedMCC,
+        errorTemplateView,
+        allowlistAddView,
+        allowlistShowView,
+        allowlistDeleteView
+      )
 
-  def allowlistController()(implicit messages: MessagesApi, appConfig: AppConfig): AllowlistController =
-    new AllowlistController(mockMessageConnector, stubbedMCC)
-
+  }
 }

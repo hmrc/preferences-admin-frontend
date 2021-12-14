@@ -19,9 +19,10 @@ package uk.gov.hmrc.preferencesadminfrontend.connectors
 import akka.actor.ActorSystem
 import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers._
-import org.mockito.Mockito._
+import org.mockito.Mockito.when
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar.mock
+import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.Status
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -29,19 +30,19 @@ import play.api.libs.json._
 import play.api.{ Configuration, Environment }
 import uk.gov.hmrc.http.{ HeaderCarrier, HttpResponse }
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-import uk.gov.hmrc.play.bootstrap.http.{ DefaultHttpClient, HttpClient }
-import uk.gov.hmrc.play.test.UnitSpec
+import uk.gov.hmrc.http.HttpClient
+import uk.gov.hmrc.play.bootstrap.http.DefaultHttpClient
 import uk.gov.hmrc.preferencesadminfrontend.model._
 
 import java.util.concurrent.TimeoutException
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class MessageConnectorSpec extends UnitSpec with ScalaFutures with MockitoSugar with GuiceOneAppPerSuite {
+class MessageConnectorSpec extends PlaySpec with ScalaFutures with GuiceOneAppPerSuite {
 
   import play.api.inject._
 
-  val mockHttp: DefaultHttpClient = mock[DefaultHttpClient]
+  val mockHttp: HttpClient = mock[HttpClient]
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
   lazy val environment = app.injector.instanceOf[Environment]
@@ -64,7 +65,7 @@ class MessageConnectorSpec extends UnitSpec with ScalaFutures with MockitoSugar 
         when(mockHttp.POST[RescindmentRequest, RescindmentUpdateResult](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any(), any()))
           .thenReturn(Future.successful(Json.fromJson[RescindmentUpdateResult](rescindmentUpdateResultJson).get))
         val result = app.injector.instanceOf[MessageConnector].addRescindments(rescindmentRequest).futureValue
-        result shouldBe rescindmentUpdateResult
+        result mustBe rescindmentUpdateResult
       }
     }
 
@@ -74,7 +75,7 @@ class MessageConnectorSpec extends UnitSpec with ScalaFutures with MockitoSugar 
         when(mockHttp.POSTEmpty[RescindmentAlertsResult](ArgumentMatchers.eq(expectedPath), any())(any(), any(), any()))
           .thenReturn(Future.successful(rescindmentAlertsResult))
         val result = app.injector.instanceOf[MessageConnector].sendRescindmentAlerts().futureValue
-        result shouldBe rescindmentAlertsResult
+        result mustBe rescindmentAlertsResult
       }
     }
   }
@@ -86,7 +87,7 @@ class MessageConnectorSpec extends UnitSpec with ScalaFutures with MockitoSugar 
         when(mockHttp.GET[HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any()))
           .thenReturn(Future.successful(HttpResponse(Status.OK, Some(Json.obj()))))
         val result = app.injector.instanceOf[MessageConnector].getAllowlist().futureValue
-        result.status shouldBe Status.OK
+        result.status mustBe Status.OK
       }
 
       "return a BAD GATEWAY with an error message when an error is thrown" in new TestCase {
@@ -95,8 +96,8 @@ class MessageConnectorSpec extends UnitSpec with ScalaFutures with MockitoSugar 
           .thenReturn(Future.failed(new TimeoutException("timeout error")))
 
         val result = app.injector.instanceOf[MessageConnector].getAllowlist().futureValue
-        result.status shouldBe Status.BAD_GATEWAY
-        result.body should include("timeout error")
+        result.status mustBe Status.BAD_GATEWAY
+        result.body must include("timeout error")
       }
     }
 
@@ -109,7 +110,7 @@ class MessageConnectorSpec extends UnitSpec with ScalaFutures with MockitoSugar 
           .instanceOf[MessageConnector]
           .addFormIdToAllowlist(AllowlistEntry("SA316", "reason"))
           .futureValue
-        result.status shouldBe Status.OK
+        result.status mustBe Status.OK
       }
 
       "return a BAD GATEWAY with an error message when an error is thrown" in new TestCase {
@@ -122,8 +123,8 @@ class MessageConnectorSpec extends UnitSpec with ScalaFutures with MockitoSugar 
           .instanceOf[MessageConnector]
           .addFormIdToAllowlist(AllowlistEntry("SA316", "reason"))
           .futureValue
-        result.status shouldBe Status.BAD_GATEWAY
-        result.body should include("timeout error")
+        result.status mustBe Status.BAD_GATEWAY
+        result.body must include("timeout error")
       }
     }
 
@@ -134,7 +135,7 @@ class MessageConnectorSpec extends UnitSpec with ScalaFutures with MockitoSugar 
           .thenReturn(Future.successful(HttpResponse(Status.OK, Some(Json.obj()))))
 
         val result = app.injector.instanceOf[MessageConnector].deleteFormIdFromAllowlist(AllowlistEntry("SA316", "reason")).futureValue
-        result.status shouldBe Status.OK
+        result.status mustBe Status.OK
       }
 
       "return a BAD GATEWAY with an error message when an error is thrown" in new TestCase {
@@ -142,8 +143,8 @@ class MessageConnectorSpec extends UnitSpec with ScalaFutures with MockitoSugar 
         when(mockHttp.POST[AllowlistEntry, HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any(), any()))
           .thenReturn(Future.failed(new TimeoutException("timeout error")))
         val result = app.injector.instanceOf[MessageConnector].deleteFormIdFromAllowlist(AllowlistEntry("SA316", "reason")).futureValue
-        result.status shouldBe Status.BAD_GATEWAY
-        result.body should include("timeout error")
+        result.status mustBe Status.BAD_GATEWAY
+        result.body must include("timeout error")
       }
     }
 
@@ -154,8 +155,8 @@ class MessageConnectorSpec extends UnitSpec with ScalaFutures with MockitoSugar 
           .thenReturn(Future.successful(HttpResponse(Status.OK, Some(getGmcBatchesResultJson))))
 
         val result = app.injector.instanceOf[MessageConnector].getGmcBatches().futureValue
-        result.status shouldBe Status.OK
-        result.json shouldBe getGmcBatchesResultJson
+        result.status mustBe Status.OK
+        result.json mustBe getGmcBatchesResultJson
       }
 
       "return a BAD GATEWAY with an error message when an error is thrown" in new TestCase {
@@ -163,8 +164,8 @@ class MessageConnectorSpec extends UnitSpec with ScalaFutures with MockitoSugar 
         when(mockHttp.GET[HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any()))
           .thenReturn(Future.failed(new TimeoutException("timeout error")))
         val result = app.injector.instanceOf[MessageConnector].getGmcBatches().futureValue
-        result.status shouldBe Status.BAD_GATEWAY
-        result.body should include("timeout error")
+        result.status mustBe Status.BAD_GATEWAY
+        result.body must include("timeout error")
       }
     }
 
@@ -175,8 +176,8 @@ class MessageConnectorSpec extends UnitSpec with ScalaFutures with MockitoSugar 
         when(mockHttp.POST[GmcBatch, HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any(), any()))
           .thenReturn(Future.successful(HttpResponse(Status.OK, Some(getRandomMessagePreviewResultJson))))
         val result = app.injector.instanceOf[MessageConnector].getRandomMessagePreview(gmcBatch).futureValue
-        result.status shouldBe Status.OK
-        result.json shouldBe getRandomMessagePreviewResultJson
+        result.status mustBe Status.OK
+        result.json mustBe getRandomMessagePreviewResultJson
       }
 
       "return a BAD GATEWAY with an error message when an error is thrown" in new TestCase {
@@ -186,8 +187,8 @@ class MessageConnectorSpec extends UnitSpec with ScalaFutures with MockitoSugar 
           .thenReturn(Future.failed(new TimeoutException("timeout error")))
 
         val result = app.injector.instanceOf[MessageConnector].getRandomMessagePreview(gmcBatch).futureValue
-        result.status shouldBe Status.BAD_GATEWAY
-        result.body should include("timeout error")
+        result.status mustBe Status.BAD_GATEWAY
+        result.body must include("timeout error")
       }
     }
 
@@ -199,7 +200,7 @@ class MessageConnectorSpec extends UnitSpec with ScalaFutures with MockitoSugar 
           .thenReturn(Future.successful(HttpResponse(Status.OK, Some(Json.obj()))))
 
         val result = app.injector.instanceOf[MessageConnector].approveGmcBatch(gmcBatchApproval).futureValue
-        result.status shouldBe Status.OK
+        result.status mustBe Status.OK
       }
 
       "return a BAD GATEWAY with an error message when an error is thrown" in new TestCase {
@@ -207,8 +208,8 @@ class MessageConnectorSpec extends UnitSpec with ScalaFutures with MockitoSugar 
         when(mockHttp.POST[GmcBatchApproval, HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any(), any()))
           .thenReturn(Future.failed(new TimeoutException("timeout error")))
         val result = app.injector.instanceOf[MessageConnector].approveGmcBatch(gmcBatchApproval).futureValue
-        result.status shouldBe Status.BAD_GATEWAY
-        result.body should include("timeout error")
+        result.status mustBe Status.BAD_GATEWAY
+        result.body must include("timeout error")
       }
     }
 
@@ -219,7 +220,7 @@ class MessageConnectorSpec extends UnitSpec with ScalaFutures with MockitoSugar 
           .thenReturn(Future.successful(HttpResponse(Status.OK, Some(Json.obj()))))
 
         val result = app.injector.instanceOf[MessageConnector].rejectGmcBatch(gmcBatchApproval).futureValue
-        result.status shouldBe Status.OK
+        result.status mustBe Status.OK
       }
 
       "return a BAD GATEWAY with an error message when an error is thrown" in new TestCase {
@@ -227,8 +228,8 @@ class MessageConnectorSpec extends UnitSpec with ScalaFutures with MockitoSugar 
         when(mockHttp.POST[GmcBatchApproval, HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any(), any()))
           .thenReturn(Future.failed(new TimeoutException("timeout error")))
         val result = app.injector.instanceOf[MessageConnector].rejectGmcBatch(gmcBatchApproval).futureValue
-        result.status shouldBe Status.BAD_GATEWAY
-        result.body should include("timeout error")
+        result.status mustBe Status.BAD_GATEWAY
+        result.body must include("timeout error")
       }
     }
   }
@@ -240,7 +241,7 @@ class MessageConnectorSpec extends UnitSpec with ScalaFutures with MockitoSugar 
         .thenReturn(Future.successful(HttpResponse(Status.OK, Some(Json.obj()))))
 
       val result = app.injector.instanceOf[MessageConnector].sendMessage(JsString("")).futureValue
-      result.status shouldBe Status.OK
+      result.status mustBe Status.OK
     }
 
     "return a BAD GATEWAY with an error message when an error is thrown" in new TestCase {
@@ -248,12 +249,12 @@ class MessageConnectorSpec extends UnitSpec with ScalaFutures with MockitoSugar 
       when(mockHttp.POST[JsValue, HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any(), any()))
         .thenReturn(Future.failed(new TimeoutException("timeout error")))
       val result = app.injector.instanceOf[MessageConnector].sendMessage(JsString("")).futureValue
-      result.status shouldBe Status.BAD_GATEWAY
-      result.body should include("timeout error")
+      result.status mustBe Status.BAD_GATEWAY
+      result.body must include("timeout error")
     }
   }
 
-  trait TestCase extends MockitoSugar {
+  trait TestCase {
 
     val expectedGetAllowlistPath = s"/admin/message/brake/gmc/allowlist"
     val expectedAddFormIdToAllowlistPath = s"/admin/message/brake/gmc/allowlist/add"
@@ -353,7 +354,7 @@ class MessageConnectorSpec extends UnitSpec with ScalaFutures with MockitoSugar 
     lazy val mockServicesConfig: ServicesConfig = mock[ServicesConfig]
 
     def messageConnectorHttpMock(expectedPath: String, jsonBody: JsValue, status: Int): MessageConnector = {
-      val mockHttp: DefaultHttpClient = mock[DefaultHttpClient]
+      val mockHttp: HttpClient = mock[HttpClient]
       when(mockHttp.GET[HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any()))
         .thenReturn(Future.successful(HttpResponse(status, Some(jsonBody))))
       when(mockHttp.POST[AllowlistEntry, HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any(), any()))
@@ -367,7 +368,7 @@ class MessageConnectorSpec extends UnitSpec with ScalaFutures with MockitoSugar 
     }
 
     def messageConnectorHttpMock(expectedPath: String, error: Throwable): MessageConnector = {
-      val mockHttp: DefaultHttpClient = mock[DefaultHttpClient]
+      val mockHttp: HttpClient = mock[DefaultHttpClient]
       when(mockHttp.GET[HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any()))
         .thenReturn(Future.failed(error))
       when(mockHttp.POST[AllowlistEntry, HttpResponse](ArgumentMatchers.eq(expectedPath), any())(any(), any(), any(), any()))
