@@ -6,12 +6,13 @@ object AppDependencies {
 
   val compile = Seq(
     ws,
-    "uk.gov.hmrc"           %% "bootstrap-frontend-play-28" % "5.16.0",
-    "com.vladsch.flexmark"  % "flexmark-all"                % "0.36.8",
-    "uk.gov.hmrc"           %% "play-frontend-hmrc"         % "1.31.0-play-28",
-    "uk.gov.hmrc"           %% "auth-client"                % "5.7.0-play-28",
-    "uk.gov.hmrc"           %% "play-partials"              % "8.2.0-play-28",
-    "com.typesafe.play"     %% "play-json-joda"             % "2.8.2"
+    "uk.gov.hmrc"                   %% "bootstrap-frontend-play-28" % "5.16.0",
+    "com.vladsch.flexmark"          % "flexmark-all"                % "0.36.8",
+    "uk.gov.hmrc"                   %% "play-frontend-hmrc"         % "1.31.0-play-28",
+    "uk.gov.hmrc"                   %% "auth-client"                % "5.7.0-play-28",
+    "uk.gov.hmrc"                   %% "play-partials"              % "8.2.0-play-28",
+    "com.typesafe.play"             %% "play-json-joda"             % "2.8.2",
+    "com.fasterxml.jackson.module"  %% "jackson-module-scala"       % "2.12.2"
   )
 
   val test = Seq(
