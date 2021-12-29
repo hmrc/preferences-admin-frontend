@@ -23,31 +23,58 @@
 @this(
 layout: Layout,
 form: FormWithCSRF,
-govukTextarea: GovukTextarea)
+govukButton: GovukButton,
+govukInput: GovukInput,
+govukTextarea: GovukTextarea,
+govukBreadcrumbs: GovukBreadcrumbs)
 @(entryForm: Form[AllowlistEntry])(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
 
 @layout(pageTitle = Some("Message Form IDs Allowlist")) {
+    @govukBreadcrumbs(Breadcrumbs(
+        items = Seq(
+          BreadcrumbsItem(
+            content = Text("Home"),
+            href = Some("/paperless/admin/home")
+          ),
+          BreadcrumbsItem(
+            content = Text("Message Brake Allowlist"),
+            href = Some("/paperless/admin/allowlist")
+          ),
+          BreadcrumbsItem(
+            content = Text("Allowlist - Add"),
+            href = Some("#")
+          )
+        )
+      )
+    )
     <h1 class="heading-large">Message Form IDs Allowlist</h1>
     <div class="section">
         @form(action = routes.AllowlistController.confirmAdd) {
-            <div class='form-group @if(entryForm("formId").hasErrors){form-group-error}'>
-                <label class="form-label" for="formId">Form ID</label>
-                @entryForm("formId").errors.map { error =>
-                    <span class="error-message" id="error-message-formId-input">@messages(error.message)</span>
-                }
-                <input class="form-control" id="formId" type="text" name="formId" value='@{entryForm("formId").value}'/>
-            </div>
-            <div class='form-group @if(entryForm("reasonText").hasErrors){form-group-error}'>
-                <label class="form-label" for="reasonText">Please enter a reason for adding the form ID</label>
-                @entryForm("reasonText").errors.map { error =>
-                    <span class="error-message" id="error-message-reason-input">@messages(error.message)</span>
-                }
-                <textarea id="reasonText" name="reasonText" maxlength="120">@entryForm("reasonText").value</textarea>
-            </div>
-            <fieldset>
-                <input type="submit" name="confirm" class="button" value="Confirm"/>
-                <input type="button" onclick="location.href='@routes.AllowlistController.showAllowlistPage';" class="button" value="Cancel"/>
-            </fieldset>
+          @govukInput(Input(
+              id = "formId",
+              name = "formId",
+              label = Label(
+                content = Text("Form ID")
+              ),
+              classes = "govuk-!-width-two-thirds"
+            ).withFormField(entryForm("formId"))
+          )
+
+          @govukTextarea(Textarea(
+              id = "reasonText",
+              name = "reasonText",
+              label = Label(
+                content = Text("Please enter a reason for adding the form ID")
+              )
+            ).withFormField(entryForm("reasonText"))
+          )
+          <div class="govuk-button-group">
+            @govukButton(Button(
+              name = Some("confirm"),
+              content = Text("Confirm")
+            ))
+            <button type="button" onclick="location.href='@routes.AllowlistController.showAllowlistPage';" class="govuk-button govuk-button--secondary" data-module="govuk-button">Cancel</button>
+          </div>
         }
     </div>
 }

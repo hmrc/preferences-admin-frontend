@@ -23,40 +23,66 @@
 @this(
 layout: Layout,
 form: FormWithCSRF,
-govukInput: GovukInput)
+govukRadios: GovukRadios,
+govukInput: GovukInput,
+govukButton: GovukButton,
+govukBreadcrumbs: GovukBreadcrumbs)
 @(searchForm: Form[_])(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
 
 @layout(pageTitle = Some("Customer Identification")) {
-    <h1>Customer Identification</h1>
+    @govukBreadcrumbs(Breadcrumbs(
+      items = Seq(
+          BreadcrumbsItem(
+            content = Text("Home"),
+            href = Some("/paperless/admin/home")
+          ),
+          BreadcrumbsItem(
+            content = Text("Paperless Admin"),
+            href = Some("#")
+          )
+        )
+      )
+    )
+
     @form(action = routes.SearchController.search()) {
-        <fieldset class="">
+          @govukRadios(Radios(
+              fieldset = Some(Fieldset(
+                  legend = Some(Legend(
+                  content = Text("Customer Identification"),
+                  classes = "govuk-fieldset__legend--l",
+                  isPageHeading = true
+                ))
+              )),
+              idPrefix = Some("name"),
+              name = "name",
+              items = Seq(
+                RadioItem(
+                  content = Text("SaUtr"),
+                  value = Some("sautr")
+                ),
+                RadioItem(
+                  content = Text("Nino"),
+                  value = Some("nino")
+                ),
+                RadioItem(
+                  content = Text("EmailId"),
+                  value = Some("email")
+                )
+              ),
+            classes = "govuk-radios--inline"
+          ))
 
-            <label class="block-label" for="name-sautr">
-                <input id="name-sautr" type="radio"  name="name" value="sautr">
-                <span class="heading-small">SaUtr</span>
-            </label>
+          @govukInput(
+            Input(
+              label = Label(
+                classes = "govuk-label--l",
+                content = Text("Identifier")
+              )
+            ).withFormField(searchForm("value"))
+          )
+          @govukButton(Button(
+            content = Text("Search")
+          ))
 
-            <label class="block-label" for="name-nino" data-target="portal">
-                <input id="name-nino" type="radio"  name="name" value="nino">
-                <span class="heading-small">Nino</span>
-            </label>
-
-            <label class="block-label" for="name-email" data-target="portal">
-                <input id="name-email" type="radio"  name="name" value="email">
-                <span class="heading-small">Email Id</span>
-            </label>
-
-            @govukInput(
-                Input(
-                    label = Label(
-                        classes = "govuk-label--l",
-                        content = Text("Identifier")
-                    )
-                ).withFormField(searchForm("value"))
-            )
-        </fieldset>
-        <div class="form-field">
-            <button class="button" type="submit" id="search">Search</button>
-        </div>
     }
 }

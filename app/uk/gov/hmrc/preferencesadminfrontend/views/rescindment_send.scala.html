@@ -21,10 +21,29 @@
 
 @this(
     layout: Layout,
-    form: FormWithCSRF)
+    form: FormWithCSRF,
+    govukBreadcrumbs: GovukBreadcrumbs)
 @(rescindment: Form[_], succeeded: String = "-", sent: String = "-", failed: String = "-")(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
 
 @layout(pageTitle = Some("Rescindment")) {
+    @govukBreadcrumbs(Breadcrumbs(
+        items = Seq(
+          BreadcrumbsItem(
+            content = Text("Home"),
+            href = Some("/paperless/admin/home")
+          ),
+          BreadcrumbsItem(
+            content = Text("Message Rescindments"),
+            href = Some("/paperless/admin/rescindment")
+          ),
+          BreadcrumbsItem(
+            content = Text("Rescindments - Send"),
+            href = Some("#")
+          )
+        )
+      )
+    )
+
     <h1 id="heading-succeeded">Rescindment - Updated: @succeeded</h1>
 
     @form(action = routes.RescindmentController.sendRescindmentAlerts()) {

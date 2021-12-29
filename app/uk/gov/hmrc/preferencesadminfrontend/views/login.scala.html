@@ -23,10 +23,22 @@
 @this(
 layout: Layout,
 form: FormWithCSRF,
-govukInput: GovukInput)
+govukInput: GovukInput,
+govukButton: GovukButton,
+govukBreadcrumbs: GovukBreadcrumbs)
 @(userForm: Form[User])(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
 
 @layout(pageTitle = Some("Login")) {
+    @govukBreadcrumbs(Breadcrumbs(
+        items = Seq(
+          BreadcrumbsItem(
+            content = Text("Home"),
+            href = Some("/paperless/admin/home")
+          )
+        )
+      )
+    )
+
     <h1>Login</h1>
     <p>Enter your details to access the admin console</p>
     @form(action = routes.LoginController.loginAction) {
@@ -52,9 +64,10 @@ govukInput: GovukInput)
                     )
                 ).withFormField(userForm("password"))
             )
-            <div class="form-field">
-                <button class="button" type="submit" id="signin">Sign in</button>
-            </div>
+
+            @govukButton(Button(
+              content = Text("Signin")
+            ))
         </fieldset>
     }
 }

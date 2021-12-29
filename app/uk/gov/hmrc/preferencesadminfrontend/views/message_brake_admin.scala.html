@@ -25,10 +25,25 @@
 @this(
 layout: Layout,
 form: FormWithCSRF,
-govukInput: GovukInput)
+govukInput: GovukInput,
+govukBreadcrumbs: GovukBreadcrumbs)
 @(batchList: Seq[GmcBatch], batchMessagePreview: Option[BatchMessagePreview] = None)(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
 
 @layout(pageTitle = Some("Unverified Message Request FormIDs")) {
+
+    @govukBreadcrumbs(Breadcrumbs(
+        items = Seq(
+            BreadcrumbsItem(
+                content = Text("Home"),
+                href = Some("/paperless/admin/home")
+            ),
+            BreadcrumbsItem(
+                content = Text("Message Brake"),
+                href = Some("#")
+            )
+        )
+    ))
+
     <h1 class="heading-large">Unverified Message Request FormIDs</h1>
     <div class="grid-row">
         <div class="column-full">
