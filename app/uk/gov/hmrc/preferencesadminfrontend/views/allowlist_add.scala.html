@@ -64,8 +64,9 @@ govukBreadcrumbs: GovukBreadcrumbs)
               id = "reasonText",
               name = "reasonText",
               label = Label(
-                content = Text("Please enter a reason for adding the form ID")
-              )
+                content = Text("Please enter a reason for adding the new form ID")
+              ),
+              attributes = Map("maxlength" -> "120"),
             ).withFormField(entryForm("reasonText"))
           )
           <div class="govuk-button-group">

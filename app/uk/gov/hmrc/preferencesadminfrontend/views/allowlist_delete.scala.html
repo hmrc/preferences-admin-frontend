@@ -23,6 +23,7 @@
 @this(
 layout: Layout,
 form: FormWithCSRF,
+govukButton: GovukButton,
 govukTextarea: GovukTextarea,
 govukBreadcrumbs: GovukBreadcrumbs)
 @(entryForm: Form[AllowlistEntry])(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
@@ -48,19 +49,24 @@ govukBreadcrumbs: GovukBreadcrumbs)
     <h1 class="heading-large">Message Form IDs Allowlist</h1>
     <div class="section">
         @form(action = routes.AllowlistController.confirmDelete) {
-            <div class='form-group @if(entryForm("reasonText").hasErrors){form-group-error}'>
-                <label class="form-label" for="reasonText">Please enter a reason for deleting the form ID @{entryForm("formId").value}</label>
-                @entryForm("reasonText").errors.map { error =>
-                    <span class="error-message" id="error-message-reason-input">@messages(error.message)</span>
-                }
-                <textarea id="reasonText" name="reasonText" maxlength="120">@entryForm("reasonText").value</textarea>
-            </div>
+            @govukTextarea(Textarea(
+                id = "reasonText",
+                name = "reasonText",
+                label = Label(
+                  content = Text(s"Please enter a reason for deleting the form ID ${entryForm("formId").value.get}")
+                ),
+                attributes = Map("maxlength" -> "120")
+              ).withFormField(entryForm("reasonText"))
+            )
             <h2 class="heading-medium">Are you sure you want to delete this form?</h2>
-            <fieldset>
-                <input type="hidden" name="formId" value='@{entryForm("formId").value}'/>
-                <input type="submit" name="confirm" class="button" value="Confirm"/>
-                <input type="button" onclick="location.href='@routes.AllowlistController.showAllowlistPage';" class="button" value="Cancel"/>
-            </fieldset>
+            <div class="govuk-button-group">
+              @govukButton(Button(
+                name = Some("confirm"),
+                content = Text("Confirm")
+              ))
+              <input type="hidden" name="formId" value='@{entryForm("formId").value}'/>
+              <button type="button" onclick="location.href='@routes.AllowlistController.showAllowlistPage';" class="govuk-button govuk-button--secondary" data-module="govuk-button">Cancel</button>
+            </div>
         }
     </div>
 }
