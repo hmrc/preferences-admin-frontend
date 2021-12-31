@@ -20,7 +20,6 @@ import com.google.common.io.BaseEncoding
 import com.typesafe.config.ConfigException.Missing
 import javax.inject.Inject
 import play.api.Configuration
-import uk.gov.hmrc.play.bootstrap.config.RunMode
 import uk.gov.hmrc.preferencesadminfrontend.controllers.model.User
 
 class LoginService @Inject()(loginServiceConfig: LoginServiceConfiguration) {
@@ -28,13 +27,13 @@ class LoginService @Inject()(loginServiceConfig: LoginServiceConfiguration) {
   def isAuthorised(user: User): Boolean = loginServiceConfig.authorisedUsers.contains(user)
 }
 
-class LoginServiceConfiguration @Inject()(val configuration: Configuration, val runMode: RunMode) {
+class LoginServiceConfiguration @Inject()(val configuration: Configuration) {
 
   def verifyConfiguration() = if (authorisedUsers.isEmpty) throw new Missing("Property users is empty")
 
   lazy val authorisedUsers: Seq[User] = {
     configuration
-      .getOptional[Seq[Configuration]](s"${runMode.env}.users")
+      .getOptional[Seq[Configuration]](s"users")
       .getOrElse(throw new Missing("Property users missing"))
       .map { userConfig: Configuration =>
         val encodedPwd = userConfig.getOptional[String]("password").getOrElse(throw new Missing("Property password missing"))

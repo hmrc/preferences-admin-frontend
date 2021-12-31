@@ -20,18 +20,17 @@ import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito._
 import org.scalatest.concurrent.{ IntegrationPatience, ScalaFutures }
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.play.PlaySpec
 import play.api.http.Status
-import play.api.libs.json.{ JsString, JsValue, Json }
+import play.api.libs.json.Json
 import uk.gov.hmrc.http.{ HeaderCarrier, HttpResponse }
-import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.preferencesadminfrontend.model._
 import uk.gov.hmrc.preferencesadminfrontend.utils.SpecBase
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class MessageServiceSpec extends UnitSpec with MockitoSugar with ScalaFutures with IntegrationPatience {
+class MessageServiceSpec extends PlaySpec with ScalaFutures with IntegrationPatience {
 
   implicit val hc = HeaderCarrier()
 
@@ -40,21 +39,21 @@ class MessageServiceSpec extends UnitSpec with MockitoSugar with ScalaFutures wi
     "return a valid update result" in new MessageServiceTestCase {
       val response = HttpResponse(Status.OK, Some(validGmcBatchSeqResponseJson))
       when(messageConnectorMock.getGmcBatches()).thenReturn(Future.successful(response))
-      messageService.getGmcBatches().futureValue shouldBe Left(Seq(gmcBatch))
+      messageService.getGmcBatches().futureValue mustBe Left(Seq(gmcBatch))
     }
 
     "return an error message if status is 200 but there no valid batches returned" in new MessageServiceTestCase {
       val responseJson = Json.parse("""[{"blah": "test"}]""".stripMargin)
       val response = HttpResponse(Status.OK, Some(responseJson))
       when(messageConnectorMock.getGmcBatches()).thenReturn(Future.successful(response))
-      messageService.getGmcBatches().futureValue shouldBe
+      messageService.getGmcBatches().futureValue mustBe
         Right("The GMC batches retrieved do not appear to be valid.")
     }
 
     "return a response body if status isn't 200" in new MessageServiceTestCase {
       val response = HttpResponse(Status.NOT_FOUND, Some(validGmcBatchSeqResponseJson))
       when(messageConnectorMock.getGmcBatches()).thenReturn(Future.successful(response))
-      messageService.getGmcBatches().futureValue shouldBe
+      messageService.getGmcBatches().futureValue mustBe
         Right("""[ {
                 |  "formId" : "SA359",
                 |  "issueDate" : "2017-03-16",
@@ -69,8 +68,8 @@ class MessageServiceSpec extends UnitSpec with MockitoSugar with ScalaFutures wi
 
     "return a valid alert result" in new MessageServiceTestCase {
       val response = HttpResponse(Status.OK, Some(validMessagePreviewResponseJson))
-      when(messageConnectorMock.getRandomMessagePreview(ArgumentMatchers.eq(gmcBatch))(any[HeaderCarrier])).thenReturn(response)
-      messageService.getRandomMessagePreview(gmcBatch).futureValue shouldBe Left(
+      when(messageConnectorMock.getRandomMessagePreview(gmcBatch)).thenReturn(Future.successful(response))
+      messageService.getRandomMessagePreview(gmcBatch).futureValue mustBe Left(
         BatchMessagePreview(
           MessagePreview(
             "Reminder to file a Self Assessment return",
@@ -88,14 +87,14 @@ class MessageServiceSpec extends UnitSpec with MockitoSugar with ScalaFutures wi
       val responseJson = Json.parse("""[{"blah": "test"}]""".stripMargin)
       val response = HttpResponse(Status.OK, Some(responseJson))
       when(messageConnectorMock.getRandomMessagePreview(gmcBatch)).thenReturn(Future.successful(response))
-      messageService.getRandomMessagePreview(gmcBatch).futureValue shouldBe
+      messageService.getRandomMessagePreview(gmcBatch).futureValue mustBe
         Right("The message preview retrieved does not appear to be valid.")
     }
 
     "return a response body if status isn't 200" in new MessageServiceTestCase {
       val response = HttpResponse(Status.NOT_FOUND, Some(validMessagePreviewResponseJson))
       when(messageConnectorMock.getRandomMessagePreview(gmcBatch)).thenReturn(Future.successful(response))
-      messageService.getRandomMessagePreview(gmcBatch).futureValue shouldBe
+      messageService.getRandomMessagePreview(gmcBatch).futureValue mustBe
         Right(
           """{
             |  "subject" : "Reminder to file a Self Assessment return",
@@ -113,13 +112,13 @@ class MessageServiceSpec extends UnitSpec with MockitoSugar with ScalaFutures wi
       val messageId = "messageid"
       val response = HttpResponse(Status.CREATED, Some(Json.obj(("id" -> "messageid"))))
       when(messageConnectorMock.sendMessage(any())(any())).thenReturn(Future.successful(response))
-      messageService.sendPenalyChargeApologyMessage("foo@test.com", "1234567890").futureValue shouldBe Right(""""messageid"""")
+      messageService.sendPenalyChargeApologyMessage("foo@test.com", "1234567890").futureValue mustBe Right(""""messageid"""")
     }
     "return error on message creation failure" in new MessageServiceTestCase {
       val errorMessage = "error message"
       val response = HttpResponse(Status.BAD_REQUEST, errorMessage)
       when(messageConnectorMock.sendMessage(any())(any())).thenReturn(Future.successful(response))
-      messageService.sendPenalyChargeApologyMessage("foo@test.com", "1234567890").futureValue shouldBe (Left((Status.BAD_REQUEST, errorMessage)))
+      messageService.sendPenalyChargeApologyMessage("foo@test.com", "1234567890").futureValue mustBe (Left((Status.BAD_REQUEST, errorMessage)))
     }
   }
 

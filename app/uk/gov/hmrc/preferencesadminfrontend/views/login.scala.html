@@ -1,5 +1,5 @@
 @*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,35 +14,60 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.play.views.html.helpers._
+@import uk.gov.hmrc.govukfrontend.views.html.components._
+@import uk.gov.hmrc.govukfrontend.views.html.components.implicits._
 @import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
 @import uk.gov.hmrc.preferencesadminfrontend.controllers.model.User
 @import uk.gov.hmrc.preferencesadminfrontend.controllers.routes
+
+@this(
+layout: Layout,
+form: FormWithCSRF,
+govukInput: GovukInput,
+govukButton: GovukButton,
+govukBreadcrumbs: GovukBreadcrumbs)
 @(userForm: Form[User])(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
 
-@uk.gov.hmrc.preferencesadminfrontend.views.html.main_template(title = "Login", bodyClasses = None, withLogoutLink = false) {
+@layout(pageTitle = Some("Login")) {
+    @govukBreadcrumbs(Breadcrumbs(
+        items = Seq(
+          BreadcrumbsItem(
+            content = Text("Home"),
+            href = Some("/paperless/admin/home")
+          )
+        )
+      )
+    )
+
     <h1>Login</h1>
     <p>Enter your details to access the admin console</p>
-    @form(action = routes.LoginController.login) {
+    @form(action = routes.LoginController.loginAction) {
         <fieldset @if(userForm.hasGlobalErrors) { class="form-field--error" }>
             @for(error <- userForm.globalErrors) {
                 <span class="error-notification">@Messages(error.message)</span>
             }
-            @input(userForm("username"),
-                '_label -> "User ID",
-                '_divClass -> "form-field",
-                '_type -> "text",
-                '_inputClass -> "input--medium input--cleared"
+            @govukInput(
+                Input(
+                    label = Label(
+                        classes = "govuk-label--l",
+                        content = Text("User ID")
+                    )
+                ).withFormField(userForm("username"))
             )
-            @input(userForm("password"),
-                '_label -> "Password",
-                '_divClass -> "form-field",
-                '_type -> "password",
-                '_inputClass -> "input--medium input--cleared"
+
+            @govukInput(
+                Input(
+                    inputType = "password",
+                    label = Label(
+                        classes = "govuk-label--l",
+                        content = Text("Password")
+                    )
+                ).withFormField(userForm("password"))
             )
-            <div class="form-field">
-                <button class="button" type="submit" id="signin">Sign in</button>
-            </div>
+
+            @govukButton(Button(
+              content = Text("Signin")
+            ))
         </fieldset>
     }
 }

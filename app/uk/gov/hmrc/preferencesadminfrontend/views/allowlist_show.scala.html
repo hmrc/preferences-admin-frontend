@@ -1,5 +1,5 @@
 @*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,27 +14,46 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.play.views.html.helpers._
+@import uk.gov.hmrc.govukfrontend.views.html.components._
+@import uk.gov.hmrc.govukfrontend.views.html.components.implicits._
 @import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
 @import uk.gov.hmrc.preferencesadminfrontend.controllers.routes
 @import uk.gov.hmrc.preferencesadminfrontend.model.Allowlist
 
+@this(
+layout: Layout,
+form: FormWithCSRF,
+govukInput: GovukInput,
+govukBreadcrumbs: GovukBreadcrumbs)
 @(allowlist: Allowlist)(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
 
-@uk.gov.hmrc.preferencesadminfrontend.views.html.main_template(title = "Message Form IDs Allowlist", bodyClasses = None) {
+@layout(pageTitle = Some("Message Form IDs Allowlist")) {
+    @govukBreadcrumbs(Breadcrumbs(
+        items = Seq(
+          BreadcrumbsItem(
+            content = Text("Home"),
+            href = Some("/paperless/admin/home")
+          ),
+          BreadcrumbsItem(
+            content = Text("Message Brake Allowlist"),
+            href = Some("/paperless/admin/allowlist")
+          )
+        )
+      )
+    )
     <h1 class="heading-large">Message Form IDs Allowlist</h1>
     <h2 class="heading-medium">Form ID</h2>
     @for(formId <- allowlist.formIdList.value) {
         <div class="form-group">
         @form(action = routes.AllowlistController.showAllowlistPage) {
-            <input name="formId" class="form-control-1-4" type="text" value="@formId.as[String]" readonly/>
-            <button type="button" onclick="location.href='@routes.AllowlistController.deleteFormId(formId.as[String])';" class="button--alert">Delete Form</button>
+            <input name="formId" class="govuk-input govuk-input--width-10" type="text" value="@formId.as[String]" readonly/>
+            <button type="button" onclick="location.href='@routes.AllowlistController.deleteFormId(formId.as[String])';" class="govuk-button govuk-button--warning">Delete Form</button>
         }
         </div>
     }
     @form(action = routes.AllowlistController.showAllowlistPage) {
         <div class="form-group">
-            <button type="button" onclick="location.href='@routes.AllowlistController.addFormId';" class="button">Add New Form</button>
+            <button type="button" onclick="location.href='@routes.AllowlistController.addFormId';" class="govuk-button">Add New Form</button>
         </div>
     }
 }

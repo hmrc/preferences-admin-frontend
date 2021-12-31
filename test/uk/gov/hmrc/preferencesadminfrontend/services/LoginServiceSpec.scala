@@ -16,41 +16,39 @@
 
 package uk.gov.hmrc.preferencesadminfrontend.services
 
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar.mock
+import org.scalatestplus.play.PlaySpec
 import play.api.{ Configuration, Mode }
-import uk.gov.hmrc.play.bootstrap.config.RunMode
-import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.preferencesadminfrontend.controllers.model.User
 
-class LoginServiceSpec extends UnitSpec with MockitoSugar {
+class LoginServiceSpec extends PlaySpec {
 
   "login" should {
     "allow an authorised user into the system" in new TestCase {
       lazy val loginService = new LoginService(loginServiceConfiguration)
       val user = new User("username", "password")
 
-      loginService.isAuthorised(user) shouldBe true
+      loginService.isAuthorised(user) mustBe true
     }
 
     "not allow an user which is not included" in new TestCase {
       lazy val loginService = new LoginService(loginServiceConfiguration)
       val user = new User("anotherUser", "password")
 
-      loginService.isAuthorised(user) shouldBe false
+      loginService.isAuthorised(user) mustBe false
     }
 
     "not allow if the password is wrong" in new TestCase {
       lazy val loginService = new LoginService(loginServiceConfiguration)
       val user = new User("username", "wrongPassword")
 
-      loginService.isAuthorised(user) shouldBe false
+      loginService.isAuthorised(user) mustBe false
     }
   }
 
   trait TestCase {
 
-    val testRunMode = new RunMode(Configuration.empty, Mode.Test)
-    val loginServiceConfiguration = new LoginServiceConfiguration(mock[Configuration], testRunMode) {
+    val loginServiceConfiguration = new LoginServiceConfiguration(mock[Configuration]) {
       override lazy val authorisedUsers: Seq[User] = Seq(User("username", "password"))
     }
   }

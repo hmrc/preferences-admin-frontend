@@ -21,14 +21,14 @@ import uk.gov.hmrc.preferencesadminfrontend.model.GmcBatch
 
 object TemplateHelper {
 
-  def getFormButton(name: String, value: String, batchList: Seq[GmcBatch], batchId: String): Html =
+  def getFormButton(name: String, value: String, batchList: Seq[GmcBatch], batchId: String, classNames: String = "govuk-button"): Html =
     batchList.find(b => b.batchId == batchId) match {
       case Some(batch) =>
         Html(<input type="hidden" name="batchId" value={batch.batchId}/>
           <input type="hidden" name="formId" value={batch.formId}/>
           <input type="hidden" name="issueDate" value={batch.issueDate}/>
           <input type="hidden" name="templateId" value={batch.templateId}/>
-          <input type="submit" name={name} class="button" value={value}/>.mkString)
+          <button name={name} data-module="govuk-button" class={classNames}>{value}</button>.mkString)
       case None => Html(<fieldset/>.mkString)
     }
 

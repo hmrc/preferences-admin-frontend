@@ -24,21 +24,21 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-import uk.gov.hmrc.play.bootstrap.http.DefaultHttpClient
 import uk.gov.hmrc.preferencesadminfrontend.services.model.{ Email, EntityId, TaxIdentifier }
 
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.Try
 
 @Singleton
-class EntityResolverConnector @Inject()(http: DefaultHttpClient, val servicesConfig: ServicesConfig) {
+class EntityResolverConnector @Inject()(httpClient: HttpClient, val servicesConfig: ServicesConfig) {
 
+  val logger = Logger(getClass)
   implicit val ef = Entity.formats
 
   def serviceUrl = servicesConfig.baseUrl("entity-resolver")
 
   def getTaxIdentifiers(taxId: TaxIdentifier)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[TaxIdentifier]] = {
-    val response = http.GET[Option[Entity]](s"$serviceUrl/entity-resolver/${taxId.regime}/${taxId.value}")
+    val response = httpClient.GET[Option[Entity]](s"$serviceUrl/entity-resolver/${taxId.regime}/${taxId.value}")
     response
       .map(
         _.fold(Seq.empty[TaxIdentifier])(
@@ -56,7 +56,7 @@ class EntityResolverConnector @Inject()(http: DefaultHttpClient, val servicesCon
   }
 
   def getTaxIdentifiers(preferenceDetails: PreferenceDetails)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[TaxIdentifier]] = {
-    val response = http.GET[Option[Entity]](s"$serviceUrl/entity-resolver/${preferenceDetails.entityId.get}")
+    val response = httpClient.GET[Option[Entity]](s"$serviceUrl/entity-resolver/${preferenceDetails.entityId.get}")
     response
       .map(
         _.fold(Seq.empty[TaxIdentifier])(
@@ -74,7 +74,7 @@ class EntityResolverConnector @Inject()(http: DefaultHttpClient, val servicesCon
   }
 
   def getPreferenceDetails(taxId: TaxIdentifier)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[PreferenceDetails]] =
-    http.GET[Option[PreferenceDetails]](s"$serviceUrl/portal/preferences/${taxId.regime}/${taxId.value}").recover {
+    httpClient.GET[Option[PreferenceDetails]](s"$serviceUrl/portal/preferences/${taxId.regime}/${taxId.value}").recover {
       case ex: BadRequestException                             => None
       case ex @ Upstream4xxResponse(_, Status.NOT_FOUND, _, _) => None
       case ex @ Upstream4xxResponse(_, Status.CONFLICT, _, _)  => None
@@ -82,9 +82,9 @@ class EntityResolverConnector @Inject()(http: DefaultHttpClient, val servicesCon
 
   def optOut(taxId: TaxIdentifier)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[OptOutResult] = {
 
-    def warnNotOptedOut(status: Int) = Logger.warn(s"Unable to manually opt-out ${taxId.name} user with id ${taxId.value}. Status: $status")
+    def warnNotOptedOut(status: Int) = logger.warn(s"Unable to manually opt-out ${taxId.name} user with id ${taxId.value}. Status: $status")
 
-    http
+    httpClient
       .POSTEmpty(s"$serviceUrl/entity-resolver-admin/manual-opt-out/${taxId.regime}/${taxId.value}")
       .map(_ => OptedOut)
       .recover {

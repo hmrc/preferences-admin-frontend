@@ -1,5 +1,5 @@
-@*
- * Copyright 2020 HM Revenue & Customs
+/*
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,19 +12,15 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *@
+ */
 
-@import uk.gov.hmrc.play.views.html.helpers._
-@import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
+import com.google.inject.AbstractModule
+import uk.gov.hmrc.http.HttpClient
+import uk.gov.hmrc.play.bootstrap.http.DefaultHttpClient
+import uk.gov.hmrc.preferencesadminfrontend.config.{ AppConfig, FrontendAppConfig }
 
-@(pageTitle: String, heading: String, message: String, config: AppConfig)(implicit request: Request[_], messages: Messages)
+class FrontendModule extends AbstractModule {
 
-@contentHeader = {
-<h1>@heading</h1>
+  override def configure(): Unit =
+    bind(classOf[AppConfig]).to(classOf[FrontendAppConfig]).asEagerSingleton()
 }
-
-@mainContent = {
-<p>@message</p>
-}
-
-@govuk_wrapper(appConfig = config, title = "Internal Server Error", contentHeader = Some(contentHeader), mainContent = mainContent)

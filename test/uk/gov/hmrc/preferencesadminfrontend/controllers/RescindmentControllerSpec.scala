@@ -19,31 +19,32 @@ package uk.gov.hmrc.preferencesadminfrontend.controllers
 import akka.stream.Materializer
 import org.jsoup.Jsoup
 import org.mockito.ArgumentMatchers.any
-import org.mockito.Mockito._
+import org.mockito.Mockito.when
 import org.mockito.{ ArgumentMatcher, ArgumentMatchers }
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar.mock
+import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Configuration
 import play.api.http.Status
 import play.api.i18n.MessagesApi
-import play.api.mvc.{ AnyContentAsFormUrlEncoded, MessagesControllerComponents }
+import play.api.mvc.AnyContentAsFormUrlEncoded
 import play.api.test.CSRFTokenHelper._
 import play.api.test.FakeRequest
-import play.api.test.Helpers.{ headers, _ }
-import uk.gov.hmrc.http.HeaderCarrier
+import play.api.test.Helpers.{ contentAsString, defaultAwaitTimeout, headers, status }
+import uk.gov.hmrc.http.{ HeaderCarrier, HttpClient }
 import uk.gov.hmrc.play.audit.http.connector.AuditResult
 import uk.gov.hmrc.play.audit.model.MergedDataEvent
-import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
 import uk.gov.hmrc.preferencesadminfrontend.controllers.model.User
 import uk.gov.hmrc.preferencesadminfrontend.model.{ RescindmentAlertsResult, RescindmentRequest, RescindmentUpdateResult }
 import uk.gov.hmrc.preferencesadminfrontend.services._
 import uk.gov.hmrc.preferencesadminfrontend.utils.SpecBase
+import uk.gov.hmrc.preferencesadminfrontend.views.html.{ rescindment, rescindment_send }
 
 import scala.concurrent.{ ExecutionContext, Future }
 
-class RescindmentControllerSpec extends UnitSpec with ScalaFutures with GuiceOneAppPerSuite {
+class RescindmentControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPerSuite {
   implicit val hc = HeaderCarrier()
   implicit val messagesApi = app.injector.instanceOf[MessagesApi]
   implicit val materializer = app.injector.instanceOf[Materializer]
@@ -55,14 +56,14 @@ class RescindmentControllerSpec extends UnitSpec with ScalaFutures with GuiceOne
     "return ok if session is authorised" in new RescindmentTestCase {
       val result = rescindmentController.showRescindmentPage()(FakeRequest().withSession(User.sessionKey -> "user").withCSRFToken)
 
-      status(result) shouldBe Status.OK
+      status(result) mustBe Status.OK
     }
 
     "redirect to login page if not authorised" in new RescindmentTestCase {
       val result = rescindmentController.showRescindmentPage()(FakeRequest().withSession().withCSRFToken)
 
-      status(result) shouldBe Status.SEE_OTHER
-      headers(result) should contain("Location" -> "/paperless/admin")
+      status(result) mustBe Status.SEE_OTHER
+      headers(result) must contain("Location" -> "/paperless/admin")
     }
   }
 
@@ -70,20 +71,20 @@ class RescindmentControllerSpec extends UnitSpec with ScalaFutures with GuiceOne
     "return ok if session is authorised" in new RescindmentTestCase {
       val result = rescindmentController.showRescindmentAlertsPage()(FakeRequest().withSession(User.sessionKey -> "user").withCSRFToken)
 
-      status(result) shouldBe Status.OK
+      status(result) mustBe Status.OK
     }
 
     "redirect to login page if not authorised" in new RescindmentTestCase {
       val result = rescindmentController.showRescindmentAlertsPage()(FakeRequest().withSession().withCSRFToken)
 
-      status(result) shouldBe Status.SEE_OTHER
-      headers(result) should contain("Location" -> "/paperless/admin")
+      status(result) mustBe Status.SEE_OTHER
+      headers(result) must contain("Location" -> "/paperless/admin")
     }
   }
 
   "rescindment" should {
     "return ok if session is authorised and form data payload is valid" in new RescindmentTestCase {
-      val fakeRequestWithForm = FakeRequest(routes.RescindmentController.rescindment()).withSession(User.sessionKey -> "user")
+      val fakeRequestWithForm = FakeRequest(routes.RescindmentController.rescindmentAction()).withSession(User.sessionKey -> "user")
       val requestWithFormData: FakeRequest[AnyContentAsFormUrlEncoded] = fakeRequestWithForm.withFormUrlEncodedBody(
         "batchId"         -> "1234567",
         "formId"          -> "SA316",
@@ -104,32 +105,28 @@ class RescindmentControllerSpec extends UnitSpec with ScalaFutures with GuiceOne
         alreadyUpdated = 0,
         invalidState = 0
       )
-      when(
-        rescindmentServiceMock.addRescindments(ArgumentMatchers.eq(rescindmentRequest))(
-          ArgumentMatchers.any[User],
-          ArgumentMatchers.any[HeaderCarrier],
-          ArgumentMatchers.any[ExecutionContext]))
+      when(rescindmentServiceMock.addRescindments(ArgumentMatchers.eq(rescindmentRequest))(any[User](), any[HeaderCarrier](), any[ExecutionContext]()))
         .thenReturn(Future.successful(rescindmentUpdateResult))
-      val result = rescindmentController.rescindment()(requestWithFormData.withCSRFToken)
+      val result = rescindmentController.rescindmentAction()(requestWithFormData.withCSRFToken)
 
-      status(result) shouldBe Status.OK
-      val document = Jsoup.parse(bodyOf(result).futureValue)
-      document.body().getElementById("heading-succeeded").text() shouldBe "Rescindment - Updated: 1"
-      document.body().getElementById("heading-sent").text() shouldBe "Sent: -"
-      document.body().getElementById("heading-failed").text() shouldBe "Failed: -"
+      status(result) mustBe Status.OK
+      val document = Jsoup.parse(contentAsString(result))
+      document.body().getElementById("heading-succeeded").text() mustBe "Rescindment - Updated: 1"
+      document.body().getElementById("heading-sent").text() mustBe "Sent: -"
+      document.body().getElementById("heading-failed").text() mustBe "Failed: -"
     }
 
     "redirect to login page if not authorised" in new RescindmentTestCase {
-      val result = rescindmentController.rescindment()(FakeRequest().withSession().withCSRFToken)
+      val result = rescindmentController.rescindmentAction()(FakeRequest().withSession().withCSRFToken)
 
-      status(result) shouldBe Status.SEE_OTHER
-      headers(result) should contain("Location" -> "/paperless/admin")
+      status(result) mustBe Status.SEE_OTHER
+      headers(result) must contain("Location" -> "/paperless/admin")
     }
 
     "return a 400 BAD_REQUEST when not providing a correct body" in new RescindmentTestCase {
-      val result = rescindmentController.rescindment()(FakeRequest().withSession(User.sessionKey -> "user").withCSRFToken)
+      val result = rescindmentController.rescindmentAction()(FakeRequest().withSession(User.sessionKey -> "user").withCSRFToken)
 
-      status(result) shouldBe Status.BAD_REQUEST
+      status(result) mustBe Status.BAD_REQUEST
     }
   }
 
@@ -142,40 +139,50 @@ class RescindmentControllerSpec extends UnitSpec with ScalaFutures with GuiceOne
         failed = 0,
         hardCopyRequested = 0
       )
-      when(
-        rescindmentServiceMock.sendRescindmentAlerts()(ArgumentMatchers.any[User], ArgumentMatchers.any[HeaderCarrier], ArgumentMatchers.any[ExecutionContext]))
+      when(rescindmentServiceMock.sendRescindmentAlerts()(any[User](), any[HeaderCarrier](), any[ExecutionContext]()))
         .thenReturn(Future.successful(rescindmentAlertsResult))
       val result = rescindmentController.sendRescindmentAlerts()(fakeRequestWithForm.withCSRFToken)
 
-      status(result) shouldBe Status.OK
-      val document = Jsoup.parse(bodyOf(result).futureValue)
-      document.body().getElementById("heading-succeeded").text() shouldBe "Rescindment - Updated: -"
-      document.body().getElementById("heading-sent").text() shouldBe "Sent: 1"
-      document.body().getElementById("heading-failed").text() shouldBe "Failed: 0"
+      status(result) mustBe Status.OK
+      val document = Jsoup.parse(contentAsString(result))
+      document.body().getElementById("heading-succeeded").text() mustBe "Rescindment - Updated: -"
+      document.body().getElementById("heading-sent").text() mustBe "Sent: 1"
+      document.body().getElementById("heading-failed").text() mustBe "Failed: 0"
     }
 
     "redirect to login page if not authorised" in new RescindmentTestCase {
       val result = rescindmentController.sendRescindmentAlerts()(FakeRequest().withSession().withCSRFToken)
 
-      status(result) shouldBe Status.SEE_OTHER
-      headers(result) should contain("Location" -> "/paperless/admin")
+      status(result) mustBe Status.SEE_OTHER
+      headers(result) must contain("Location" -> "/paperless/admin")
     }
   }
-}
 
-trait RescindmentTestCase extends SpecBase with MockitoSugar {
-  implicit val ecc: ExecutionContext = stubbedMCC.executionContext
+  class RescindmentTestCase extends SpecBase {
+    implicit val ecc: ExecutionContext = stubbedMCC.executionContext
 
-  val rescindmentServiceMock = mock[RescindmentService]
-  when(auditConnectorMock.sendEvent(any())(any(), any())).thenReturn(Future.successful(AuditResult.Success))
+    val httpClient: HttpClient = app.injector.instanceOf[HttpClient]
+    val authorisedAction: AuthorisedAction = app.injector.instanceOf[AuthorisedAction]
+    val rescindmentView: rescindment = app.injector.instanceOf[rescindment]
+    val rescindmentSendView: rescindment_send = app.injector.instanceOf[rescindment_send]
+    val rescindmentServiceMock: RescindmentService = mock[RescindmentService]
+    when(auditConnectorMock.sendEvent(any())(any(), any())).thenReturn(Future.successful(AuditResult.Success))
 
-  def rescindmentController()(implicit messages: MessagesApi, appConfig: AppConfig): RescindmentController =
-    new RescindmentController(auditConnectorMock, rescindmentServiceMock, stubbedMCC)
+    def rescindmentController()(implicit messages: MessagesApi, appConfig: AppConfig): RescindmentController =
+      new RescindmentController(
+        authorisedAction,
+        auditConnectorMock,
+        rescindmentServiceMock,
+        stubbedMCC,
+        rescindmentView,
+        rescindmentSendView
+      )
 
-  override def isSimilar(expected: MergedDataEvent): ArgumentMatcher[MergedDataEvent] =
-    new ArgumentMatcher[MergedDataEvent]() {
-      def matches(t: MergedDataEvent): Boolean = this.matches(t) && {
-        t.request.generatedAt == expected.request.generatedAt && t.response.generatedAt == expected.response.generatedAt
+    override def isSimilar(expected: MergedDataEvent): ArgumentMatcher[MergedDataEvent] =
+      new ArgumentMatcher[MergedDataEvent]() {
+        def matches(t: MergedDataEvent): Boolean = this.matches(t) && {
+          t.request.generatedAt == expected.request.generatedAt && t.response.generatedAt == expected.response.generatedAt
+        }
       }
-    }
+  }
 }

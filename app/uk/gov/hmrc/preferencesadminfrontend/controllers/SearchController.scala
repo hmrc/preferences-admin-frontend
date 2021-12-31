@@ -16,84 +16,91 @@
 
 package uk.gov.hmrc.preferencesadminfrontend.controllers
 
+import play.api.Logging
+
 import javax.inject.{ Inject, Singleton }
 import play.api.i18n.{ I18nSupport, Messages }
 import play.api.mvc.MessagesControllerComponents
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
-import uk.gov.hmrc.play.bootstrap.controller.FrontendController
+import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
 import uk.gov.hmrc.preferencesadminfrontend.connectors.{ AlreadyOptedOut, OptedOut, PreferenceNotFound }
 import uk.gov.hmrc.preferencesadminfrontend.controllers.model.{ OptOutReason, Search }
 import uk.gov.hmrc.preferencesadminfrontend.services._
 import uk.gov.hmrc.preferencesadminfrontend.services.model.TaxIdentifier
+import uk.gov.hmrc.preferencesadminfrontend.views.html.{ confirmed, customer_identification, failed, user_opt_out }
 
 import scala.concurrent.{ ExecutionContext, Future }
 
 @Singleton
-class SearchController @Inject()(auditConnector: AuditConnector, searchService: SearchService, mcc: MessagesControllerComponents)(
-  implicit appConfig: AppConfig,
-  ec: ExecutionContext)
-    extends FrontendController(mcc) with I18nSupport {
+class SearchController @Inject()(
+  authorisedAction: AuthorisedAction,
+  auditConnector: AuditConnector,
+  searchService: SearchService,
+  mcc: MessagesControllerComponents,
+  confirmedView: confirmed,
+  customerIdentificationView: customer_identification,
+  failedView: failed,
+  userOptOutView: user_opt_out)(implicit appConfig: AppConfig, ec: ExecutionContext)
+    extends FrontendController(mcc) with I18nSupport with Logging {
 
-  def showSearchPage(taxIdentifierName: String, taxIdentifierValue: String) = AuthorisedAction.async { implicit request => implicit user =>
-    Future.successful(
-      Ok(
-        uk.gov.hmrc.preferencesadminfrontend.views.html.customer_identification(Search()
-          .bind(Map("name" -> taxIdentifierName, "value" -> taxIdentifierValue))
-          .discardingErrors)))
-  }
+  def showSearchPage(taxIdentifierName: String, taxIdentifierValue: String) =
+    authorisedAction.async { implicit request => implicit user =>
+      Future.successful(
+        Ok(
+          customerIdentificationView(
+            Search()
+              .bind(Map("name" -> taxIdentifierName, "value" -> taxIdentifierValue))
+              .discardingErrors)))
+    }
 
-  def search = AuthorisedAction.async { implicit request => implicit user =>
+  def search = authorisedAction.async { implicit request => implicit user =>
     Search().bindFromRequest.fold(
-      errors => Future.successful(BadRequest(uk.gov.hmrc.preferencesadminfrontend.views.html.customer_identification(errors))),
+      errors => Future.successful(BadRequest(customerIdentificationView(errors))),
       searchTaxIdentifier => {
         searchService.searchPreference(searchTaxIdentifier).map {
           case Nil =>
-            Ok(
-              uk.gov.hmrc.preferencesadminfrontend.views.html
-                .customer_identification(Search().bindFromRequest.withError("value", "error.preference_not_found")))
+            Ok(customerIdentificationView(Search().bindFromRequest.withError("value", "error.preference_not_found")))
           case preferenceList =>
-            Ok(uk.gov.hmrc.preferencesadminfrontend.views.html.user_opt_out(OptOutReason(), searchTaxIdentifier, preferenceList))
+            Ok(userOptOutView(OptOutReason(), searchTaxIdentifier, preferenceList))
         }
       }
     )
   }
 
-  def optOut(taxIdentifierName: String, taxIdentifierValue: String) = AuthorisedAction.async { implicit request => implicit user =>
+  def optOut(taxIdentifierName: String, taxIdentifierValue: String) = authorisedAction.async { implicit request => implicit user =>
     val identifier = TaxIdentifier(taxIdentifierName, taxIdentifierValue)
     OptOutReason().bindFromRequest.fold(
       errors => {
         searchService.getPreference(identifier).map {
           case Nil =>
-            Ok(
-              uk.gov.hmrc.preferencesadminfrontend.views.html
-                .customer_identification(Search().bindFromRequest.withError("value", Messages("error.preference_not_found"))))
+            Ok(customerIdentificationView(Search().bindFromRequest.withError("value", Messages("error.preference_not_found"))))
           case preferences =>
-            Ok(uk.gov.hmrc.preferencesadminfrontend.views.html.user_opt_out(errors, identifier, preferences))
+            Ok(userOptOutView(errors, identifier, preferences))
         }
       },
       optOutReason => {
         searchService.optOut(identifier, optOutReason.reason).map {
-          case OptedOut           => Redirect(routes.SearchController.confirmed(taxIdentifierName, taxIdentifierValue))
-          case AlreadyOptedOut    => Redirect(routes.SearchController.failed(taxIdentifierName, taxIdentifierValue, AlreadyOptedOut.errorCode))
-          case PreferenceNotFound => Redirect(routes.SearchController.failed(taxIdentifierName, taxIdentifierValue, PreferenceNotFound.errorCode))
+          case OptedOut           => Redirect(routes.SearchController.searchConfirmed(taxIdentifierName, taxIdentifierValue))
+          case AlreadyOptedOut    => Redirect(routes.SearchController.searchFailed(taxIdentifierName, taxIdentifierValue, AlreadyOptedOut.errorCode))
+          case PreferenceNotFound => Redirect(routes.SearchController.searchFailed(taxIdentifierName, taxIdentifierValue, PreferenceNotFound.errorCode))
         }
       }
     )
   }
 
-  def confirmed(taxIdentifierName: String, taxIdentifierValue: String) = AuthorisedAction.async { implicit request => implicit user =>
+  def searchConfirmed(taxIdentifierName: String, taxIdentifierValue: String) = authorisedAction.async { implicit request => implicit user =>
     searchService.getPreference(TaxIdentifier(taxIdentifierName, taxIdentifierValue)).map {
       case Nil =>
-        Ok(uk.gov.hmrc.preferencesadminfrontend.views.html.failed(TaxIdentifier(taxIdentifierName, taxIdentifierValue), Nil, PreferenceNotFound.errorCode))
+        Ok(failedView(TaxIdentifier(taxIdentifierName, taxIdentifierValue), Nil, PreferenceNotFound.errorCode))
       case preferences =>
-        Ok(uk.gov.hmrc.preferencesadminfrontend.views.html.confirmed(preferences))
+        Ok(confirmedView(preferences))
     }
   }
 
-  def failed(taxIdentifierName: String, taxIdentifierValue: String, failureCode: String) = AuthorisedAction.async { implicit request => implicit user =>
+  def searchFailed(taxIdentifierName: String, taxIdentifierValue: String, failureCode: String) = authorisedAction.async { implicit request => implicit user =>
     searchService.getPreference(TaxIdentifier(taxIdentifierName, taxIdentifierValue)).map { preference =>
-      Ok(uk.gov.hmrc.preferencesadminfrontend.views.html.failed(TaxIdentifier(taxIdentifierName, taxIdentifierValue), preference, failureCode))
+      Ok(failedView(TaxIdentifier(taxIdentifierName, taxIdentifierValue), preference, failureCode))
     }
   }
 }

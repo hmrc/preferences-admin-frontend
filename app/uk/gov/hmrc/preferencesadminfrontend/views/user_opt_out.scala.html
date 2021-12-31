@@ -1,5 +1,5 @@
 @*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,15 +14,20 @@
  * limitations under the License.
  *@
 
+@import uk.gov.hmrc.govukfrontend.views.html.components._
+@import uk.gov.hmrc.govukfrontend.views.html.components.implicits._
 @import uk.gov.hmrc.preferencesadminfrontend.controllers.model.OptOutReason
-@(reason: Form[OptOutReason],
+@import uk.gov.hmrc.preferencesadminfrontend.controllers.routes
+
+@this(
+    layout: Layout,
+    form: FormWithCSRF)
+@(reasonForm: Form[OptOutReason],
   searchTaxIdentifier: uk.gov.hmrc.preferencesadminfrontend.services.model.TaxIdentifier,
   preferences: List[uk.gov.hmrc.preferencesadminfrontend.services.model.Preference])(implicit request: Request[_], messages: Messages, appConfig: uk.gov.hmrc.preferencesadminfrontend.config.AppConfig)
 
-@import uk.gov.hmrc.play.views.html.helpers._
-@import uk.gov.hmrc.preferencesadminfrontend.controllers.routes
 
-@uk.gov.hmrc.preferencesadminfrontend.views.html.main_template(title = "User Summary", bodyClasses = None) {
+@layout(pageTitle = Some("User Summary")) {
 
 @uk.gov.hmrc.preferencesadminfrontend.views.html.user_summary(preferences)
 
@@ -49,18 +54,17 @@
             </div>
         </div>
         @if(preference.genericPaperless || preference.taxCreditsPaperless) {
-            <div id="confirm" class="accordion__body @if(!reason.hasErrors){hidden}" data-accordion-body aria-hidden="true">
+            <div id="confirm" class="accordion__body @if(!reasonForm.hasErrors){hidden}" data-accordion-body aria-hidden="true">
 
                 <p class="font-xsmall">Are you sure you wish to opt this user out?</p>
 
                 @form(action = routes.SearchController.optOut(preference.taxIdentifiers.last.name,
                                                               preference.taxIdentifiers.last.value)) {
-                    @textArea(reason("reason"),
-                        '_label -> "Please provide reason",
-                        '_divClass -> "form-field font-xsmall",
-                        '_type -> "text",
-                        '_inputClass -> "input--fullwidth input--cleared font-xsmall"
-                    )
+                    <label class="form-label" for="reason">Please provide a reason</label>
+                    @reasonForm("reason").errors.map { error =>
+                        <span class="error-message" id="error-message-reason-input">@messages(error.message)</span>
+                    }
+                    <textarea id="reason" name="reason">@reasonForm("reason").value</textarea>
                     <div class="form-field">
                         <button class="button" type="submit">Yes</button>
                     </div>

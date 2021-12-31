@@ -22,8 +22,9 @@ import play.api.mvc.Request
 import play.api.routing.Router
 import play.api.{ Configuration, Environment, OptionalSourceMapper }
 import play.twirl.api.Html
-import uk.gov.hmrc.play.bootstrap.audit.DefaultAuditConnector
-import uk.gov.hmrc.play.bootstrap.http.FrontendErrorHandler
+import uk.gov.hmrc.preferencesadminfrontend.views.html.ErrorTemplate
+import uk.gov.hmrc.play.audit.DefaultAuditChannel
+import uk.gov.hmrc.play.bootstrap.frontend.http.FrontendErrorHandler
 
 @Singleton
 class ErrorHandler @Inject()(
@@ -31,12 +32,12 @@ class ErrorHandler @Inject()(
   config: Configuration,
   sourceMapper: OptionalSourceMapper,
   router: Provider[Router],
-  appConfig: AppConfig,
   val messagesApi: MessagesApi,
-  frontendAuditConnector: DefaultAuditConnector)
+  frontendAuditConnector: DefaultAuditChannel,
+  errorTemplateView: ErrorTemplate)(implicit val appConfig: AppConfig)
     extends FrontendErrorHandler with I18nSupport {
 
   override def standardErrorTemplate(pageTitle: String, heading: String, message: String)(implicit request: Request[_]): Html =
-    uk.gov.hmrc.preferencesadminfrontend.views.html.error_template(pageTitle, heading, message, appConfig)
+    errorTemplateView(pageTitle, heading, message)
 
 }

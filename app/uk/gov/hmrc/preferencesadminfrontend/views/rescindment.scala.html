@@ -1,5 +1,5 @@
 @*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,60 +14,114 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.play.views.html.helpers._
+@import uk.gov.hmrc.govukfrontend.views.html.components._
+@import uk.gov.hmrc.govukfrontend.views.html.components.implicits._
 @import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
 @import uk.gov.hmrc.preferencesadminfrontend.controllers.routes
 @import uk.gov.hmrc.preferencesadminfrontend.model.RescindmentRequest
-@import uk.gov.hmrc.preferencesadminfrontend.model.RescindmentUpdateResult
-@import uk.gov.hmrc.preferencesadminfrontend.model.RescindmentAlertsResult
 
-@(rescindment: Form[RescindmentRequest])(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
+@this(
+    layout: Layout,
+    form: FormWithCSRF,
+    govukBreadcrumbs: GovukBreadcrumbs,
+    govukFieldset: GovukFieldset,
+    govukInput: GovukInput,
+    govukButton: GovukButton,
+    govukErrorSummary : GovukErrorSummary)
+@(rescindmentForm: Form[RescindmentRequest])(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
 
-@uk.gov.hmrc.preferencesadminfrontend.views.html.main_template(title = "Rescindment", bodyClasses = None) {
-    <h1>Rescindment - Updating</h1>
-    @form(action = routes.RescindmentController.rescindment()) {
-        <fieldset @if(rescindment.hasGlobalErrors) { class="form-field--error" }>
-            @for(error <- rescindment.globalErrors) {
-                <span class="error-notification">@Messages(error.message)</span>
-            }
+@html = {
+  @govukInput(Input(
+    id = "address-line-1",
+    name = "address-line-1",
+    label = Label(
+      content = HtmlContent("""Building and street <span class="govuk-visually-hidden">line 1 of 2</span>""")
+    ),
+    autocomplete = Some("address-line1")
+  ))
 
-            @input(rescindment("batchId"),
-                '_label -> "Batch Id",
-                '_divClass -> "form-field",
-                '_type -> "text",
-                '_inputClass -> "input--medium input--cleared"
-            )
+  @govukInput(
+    Input(
+      label = Label(
+        content = Text("Batch Id")
+      ),
+      classes = "govuk-!-width-two-thirds"
+    ).withFormField(rescindmentForm("batchId"))
+  )
 
-            @input(rescindment("formId"),
-                '_label -> "Form Id",
-                '_divClass -> "form-field",
-                '_type -> "text",
-                '_inputClass -> "input--medium input--cleared"
-            )
+  @govukInput(
+    Input(
+      label = Label(
+        content = Text("Form Id")
+      ),
+      classes = "govuk-!-width-two-thirds"
+    ).withFormField(rescindmentForm("formId"))
+  )
 
-            @input(rescindment("reference"),
-                '_label -> "Reference",
-                '_divClass -> "form-field",
-                '_type -> "text",
-                '_inputClass -> "input--medium input--cleared"
-            )
+  @govukInput(
+    Input(
+      label = Label(
+        content = Text("Reference")
+      ),
+      classes = "govuk-!-width-two-thirds"
+    ).withFormField(rescindmentForm("reference"))
+  )
 
-            @input(rescindment("date"),
-                '_label -> "Date (YYYY-MM-DD)",
-                '_divClass -> "form-field",
-                '_type -> "text",
-                '_inputClass -> "input--medium input--cleared"
-            )
+  @govukInput(
+    Input(
+      label = Label(
+      content = Text("Date (YYYY-MM-DD)")
+      ),
+      classes = "govuk-input--width-10"
+    ).withFormField(rescindmentForm("date"))
+  )
 
-            @input(rescindment("emailTemplateId"),
-                '_label -> "Email Template",
-                '_divClass -> "form-field",
-                '_type -> "text",
-                '_inputClass -> "input--medium input--cleared"
-            )
-        </fieldset>
-        <div class="form-field">
-            <button class="button" type="submit" id="rescind">Rescind</button>
-        </div>
+  @govukInput(
+    Input(
+      label = Label(
+        content = Text("Email Template")
+      ),
+      classes = "govuk-!-width-two-thirds"
+    ).withFormField(rescindmentForm("emailTemplateId"))
+  )
+}
+
+@layout(pageTitle = Some("Rescindment")) {
+    @govukBreadcrumbs(Breadcrumbs(
+        items = Seq(
+          BreadcrumbsItem(
+            content = Text("Home"),
+            href = Some("/paperless/admin/home")
+          ),
+          BreadcrumbsItem(
+            content = Text("Message Rescindments"),
+            href = Some("#")
+          )
+        )
+      )
+    )
+    @form(action = routes.RescindmentController.rescindmentAction()) {
+      @if(rescindmentForm.hasGlobalErrors) {
+        @govukErrorSummary(ErrorSummary(
+          errorList = rescindmentForm.globalErrors.map(error => ErrorLink(
+                        href = Some("#"),
+                        content = Text(messages(error.message))
+                        )),
+          title = Text("There is a problem")
+        ))
+      }
+
+      @govukFieldset(Fieldset(
+        legend = Some(Legend(
+            content = Text("Rescindment - Updating"),
+            classes = "govuk-fieldset__legend--l",
+            isPageHeading = true
+          )),
+        html = html
+        ))
+
+      @govukButton(Button(
+        content = Text("Rescind")
+      ))
     }
 }

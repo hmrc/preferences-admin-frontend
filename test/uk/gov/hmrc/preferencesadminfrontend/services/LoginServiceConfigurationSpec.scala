@@ -19,13 +19,11 @@ package uk.gov.hmrc.preferencesadminfrontend.services
 import com.google.common.base.Charsets
 import com.google.common.io.BaseEncoding
 import com.typesafe.config.ConfigException.Missing
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.play.PlaySpec
 import play.api.{ Configuration, Environment, Mode }
-import uk.gov.hmrc.play.bootstrap.config.RunMode
-import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.preferencesadminfrontend.controllers.model.User
 
-class LoginServiceConfigurationSpec extends UnitSpec {
+class LoginServiceConfigurationSpec extends PlaySpec {
 
   "authorisedUsers" should {
 
@@ -35,11 +33,10 @@ class LoginServiceConfigurationSpec extends UnitSpec {
         "password" -> BaseEncoding.base64().encode(user.password.getBytes(Charsets.UTF_8))
       )
 
-      val confForUsers = configurationForUsers(mapUser)
-      val loginServiceConfiguration = new LoginServiceConfiguration(configurationForUsers(mapUser), testRunMode)
+      val loginServiceConfiguration = new LoginServiceConfiguration(configurationForUsers(mapUser))
 
-      loginServiceConfiguration.authorisedUsers.size shouldBe 1
-      loginServiceConfiguration.authorisedUsers shouldBe Seq(user)
+      loginServiceConfiguration.authorisedUsers.size mustBe 1
+      loginServiceConfiguration.authorisedUsers mustBe Seq(user)
     }
 
     "return a Seq of users if the configuration is valid for multiple users with encoded password" in new TestCase {
@@ -48,37 +45,37 @@ class LoginServiceConfigurationSpec extends UnitSpec {
         "password" -> BaseEncoding.base64().encode(user.password.getBytes(Charsets.UTF_8))
       )
 
-      val loginServiceConfiguration = new LoginServiceConfiguration(configurationForUsers(mapUser, mapUser), testRunMode)
+      val loginServiceConfiguration = new LoginServiceConfiguration(configurationForUsers(mapUser, mapUser))
 
-      loginServiceConfiguration.authorisedUsers.size shouldBe 2
-      loginServiceConfiguration.authorisedUsers shouldBe Seq(user, user)
+      loginServiceConfiguration.authorisedUsers.size mustBe 2
+      loginServiceConfiguration.authorisedUsers mustBe Seq(user, user)
     }
 
     "throw a Missing exception if the users configuration is missing" in new TestCase {
-      val loginServiceConfiguration = new LoginServiceConfiguration(Configuration.from(Map.empty), testRunMode)
+      val loginServiceConfiguration = new LoginServiceConfiguration(Configuration.from(Map.empty))
 
       val caught = intercept[Missing](loginServiceConfiguration.authorisedUsers)
-      caught.getMessage should include("Property users missing")
+      caught.getMessage must include("Property users missing")
     }
 
     "throw a Missing exception if the username configuration is missing for a user" in new TestCase {
       val mapConfiguration = Map(
         "password" -> user.password
       )
-      val loginServiceConfiguration = new LoginServiceConfiguration(configurationForUsers(mapConfiguration), testRunMode)
+      val loginServiceConfiguration = new LoginServiceConfiguration(configurationForUsers(mapConfiguration))
 
       val caught = intercept[Missing](loginServiceConfiguration.authorisedUsers)
-      caught.getMessage should include("Property username missing")
+      caught.getMessage must include("Property username missing")
     }
 
     "throw a Missing exception if the password configuration is missing for a user" in new TestCase {
       val mapConfiguration = Map(
         "username" -> user.username
       )
-      val loginServiceConfiguration = new LoginServiceConfiguration(configurationForUsers(mapConfiguration), testRunMode)
+      val loginServiceConfiguration = new LoginServiceConfiguration(configurationForUsers(mapConfiguration))
 
       val caught = intercept[Missing](loginServiceConfiguration.authorisedUsers)
-      caught.getMessage should include("Property password missing")
+      caught.getMessage must include("Property password missing")
     }
 
   }
@@ -86,21 +83,21 @@ class LoginServiceConfigurationSpec extends UnitSpec {
   "verifyConfiguration" should {
 
     "throw a Missing exception if users Seq is empty" in new TestCase {
-      val loginServiceConfiguration = new LoginServiceConfiguration(Configuration.from(Map("Test.users" -> Seq.empty)), testRunMode)
+      val loginServiceConfiguration = new LoginServiceConfiguration(Configuration.from(Map("users" -> Seq.empty)))
 
       val caught = intercept[Missing](loginServiceConfiguration.verifyConfiguration())
-      caught.getMessage should include("Property users is empty")
+      caught.getMessage must include("Property users is empty")
     }
 
   }
 
-  trait TestCase extends MockitoSugar {
+  trait TestCase {
 
     val user = User("user", "pwd")
     val mockEnvironment = Environment.simple()
-    val testRunMode = new RunMode(Configuration.empty, Mode.Test)
 
-    def configurationForUsers(usersMap: Map[String, Any]*) = Configuration.from(Map("Test.users" -> usersMap))
+    def configurationForUsers(usersMap: Map[String, Any]*): Configuration =
+      Configuration.from(Map("users" -> usersMap))
   }
 
 }

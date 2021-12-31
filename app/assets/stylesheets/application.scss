@@ -1,3 +1,15 @@
+$govuk-assets-path: "/preferences/admin/assets/lib/govuk-frontend/govuk/assets/";
+$hmrc-assets-path: "/preferences/admin/assets/lib/hmrc-frontend/hmrc/";
+
+@import "lib/govuk-frontend/govuk/all";
+@import "lib/hmrc-frontend/hmrc/all";
+
+$govuk-global-styles: true;
+
+body {
+    font-family: "nta", Arial, sans-serif;
+}
+
 .linkButton {
     background: none;
     background-color: black;
@@ -12,7 +24,7 @@
     text-transform: none;
     font-weight: 700;
     line-height: 23px;
-    box-shadow: 0 0 0  #FFF;;
+    box-shadow: 0 0 0 #FFF;
 }
 
 .linkButton:hover {

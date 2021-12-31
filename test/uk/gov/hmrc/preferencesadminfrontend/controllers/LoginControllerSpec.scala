@@ -16,11 +16,10 @@
 
 package uk.gov.hmrc.preferencesadminfrontend.controllers
 
+import akka.stream.Materializer
 import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito._
-import org.scalatest.Matchers._
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http._
@@ -34,24 +33,28 @@ import uk.gov.hmrc.preferencesadminfrontend.utils.SpecBase
 
 import scala.concurrent.Future
 
-class LoginControllerSpec extends LoginControllerFixtures with ScalaFutures {
+class LoginControllerSpec extends PlaySpec with GuiceOneAppPerSuite with SpecBase with ScalaFutures {
+
+  implicit lazy val materializer: Materializer = app.materializer
+  override implicit lazy val app = GuiceApplicationBuilder().build()
+  implicit val messagesApi = app.injector.instanceOf[MessagesApi]
 
   "GET /" should {
-    "return 200" in {
+    "return 200" in new MessageBrakeControllerTestCase {
       val result = loginController.showLoginPage(FakeRequest("GET", "/").withCSRFToken)
-      status(result) shouldBe Status.OK
+      status(result) mustBe Status.OK
     }
 
-    "return HTML" in {
+    "return HTML" in new MessageBrakeControllerTestCase {
       val result = loginController.showLoginPage(FakeRequest("GET", "/").withCSRFToken)
-      contentType(result) shouldBe Some("text/html")
-      charset(result) shouldBe Some("utf-8")
+      contentType(result) mustBe Some("text/html")
+      charset(result) mustBe Some("utf-8")
     }
   }
 
   "POST to login" should {
-    "Redirect to the next page if credentials are correct" in {
-      val result = loginController.login(
+    "Redirect to the next page if credentials are correct" in new MessageBrakeControllerTestCase {
+      val result = loginController.loginAction(
         FakeRequest()
           .withFormUrlEncodedBody(
             "username" -> "user",
@@ -59,13 +62,13 @@ class LoginControllerSpec extends LoginControllerFixtures with ScalaFutures {
           )
           .withCSRFToken)
 
-      session(result).data should contain("userId" -> "user")
-      status(result) shouldBe Status.SEE_OTHER
-      headers(result) should contain("Location" -> "/paperless/admin/home")
+      session(result).data must contain("userId" -> "user")
+      status(result) mustBe Status.SEE_OTHER
+      headers(result) must contain("Location" -> "/paperless/admin/home")
     }
 
-    "Return unauthorised if credentials are not correct" in {
-      val result = loginController.login(
+    "Return unauthorised if credentials are not correct" in new MessageBrakeControllerTestCase {
+      val result = loginController.loginAction(
         FakeRequest()
           .withFormUrlEncodedBody(
             "username" -> "user",
@@ -74,32 +77,30 @@ class LoginControllerSpec extends LoginControllerFixtures with ScalaFutures {
           .withCSRFToken
       )
 
-      result.futureValue.header.status shouldBe Status.UNAUTHORIZED
+      status(result) mustBe Status.UNAUTHORIZED
     }
 
-    "Return bad request if credentials are missing" in {
-      val result = loginController.login(
+    "Return bad request if credentials are missing" in new MessageBrakeControllerTestCase {
+      val result = loginController.loginAction(
         FakeRequest().withFormUrlEncodedBody().withCSRFToken
       )
 
-      result.futureValue.header.status shouldBe Status.BAD_REQUEST
+      status(result) mustBe Status.BAD_REQUEST
     }
   }
 
   "POST to logout" should {
-    "Destroy existing session and redirect to login page" in {
-      val result = loginController.logout(FakeRequest().withSession("userId" -> "user").withCSRFToken)
+    "Destroy existing session and redirect to login page" in new MessageBrakeControllerTestCase {
+      val result = loginController.logoutAction(FakeRequest().withSession("userId" -> "user").withCSRFToken)
 
-      session(result).data should not contain ("userId" -> "user")
-      status(result) shouldBe Status.SEE_OTHER
-      headers(result) should contain("Location" -> "/paperless/admin")
+      session(result).data must not contain ("userId" -> "user")
+      status(result) mustBe Status.SEE_OTHER
+      headers(result) must contain("Location" -> "/paperless/admin")
     }
   }
-}
 
-trait LoginControllerFixtures extends PlaySpec with MockitoSugar with GuiceOneAppPerSuite with SpecBase {
-  override implicit lazy val app = GuiceApplicationBuilder().build()
-  implicit val messagesApi = app.injector.instanceOf[MessagesApi]
-  when(auditConnectorMock.sendEvent(any())(any(), any())).thenReturn(Future.successful(AuditResult.Success))
-  val loginController = app.injector.instanceOf[LoginController]
+  class MessageBrakeControllerTestCase extends SpecBase {
+    when(auditConnectorMock.sendEvent(any())(any(), any())).thenReturn(Future.successful(AuditResult.Success))
+    val loginController = app.injector.instanceOf[LoginController]
+  }
 }

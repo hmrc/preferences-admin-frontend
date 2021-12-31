@@ -16,12 +16,14 @@
 
 package uk.gov.hmrc.preferencesadminfrontend.controllers
 
-import play.api.mvc._
+import play.api.mvc.{ Action, AnyContent, MessagesBaseController, MessagesControllerComponents, Request, Result }
 import uk.gov.hmrc.preferencesadminfrontend.controllers.model.User
+
+import javax.inject.Inject
 
 import scala.concurrent.Future
 
-object AuthorisedAction {
+class AuthorisedAction @Inject()(val controllerComponents: MessagesControllerComponents) extends MessagesBaseController {
 
   def async(block: Request[AnyContent] => User => Future[Result]): Action[AnyContent] =
     Action.async { implicit request =>
