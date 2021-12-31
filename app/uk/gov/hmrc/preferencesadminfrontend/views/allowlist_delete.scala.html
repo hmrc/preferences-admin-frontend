@@ -53,7 +53,7 @@ govukBreadcrumbs: GovukBreadcrumbs)
                 id = "reasonText",
                 name = "reasonText",
                 label = Label(
-                  content = Text(s"Please enter a reason for deleting the form ID ${entryForm("formId").value.get}")
+                  content = Text(s"Please enter a reason for deleting the form ID ${entryForm("formId").value.getOrElse("")}")
                 ),
                 attributes = Map("maxlength" -> "120")
               ).withFormField(entryForm("reasonText"))
