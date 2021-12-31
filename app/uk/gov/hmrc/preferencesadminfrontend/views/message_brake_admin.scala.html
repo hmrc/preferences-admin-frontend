@@ -25,6 +25,7 @@
 @this(
 layout: Layout,
 form: FormWithCSRF,
+govukButton: GovukButton,
 govukInput: GovukInput,
 govukBreadcrumbs: GovukBreadcrumbs)
 @(batchList: Seq[GmcBatch], batchMessagePreview: Option[BatchMessagePreview] = None)(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
@@ -44,44 +45,44 @@ govukBreadcrumbs: GovukBreadcrumbs)
         )
     ))
 
-    <h1 class="heading-large">Unverified Message Request FormIDs</h1>
-    <div class="grid-row">
-        <div class="column-full">
-            <table>
-                <thead>
-                <tr>
-                    <th scope="col">Form ID</th>
-                    <th class="numeric" scope="col">Batch No</th>
-                    <th class="numeric" scope="col">Issue Date</th>
-                    <th class="numeric" scope="col">Count</th>
-                    <th class="numeric" scope="col">Email Template ID</th>
-                    <th></th>
+    <table class="govuk-table">
+        <caption class="govuk-table__caption govuk-table__caption--l">Unverified Message Request FormIDs</caption>
+        <thead class="govuk-table__head">
+        <tr class="govuk-table__row">
+            <th scope="col" class="govuk-table__header">FormID</th>
+            <th scope="col" class="govuk-table__header">Batch No</th>
+            <th scope="col" class="govuk-table__header">Issue Date</th>
+            <th scope="col" class="govuk-table__header">Count</th>
+            <th scope="col" class="govuk-table__header">Email Template ID</th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody class="govuk-table__body">
+            @for(batch <- batchList) {
+                <tr class="govuk-table__row">
+                    <th scope="row" class="govuk-table__header">@batch.formId</th>
+                    <td class="govuk-table__cell">@batch.batchId</td>
+                    <td class="govuk-table__cell">@batch.issueDate</td>
+                    <td class="govuk-table__cell">@batch.count</td>
+                    <td class="govuk-table__cell">@batch.templateId</td>
+                    <td>
+                        @form(action = routes.MessageBrakeController.previewMessage) {
+                            <input type="hidden" name="batchId" value="@batch.batchId"/>
+                            <input type="hidden" name="formId" value="@batch.formId"/>
+                            <input type="hidden" name="issueDate" value="@batch.issueDate"/>
+                            <input type="hidden" name="templateId" value="@batch.templateId"/>
+                            @govukButton(Button(
+                                name = Some("preview"),
+                                content = Text("Preview")
+                            ))
+                        }
+                    </td>
                 </tr>
-                </thead>
-                <tbody>
-                @for(batch <- batchList) {
-                    <tr>
-                        <th scope="row">@batch.formId</th>
-                        <td class="numeric">@batch.batchId</td>
-                        <td class="numeric">@batch.issueDate</td>
-                        <td class="numeric">@batch.count</td>
-                        <td class="numeric">@batch.templateId</td>
-                        <td>
-                            @form(action = routes.MessageBrakeController.previewMessage) {
-                            <fieldset>
-                                <input type="hidden" name="batchId" value="@batch.batchId"/>
-                                <input type="hidden" name="formId" value="@batch.formId"/>
-                                <input type="hidden" name="issueDate" value="@batch.issueDate"/>
-                                <input type="hidden" name="templateId" value="@batch.templateId"/>
-                                <input type="submit" name="preview" class="button" value="Preview"/>
-                            </fieldset>
-                            }
-                        </td>
-                    </tr>
-                }
-                </tbody>
-            </table>
-        </div>
+            }
+        </tbody>
+    </table>
+
+    <div class="grid-row">
         @batchMessagePreview match {
             case Some(batchPreview) => {
                 <div class="column-full">
@@ -94,27 +95,27 @@ govukBreadcrumbs: GovukBreadcrumbs)
                     </div>
                 </div>
                 <div class="column-full">
-                    <table>
-                        <tbody>
-                            <tr>
-                                <td>External Ref ID</td>
-                                <td>@batchPreview.message.externalRefId</td>
+                    <table class="govuk-table">
+                        <tbody class="govuk-table__body">
+                            <tr class="govuk-table__row">
+                                <td class="govuk-table__cell">External Ref ID</td>
+                                <td class="govuk-table__cell">@batchPreview.message.externalRefId</td>
                             </tr>
-                            <tr>
-                                <td>MessageType</td>
-                                <td>@batchPreview.message.messageType</td>
+                            <tr class="govuk-table__row">
+                                <td class="govuk-table__cell">MessageType</td>
+                                <td class="govuk-table__cell">@batchPreview.message.messageType</td>
                             </tr>
-                            <tr>
-                                <td>Subject</td>
-                                <td>@{Html(batchPreview.message.subject)}</td>
+                            <tr class="govuk-table__row">
+                                <td class="govuk-table__cell">Subject</td>
+                                <td class="govuk-table__cell">@{Html(batchPreview.message.subject)}</td>
                             </tr>
-                            <tr>
-                                <td>Issue Date</td>
-                                <td>@batchPreview.message.issueDate</td>
+                            <tr class="govuk-table__row">
+                                <td class="govuk-table__cell">Issue Date</td>
+                                <td class="govuk-table__cell">@batchPreview.message.issueDate</td>
                             </tr>
-                            <tr>
-                                <td>Tax Identifier Name</td>
-                                <td>@batchPreview.message.taxIdentifierName</td>
+                            <tr class="govuk-table__row">
+                                <td class="govuk-table__cell">Tax Identifier Name</td>
+                                <td class="govuk-table__cell">@batchPreview.message.taxIdentifierName</td>
                             </tr>
                         </tbody>
                     </table>
@@ -125,7 +126,7 @@ govukBreadcrumbs: GovukBreadcrumbs)
                             @TemplateHelper.getFormButton("approve", "Approve", batchList, batchPreview.batchId)
                         }
                         @form(action = routes.MessageBrakeController.showRejectBatchConfirmationPage(), 'class -> "button-form") {
-                            @TemplateHelper.getFormButton("reject", "Reject", batchList, batchPreview.batchId)
+                            @TemplateHelper.getFormButton("reject", "Reject", batchList, batchPreview.batchId, "govuk-button govuk-button--warning")
                         }
                     </div>
                 </div>
