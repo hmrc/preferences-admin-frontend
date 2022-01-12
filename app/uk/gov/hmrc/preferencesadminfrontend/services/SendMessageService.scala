@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.preferencesadminfrontend.services
 
+import play.api.libs.json.Json
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.preferencesadminfrontend.connectors.{ EntityResolverConnector, MessageConnector, PreferenceDetails, PreferencesConnector }
 import uk.gov.hmrc.preferencesadminfrontend.services.FailedReason.{ BouncedEmail, Duplicate, EmailIssueIdentified, EmailMissing, NoPreference, NotApplicable, OptedOut, UnKnownError, UnVerified }
@@ -25,7 +26,23 @@ import uk.gov.hmrc.preferencesadminfrontend.services.model.TaxIdentifier
 import javax.inject.Inject
 import scala.concurrent.{ ExecutionContext, Future }
 
+case class Identifier(itsaId: String, utr: String)
+
+object Identifier {
+  implicit val identifierFormat = Json.format[Identifier]
+}
+
 class SendMessageService @Inject()(entityResolver: EntityResolverConnector, messageService: MessageService) {
+
+  def sendMessage(identifier: List[Identifier]): Future[List[MigrationResult]] =
+    Future.successful(
+      List(
+        MigrationResult(Identifier("itsaid", "utr"), "status", "green", "reason"),
+        MigrationResult(Identifier("itsaid", "utr"), "status", "red", "reason"),
+        MigrationResult(Identifier("itsaid", "utr"), "status", "green", "reason"),
+        MigrationResult(Identifier("itsaid", "utr"), "status", "red", "reason"),
+        MigrationResult(Identifier("itsaid", "utr"), "status", "green", "reason")
+      ))
 
   def sendMessage(utr: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[MessageStatus] =
     (for {
@@ -63,6 +80,7 @@ class SendMessageService @Inject()(entityResolver: EntityResolverConnector, mess
 }
 
 case class MessageStatus(utr: String, status: String, displayClass: String, reason: String)
+case class MigrationResult(identifier: Identifier, status: String, displayClass: String, reason: String)
 
 object FailedReason {
   val NotApplicable = "N/A"

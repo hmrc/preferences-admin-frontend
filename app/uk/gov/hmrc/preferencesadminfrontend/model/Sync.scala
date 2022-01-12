@@ -17,31 +17,18 @@
 package uk.gov.hmrc.preferencesadminfrontend.model
 
 import play.api.data.Form
-import play.api.data.Forms.{ mapping, text }
-import play.api.data.validation.{ Constraint, Invalid, Valid }
+import play.api.data.Forms.{ list, mapping, text }
 import play.api.libs.json.{ Json, OWrites }
+import uk.gov.hmrc.preferencesadminfrontend.services.Identifier
 
-case class SendMessage(utrs: String)
+case class Sync(entries: String)
 
-object SendMessage {
+object SyncOne {
 
-  def listParser(utrs: String) = utrs.trim.split("\r").toList.map(_.trim)
-
-  val sizeConstraint: Constraint[String] = Constraint("constraints.size")({ size =>
-    if (size.trim.isEmpty) {
-      Invalid("Can't send empty content")
-    } else if (listParser(size).length > 100)
-      Invalid("Can't send more than 100 UTR's at once")
-    else {
-      Valid
-    }
-  })
-
-  implicit val writes: OWrites[SendMessage] = Json.writes[SendMessage]
-
-  def apply(): Form[SendMessage] = Form(
+  def apply(): Form[Sync] = Form(
     mapping(
-      "utrs" -> text.verifying(sizeConstraint)
-    )(SendMessage.apply)(SendMessage.unapply)
+      "entries" -> text
+    )(Sync.apply)(Sync.unapply)
   )
+
 }
