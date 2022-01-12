@@ -25,9 +25,20 @@ import uk.gov.hmrc.preferencesadminfrontend.services.model.TaxIdentifier
 import javax.inject.Inject
 import scala.concurrent.{ ExecutionContext, Future }
 
+case class Identifier(itsaId: String, utr: String)
+
 class SendMessageService @Inject()(entityResolver: EntityResolverConnector, messageService: MessageService) {
 
+
+  def sendMessage(identifier: List[Identifier]): Future[List[MigrationResult]] = {
+    ???
+  }
+
   def sendMessage(utr: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[MessageStatus] =
+
+
+
+
     (for {
       preferenceDetails: Option[PreferenceDetails] <- entityResolver.getPreferenceDetails(TaxIdentifier("sautr", utr))
     } yield
@@ -63,6 +74,7 @@ class SendMessageService @Inject()(entityResolver: EntityResolverConnector, mess
 }
 
 case class MessageStatus(utr: String, status: String, displayClass: String, reason: String)
+case class MigrationResult(identifier: Identifier, status: String, displayClass: String, reason: String)
 
 object FailedReason {
   val NotApplicable = "N/A"
