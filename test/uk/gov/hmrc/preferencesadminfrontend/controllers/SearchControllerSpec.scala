@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -97,7 +97,7 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
       status(result) mustBe Status.OK
       val body: String = contentAsString(result)
       body must include("john.doe@digital.hmrc.gov.uk")
-      body must include("15 February 2018 AM 12:0:0s")
+      body must include("15 February 2018 12:00:00 AM")
     }
 
     "return a preference if email address exists" in new SearchControllerTestCase {
@@ -117,7 +117,7 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
       status(result) mustBe Status.OK
       val body: String = contentAsString(result)
       body must include("test@test.com")
-      body must include("15 February 2018 AM 12:0:0s")
+      body must include("15 February 2018 12:00:00 AM")
     }
 
     "return a not found error message if the preference associated with that emailid is not found" in new SearchControllerTestCase {

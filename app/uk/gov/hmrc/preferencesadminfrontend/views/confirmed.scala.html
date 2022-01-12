@@ -14,21 +14,37 @@
  * limitations under the License.
  *@
 
-@this(layout: Layout)
+@this(
+  layout: Layout, govukSummaryList: GovukSummaryList,
+  govukBreadcrumbs: GovukBreadcrumbs)
 @(preference: List[uk.gov.hmrc.preferencesadminfrontend.services.model.Preference])(implicit request: Request[_], messages: Messages, appConfig: uk.gov.hmrc.preferencesadminfrontend.config.AppConfig)
 
 @layout(pageTitle = Some("User Summary")) {
 
-    <div class="transaction-banner--complete">
-        <h1 class="transaction-banner__heading">User manually opted out</h1>
-        <p>You successfully opted out the user in the below summary</p>
-    </div>
+  @govukBreadcrumbs(Breadcrumbs(
+      items = Seq(
+        BreadcrumbsItem(
+          content = Text("Home"),
+          href = Some("/paperless/admin/home")
+        ),
+        BreadcrumbsItem(
+          content = Text("Paperless Admin"),
+          href = Some("#")
+        )
+      )
+    )
+  )
 
-    <h2>User Summary</h2>
+  <div class="transaction-banner--complete">
+      <h1 class="transaction-banner__heading">User manually opted out</h1>
+      <p>You successfully opted out the user in the below summary</p>
+  </div>
 
-    @uk.gov.hmrc.preferencesadminfrontend.views.html.user_summary(preference)
+  <h2>User Summary</h2>
 
-    <div style="margin-top: 100px;">
-        <a class="back-link" href="/paperless/admin/search">Opt out another user</a>
-    </div>
+  @uk.gov.hmrc.preferencesadminfrontend.views.html.user_summary(govukSummaryList, preference)
+
+  <div style="margin-top: 100px;">
+      <a class="back-link" href="/paperless/admin/search">Opt out another user</a>
+  </div>
 }
