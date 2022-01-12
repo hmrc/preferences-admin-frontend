@@ -70,18 +70,19 @@ govukBreadcrumbs: GovukBreadcrumbs)
                 )
               ),
             classes = "govuk-radios--inline"
-          ))
+          ).withFormField(searchForm("name"))
+        )
 
-          @govukInput(
-            Input(
-              label = Label(
-                content = Text("Identifier")
-              )
-            ).withFormField(searchForm("value"))
-          )
-          @govukButton(Button(
-            content = Text("Search")
-          ))
+        @govukInput(
+          Input(
+            label = Label(
+              content = Text("Identifier")
+            )
+          ).withFormField(searchForm("value"))
+        )
+        @govukButton(Button(
+          content = Text("Search")
+        ))
 
     }
 }

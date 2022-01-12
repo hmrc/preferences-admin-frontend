@@ -21,6 +21,12 @@
 
 @this(
     layout: Layout,
+    govukButton: GovukButton,
+    govukTextarea: GovukTextarea,
+    govukSummaryList: GovukSummaryList,
+    govukBreadcrumbs: GovukBreadcrumbs,
+    govukWarningText : GovukWarningText,
+    govukInsetText : GovukInsetText,
     form: FormWithCSRF)
 @(reasonForm: Form[OptOutReason],
   searchTaxIdentifier: uk.gov.hmrc.preferencesadminfrontend.services.model.TaxIdentifier,
@@ -28,53 +34,77 @@
 
 
 @layout(pageTitle = Some("User Summary")) {
+  @govukBreadcrumbs(Breadcrumbs(
+    items = Seq(
+        BreadcrumbsItem(
+          content = Text("Home"),
+          href = Some("/paperless/admin/home")
+        ),
+        BreadcrumbsItem(
+          content = Text("Paperless Admin"),
+          href = Some(s"/paperless/admin/search?taxIdentifierName=${searchTaxIdentifier.name}&taxIdentifierValue=${searchTaxIdentifier.value}")
+        ),
+        BreadcrumbsItem(
+          content = Text("User Summary"),
+          href = Some("#")
+        )
+      )
+    )
+  )
 
-@uk.gov.hmrc.preferencesadminfrontend.views.html.user_summary(preferences)
+@uk.gov.hmrc.preferencesadminfrontend.views.html.user_summary(govukSummaryList, preferences)
 
 @if(preferences.size == 1){
 
 @for(preference <- preferences){
-
     <h2>Actions</h2>
-
-    <div id="accordionId" data-accordion data-accordion-animate data-accordion-set-hash aria-expanded="false" class="accordion">
-        <div class="accordion__row">
-            <div class="accordion__row__left">
-                <i class="accordion__indicator arrow arrow--right font-small" data-accordion-arrow></i>
-                <a class="accordion__button link--no-underline bold-small" href="" data-accordion-button role="button">
-                    Opt user out of paperless
-                </a>
-            </div>
-            <div class="accordion__row__right align--top">
+    <div class="govuk-accordion" data-module="govuk-accordion" id="accordion-with-summary-sections">
+      <div class="govuk-accordion__section ">
+        <div class="govuk-accordion__section-header">
+          <h2 class="govuk-accordion__section-heading">
+            <span class="govuk-accordion__section-button" id="accordion-with-summary-sections-heading-1">
+              Opt user out of paperless
+            </span>
+          </h2>
+          <div class="govuk-accordion__section-summary govuk-body" id="accordion-with-summary-sections-summary-1">
             @if(preference.genericPaperless || preference.taxCreditsPaperless) {
-                <p class="font-xsmall flush">This option allows you to opt out this user from paperless</p>
+              @govukInsetText(InsetText(
+                content = Text("This option allows you to opt out this user from paperless")
+              ))
             } else {
-                <p class="font-xsmall flush">This user already opted out from paperless</p>
+              @govukInsetText(InsetText(
+                content = Text("This user already opted out from paperless")
+              ))
             }
-            </div>
+          </div>
         </div>
-        @if(preference.genericPaperless || preference.taxCreditsPaperless) {
-            <div id="confirm" class="accordion__body @if(!reasonForm.hasErrors){hidden}" data-accordion-body aria-hidden="true">
+        <div id="confirm">
+          @if(preference.genericPaperless || preference.taxCreditsPaperless) {
 
-                <p class="font-xsmall">Are you sure you wish to opt this user out?</p>
+              @govukWarningText(WarningText(
+                iconFallbackText = "Warning",
+                content = Text("Are you sure you wish to opt this user out?")
+              ))
+              @form(action = routes.SearchController.optOut(preference.taxIdentifiers.last.name, preference.taxIdentifiers.last.value)) {
+                @govukTextarea(Textarea(
+                    id = "reason",
+                    name = "reason",
+                    label = Label(
+                      content = Text("Please enter a reason")
+                    )
+                  ).withFormField(reasonForm("reason"))
+                )
 
-                @form(action = routes.SearchController.optOut(preference.taxIdentifiers.last.name,
-                                                              preference.taxIdentifiers.last.value)) {
-                    <label class="form-label" for="reason">Please provide a reason</label>
-                    @reasonForm("reason").errors.map { error =>
-                        <span class="error-message" id="error-message-reason-input">@messages(error.message)</span>
-                    }
-                    <textarea id="reason" name="reason">@reasonForm("reason").value</textarea>
-                    <div class="form-field">
-                        <button class="button" type="submit">Yes</button>
-                    </div>
-                }
-            </div>
-        }
-    </div>
-
-    <div style="margin-top: 200px;">
-        <a class="back-link" href="/paperless/admin/search?taxIdentifierName=@{searchTaxIdentifier.name}&taxIdentifierValue=@{searchTaxIdentifier.value}">Back to search</a>
+                <div class="govuk-button-group">
+                  @govukButton(Button(
+                    content = Text("Yes")
+                  ))
+                  <input type="button" onclick="location.href='/paperless/admin/search?taxIdentifierName=@{searchTaxIdentifier.name}&taxIdentifierValue=@{searchTaxIdentifier.value}';" class="govuk-button govuk-button--secondary" data-module="govuk-button" value="Cancel"/>
+                </div>
+              }
+          }
+        </div>
+      </div>
     </div>
   }
  }

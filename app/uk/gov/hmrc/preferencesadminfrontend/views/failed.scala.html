@@ -14,12 +14,28 @@
  * limitations under the License.
  *@
 
-@this(layout: Layout)
+@this(
+  layout: Layout, govukSummaryList: GovukSummaryList,
+  govukBreadcrumbs: GovukBreadcrumbs)
 @(taxId: uk.gov.hmrc.preferencesadminfrontend.services.model.TaxIdentifier,
         preferences: List[uk.gov.hmrc.preferencesadminfrontend.services.model.Preference],
         failureCode: String)(implicit request: Request[_], messages: Messages, appConfig: uk.gov.hmrc.preferencesadminfrontend.config.AppConfig)
 
 @layout(pageTitle = Some("User Summary")) {
+
+  @govukBreadcrumbs(Breadcrumbs(
+    items = Seq(
+        BreadcrumbsItem(
+          content = Text("Home"),
+          href = Some("/paperless/admin/home")
+        ),
+        BreadcrumbsItem(
+          content = Text("Paperless Admin"),
+          href = Some("#")
+        )
+      )
+    )
+  )
 
     <div class="transaction-banner--complete">
         <h1 class="transaction-banner__heading">Failed to manually opt user out</h1>
@@ -31,9 +47,9 @@
 
     </div>
 
-        <h2>User Summary</h2>
+    <h2>User Summary</h2>
 
-        @uk.gov.hmrc.preferencesadminfrontend.views.html.user_summary(preferences)
+    @uk.gov.hmrc.preferencesadminfrontend.views.html.user_summary(govukSummaryList, preferences)
 
     <div style="margin-top: 100px;">
         <a class="back-link" href="/paperless/admin/search">Opt out another user</a>

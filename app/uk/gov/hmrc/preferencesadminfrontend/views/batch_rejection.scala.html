@@ -37,10 +37,10 @@ govukInput: GovukInput)
    }
    <textarea id="reasonText" name="reasonText" maxlength="120">@gmcBatchApprovalForm("reasonText").value</textarea>
   </div>
-  <fieldset>
+  <div class="govuk-button-group">
    <input type="submit" name="confirm" class="button" value="Confirm"/>
-   <input type="button" onclick="location.href='@routes.MessageBrakeController.showAdminPage';" class="button" value="Cancel"/>
-  </fieldset>
+   <input type="button" onclick="location.href='@routes.MessageBrakeController.showAdminPage';" class="govuk-button govuk-button--secondary" data-module="govuk-button" value="Cancel"/>
+  </div>
   <input type="hidden" name="batchId" value='@gmcBatchApprovalForm("batchId").value'/>
   <input type="hidden" name="formId" value='@gmcBatchApprovalForm("formId").value'/>
   <input type="hidden" name="issueDate" value='@gmcBatchApprovalForm("issueDate").value'/>

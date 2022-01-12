@@ -42,12 +42,12 @@
 
     </div>
 
-<fieldset>
+  <div class="govuk-button-group">
     @if(appConfig.featureFlag == "true") {
-    <input type="submit" name="confirm" class="button" value="Send"/>
+      <input type="submit" name="confirm" class="button" value="Send"/>
     }
-    <input type="button" onclick="location.href='@routes.MessageController.show';" class="button" value="Cancel"/>
-</fieldset>
+    <input type="button" onclick="location.href='@routes.MessageController.show';" class="govuk-button govuk-button--secondary" value="Cancel"/>
+  </div>
 }
 </div>
 }
