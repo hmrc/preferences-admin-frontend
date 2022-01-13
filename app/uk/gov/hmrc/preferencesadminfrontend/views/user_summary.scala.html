@@ -60,13 +60,13 @@
                 SummaryListRow(
                     key = Key(content = Text(s"Opted ${if(preference.genericPaperless) "In" else if(preference.genericUpdatedAt.isEmpty) "In" else "Out"} ${if(preference.genericPaperless) "to" else if(preference.genericUpdatedAt.isEmpty) "to" else "of"} paperless for generic terms and conditions")),
                     value = Value(
-                        content = Text(DateTimeFormat.forPattern("d MMMM yyyy hh:mm:ss a").print(preference.genericUpdatedAt.get))
+                        content = Text(preference.genericUpdatedAt.fold("Not available")(date => DateTimeFormat.forPattern("d MMMM yyyy hh:mm:ss a").print(date)))
                     )
                 ),
                 SummaryListRow(
                     key = Key(content = Text(s"Opted ${if(preference.taxCreditsPaperless) "In" else if(preference.taxCreditsUpdatedAt.isEmpty) "In" else "Out"} ${if(preference.taxCreditsPaperless) "to" else if(preference.taxCreditsUpdatedAt.isEmpty) "to" else "of"} paperless for tax credits terms and conditions")),
                     value = Value(
-                        content = Text(DateTimeFormat.forPattern("d MMMM yyyy hh:mm:ss a").print(preference.taxCreditsUpdatedAt.get))
+                        content = Text(preference.taxCreditsUpdatedAt.fold("Not available")(date => DateTimeFormat.forPattern("d MMMM yyyy hh:mm:ss a").print(date)))
                     )
                 ),
                 SummaryListRow(
