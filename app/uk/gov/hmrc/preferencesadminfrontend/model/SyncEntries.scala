@@ -16,14 +16,20 @@
 
 package uk.gov.hmrc.preferencesadminfrontend.model
 
-import uk.gov.hmrc.preferencesadminfrontend.services.MigrationResult
+import play.api.data.Form
+import play.api.data.Forms.{ boolean, mapping, text }
+import play.api.data.validation.{ Constraint, Invalid, Valid }
+import play.api.libs.json.{ Json, OWrites }
 
-case class MigrationSummary(
-  total: SummaryItem,
-  noDigitalFootprint: SummaryItem,
-  saOnlineCustomer: SummaryItem,
-  itsaOnlineNoPreference: SummaryItem,
-  itsaOnlineCustomerPreference: SummaryItem,
-  saAndItsaCustomer: SummaryItem)
+case class SyncEntries(entries: String, confirm: Boolean)
 
-case class SummaryItem(count: Int, items: List[MigrationResult])
+object SyncEntries {
+  implicit val writes: OWrites[SyncEntries] = Json.writes[SyncEntries]
+
+  def apply(): Form[SyncEntries] = Form(
+    mapping(
+      "entries" -> text.verifying("Entries are lost", _.nonEmpty),
+      "confirm" -> boolean
+    )(SyncEntries.apply)(SyncEntries.unapply)
+  )
+}

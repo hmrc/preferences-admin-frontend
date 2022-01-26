@@ -18,7 +18,7 @@ package uk.gov.hmrc.preferencesadminfrontend.controllers
 
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import uk.gov.hmrc.preferencesadminfrontend.services.Identifier
+import uk.gov.hmrc.preferencesadminfrontend.services.{ Identifier, MigrationResult }
 
 class MessageControllerspec extends PlaySpec with GuiceOneAppPerSuite {
   val controller = app.injector.instanceOf[MessageController]

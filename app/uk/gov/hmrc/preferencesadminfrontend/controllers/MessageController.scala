@@ -23,10 +23,14 @@ import play.api.libs.json.Json
 import play.api.mvc.{ MessagesControllerComponents, Result }
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
+
 import uk.gov.hmrc.preferencesadminfrontend.model.{ MigrationEntries, MigrationSummary }
 import uk.gov.hmrc.preferencesadminfrontend.services.{ Identifier, MigratePreferencesService, MigrationResult }
-import uk.gov.hmrc.preferencesadminfrontend.views.html.{ migration_entries, migration_status, migration_summary }
 
+import uk.gov.hmrc.preferencesadminfrontend.model.{ MigrationEntries, MigrationSummary, SummaryItem, SyncEntries }
+
+
+import uk.gov.hmrc.preferencesadminfrontend.views.html.{ migration_entries, migration_status, migration_summary }
 import java.net.IDN
 import javax.inject.Inject
 import scala.concurrent.{ ExecutionContext, Future }
@@ -55,10 +59,27 @@ class MessageController @Inject()(
         input => {
           parse(input.entries) match {
             case Right(identifiers) =>
-              sendMessageService.migrate(identifiers = identifiers, dryRun = false).map { resut =>
-                val identifiersSerialized = Json.toJson(identifiers).toString()
+              sendMessageService.migrate(identifiers, dryRun = false).map {
+                resut =>
+                  val identifiersSerialized = Json.toJson(identifiers).toString()
 
-                Ok(migrationSummaryView(MigrationSummary(50, 10, 20, 60, 30, 20), identifiers, identifiersSerialized))
+                  val total = testData
+                  val group = testData.groupBy(_.status)
+                  val noDigitalFootPrint = group("NoDigital")
+                  val saOnline = group("SAOnlineCustomer")
+                  val ItsaOnlineNoPreference = group("ITSAOnlineNoPreference")
+                  val ItsaOnlinewithPreference = group("ITSAOnline")
+                  val saItsaCustomer = group("SA&ITSACustomer")
+
+                  val summary = MigrationSummary(
+                    total = SummaryItem(total.size, total),
+                    noDigitalFootprint = SummaryItem(noDigitalFootPrint.size, noDigitalFootPrint),
+                    saOnlineCustomer = SummaryItem(saOnline.size, saOnline),
+                    itsaOnlineNoPreference = SummaryItem(ItsaOnlineNoPreference.size, ItsaOnlineNoPreference),
+                    itsaOnlineCustomerPreference = SummaryItem(ItsaOnlinewithPreference.size, ItsaOnlinewithPreference),
+                    saAndItsaCustomer = SummaryItem(saItsaCustomer.size, saItsaCustomer)
+                  )
+                  Ok(migrationSummaryView(summary, identifiers, SyncEntries().fill(SyncEntries(identifiersSerialized, false))))
               }
             case Left(value) => Future.successful(BadRequest(migrationEntriesView(MigrationEntries().withError(FormError("identifiers", value)))))
           }
@@ -102,4 +123,40 @@ class MessageController @Inject()(
     }
     parseEntries(lines)
   }
+
+  def testData = List(
+    MigrationResult(Identifier("123", "456"), "NoDigital", "", "reason"),
+    MigrationResult(Identifier("123", "456"), "NoDigital", "", "reason"),
+    MigrationResult(Identifier("123", "456"), "NoDigital", "", "reason"),
+    MigrationResult(Identifier("123", "456"), "NoDigital", "", "reason"),
+    MigrationResult(Identifier("123", "456"), "NoDigital", "", "reason"),
+    MigrationResult(Identifier("123", "456"), "SAOnlineCustomer", "", "reason"),
+    MigrationResult(Identifier("123", "456"), "SAOnlineCustomer", "", "reason"),
+    MigrationResult(Identifier("123", "456"), "SAOnlineCustomer", "", "reason"),
+    MigrationResult(Identifier("123", "456"), "SAOnlineCustomer", "", "reason"),
+    MigrationResult(Identifier("123", "456"), "SAOnlineCustomer", "", "reason"),
+    MigrationResult(Identifier("123", "456"), "SAOnlineCustomer", "", "reason"),
+    MigrationResult(Identifier("123", "456"), "SAOnlineCustomer", "", "reason"),
+    MigrationResult(Identifier("123", "456"), "SAOnlineCustomer", "", "reason"),
+    MigrationResult(Identifier("456", "123"), "ITSAOnlineNoPreference", "", "reason"),
+    MigrationResult(Identifier("456", "123"), "ITSAOnlineNoPreference", "", "reason"),
+    MigrationResult(Identifier("456", "123"), "ITSAOnlineNoPreference", "", "reason"),
+    MigrationResult(Identifier("456", "123"), "ITSAOnlineNoPreference", "", "reason"),
+    MigrationResult(Identifier("456", "123"), "ITSAOnlineNoPreference", "", "reason"),
+    MigrationResult(Identifier("456", "123"), "ITSAOnlineNoPreference", "", "reason"),
+    MigrationResult(Identifier("456", "123"), "ITSAOnlineNoPreference", "", "reason"),
+    MigrationResult(Identifier("899", "322"), "ITSAOnline", "", "reason"),
+    MigrationResult(Identifier("899", "322"), "ITSAOnline", "", "reason"),
+    MigrationResult(Identifier("899", "322"), "ITSAOnline", "", "reason"),
+    MigrationResult(Identifier("899", "322"), "ITSAOnline", "", "reason"),
+    MigrationResult(Identifier("899", "322"), "ITSAOnline", "", "reason"),
+    MigrationResult(Identifier("899", "322"), "ITSAOnline", "", "reason"),
+    MigrationResult(Identifier("899", "322"), "ITSAOnline", "", "reason"),
+    MigrationResult(Identifier("534", "286"), "SA&ITSACustomer", "", "reason"),
+    MigrationResult(Identifier("534", "286"), "SA&ITSACustomer", "", "reason"),
+    MigrationResult(Identifier("534", "286"), "SA&ITSACustomer", "", "reason"),
+    MigrationResult(Identifier("534", "286"), "SA&ITSACustomer", "", "reason"),
+    MigrationResult(Identifier("534", "286"), "SA&ITSACustomer", "", "reason")
+  )
+
 }
