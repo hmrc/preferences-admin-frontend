@@ -21,6 +21,6 @@ import play.api.libs.json.{ Json, OFormat }
 case class UserState(state: String)
 
 object UserState {
-  val Active = "Active"
+  val Activated = "Activated"
   implicit val fmt: OFormat[UserState] = Json.format[UserState]
 }

@@ -29,23 +29,23 @@ import scala.concurrent.{ ExecutionContext, Future }
 @Singleton
 class EnrolmentStoreConnector @Inject()(httpClient: HttpClient, val servicesConfig: ServicesConfig)(implicit ec: ExecutionContext) {
 
-  def serviceUrl: String = servicesConfig.baseUrl("enrolment")
+  def serviceUrl: String = servicesConfig.baseUrl("enrolment-store")
 
   def getUserIds(enrolmentKey: String)(implicit hc: HeaderCarrier): Future[Either[String, List[PrincipalUserId]]] =
     httpClient
-      .GET[HttpResponse](s"$serviceUrl/enrolments/$enrolmentKey/users?type=principal")
+      .GET[HttpResponse](s"$serviceUrl/enrolments-store/enrolments/$enrolmentKey/users?type=principal")
       .map(handleGetUserIdsResponse)
 
   def getUserState(principalUserId: PrincipalUserId, saUtr: String)(implicit hc: HeaderCarrier): Future[Either[String, Option[UserState]]] =
     httpClient
-      .GET[HttpResponse](s"$serviceUrl/users/${principalUserId.id}/enrolments/$saUtr")
+      .GET[HttpResponse](s"$serviceUrl/enrolments-store/users/${principalUserId.id}/enrolments/$saUtr")
       .map(handleCheckEnrolmentsResponse)
 
   private def handleGetUserIdsResponse(httpResponse: HttpResponse): Either[String, List[PrincipalUserId]] =
     httpResponse.status match {
       case OK         => httpResponse.json.as[PrincipalUserIds].principalUserIds.asRight
       case NO_CONTENT => List.empty[PrincipalUserId].asRight
-      case other      => s"upstream error when getting principal, $other ${httpResponse.body}".asLeft
+      case other      => s"upstream error when getting principals, $other ${httpResponse.body}".asLeft
     }
 
   private def handleCheckEnrolmentsResponse(httpResponse: HttpResponse): Either[String, Option[UserState]] =

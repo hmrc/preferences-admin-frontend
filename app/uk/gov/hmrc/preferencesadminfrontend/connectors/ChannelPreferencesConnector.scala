@@ -39,12 +39,12 @@ object ChannelPreferencesConnector {
 class ChannelPreferencesConnector @Inject()(httpClient: HttpClient, val servicesConfig: ServicesConfig)(implicit ec: ExecutionContext) {
   def serviceUrl: String = servicesConfig.baseUrl("channel-preferences")
 
-  def updateStatus(statusUpdate: StatusUpdate)(implicit hc: HeaderCarrier): Future[Either[String, String]] =
+  def updateStatus(statusUpdate: StatusUpdate)(implicit hc: HeaderCarrier): Future[Either[String, Unit]] =
     httpClient
       .POST[StatusUpdate, HttpResponse](s"$serviceUrl/channel-preferences/preference/itsa/status", statusUpdate)
       .map { httpResponse =>
         httpResponse.status match {
-          case status if Status.isSuccessful(status) => SentStatus.Sent.asRight
+          case status if Status.isSuccessful(status) => ().asRight
           case other                                 => s"upstream error when sending status update, $other ${httpResponse.body}".asLeft
         }
       }

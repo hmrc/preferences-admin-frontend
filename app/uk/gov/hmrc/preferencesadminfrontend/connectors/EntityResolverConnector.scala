@@ -105,7 +105,7 @@ class EntityResolverConnector @Inject()(httpClient: HttpClient, val servicesConf
       }
   }
 
-  def confirm(entityId: String, itsaId: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[String, String]] =
+  def confirm(entityId: String, itsaId: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[String, Unit]] =
     httpClient
       .doEmptyPost(
         s"$serviceUrl/preferences/confirm/$entityId/$itsaId",
@@ -113,7 +113,7 @@ class EntityResolverConnector @Inject()(httpClient: HttpClient, val servicesConf
       )
       .map { httpResponse =>
         httpResponse.status match {
-          case status if Status.isSuccessful(status) => SentStatus.Sent.asRight
+          case status if Status.isSuccessful(status) => ().asRight
           case other                                 => s"upstream error when confirming ITSA preference, $other ${httpResponse.body}".asLeft
         }
       }

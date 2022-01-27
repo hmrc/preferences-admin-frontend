@@ -24,7 +24,7 @@ import play.api.mvc.{ MessagesControllerComponents, Result }
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
 import uk.gov.hmrc.preferencesadminfrontend.model.{ MigrationEntries, MigrationSummary }
-import uk.gov.hmrc.preferencesadminfrontend.services.{ Identifier, MigrationResult, SendMessageService }
+import uk.gov.hmrc.preferencesadminfrontend.services.{ Identifier, MigratePreferencesService, MigrationResult }
 import uk.gov.hmrc.preferencesadminfrontend.views.html.{ migration_entries, migration_status, migration_summary }
 
 import java.net.IDN
@@ -37,7 +37,7 @@ class MessageController @Inject()(
   migrationEntriesView: migration_entries,
   migrationSummaryView: migration_summary,
   migrationStatusView: migration_status,
-  sendMessageService: SendMessageService,
+  sendMessageService: MigratePreferencesService,
   mcc: MessagesControllerComponents)(implicit appConfig: AppConfig, ec: ExecutionContext)
     extends FrontendController(mcc) with I18nSupport with Logging {
 
@@ -55,7 +55,7 @@ class MessageController @Inject()(
         input => {
           parse(input.entries) match {
             case Right(identifiers) =>
-              sendMessageService.sendMessage(identifiers).map { resut =>
+              sendMessageService.migrate(identifiers = identifiers, dryRun = false).map { resut =>
                 val identifiersSerialized = Json.toJson(identifiers).toString()
 
                 Ok(migrationSummaryView(MigrationSummary(50, 10, 20, 60, 30, 20), identifiers, identifiersSerialized))
@@ -71,7 +71,7 @@ class MessageController @Inject()(
 
     val identifiers = Json.parse(json).validate[List[Identifier]].get
 
-    sendMessageService.sendMessage(identifiers).map { resut: List[MigrationResult] =>
+    sendMessageService.migrate(identifiers = identifiers, dryRun = true).map { resut: List[MigrationResult] =>
       Ok(migrationStatusView(resut))
     }
 

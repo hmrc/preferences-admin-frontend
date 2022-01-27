@@ -32,7 +32,7 @@ class CustomerPreferenceMigrator @Inject()(
 ) {
   def migrateCustomer(identifier: Identifier, migratingCustomer: MigratingCustomer)(
     implicit headerCarrier: HeaderCarrier,
-    executionContext: ExecutionContext): Future[Either[String, String]] =
+    executionContext: ExecutionContext): Future[Either[String, Unit]] =
     migratingCustomer match {
       case sa: MTDPMigration.SAOnline               => migrateSAOnline(identifier, sa)
       case itsa: MTDPMigration.ITSAOnlinePreference => migrateITSAOnline(identifier, itsa)
@@ -40,10 +40,10 @@ class CustomerPreferenceMigrator @Inject()(
 
   private def migrateSAOnline(identifier: Identifier, saOnline: SAOnline)(
     implicit headerCarrier: HeaderCarrier,
-    executionContext: ExecutionContext): Future[Either[String, String]] =
+    executionContext: ExecutionContext): Future[Either[String, Unit]] =
     entityResolverConnector.confirm(saOnline.entityId.value, identifier.itsaId)
 
   private def migrateITSAOnline(identifier: Identifier, itsaOnlinePreference: ITSAOnlinePreference)(
-    implicit headerCarrier: HeaderCarrier): Future[Either[String, String]] =
+    implicit headerCarrier: HeaderCarrier): Future[Either[String, Unit]] =
     channelPreferencesConnector.updateStatus(StatusUpdate(identifier.itsaId, itsaOnlinePreference.isPaperless))
 }

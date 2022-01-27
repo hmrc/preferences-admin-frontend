@@ -55,10 +55,10 @@ class CustomerMigrationResolver @Inject()(
 
   private def resolve(enrolments: Enrolments, identifier: Identifier)(implicit headerCarrier: HeaderCarrier): EitherT[Future, String, CustomerType] = {
     val resolution = enrolments match {
-      case Enrolments(Some(ActiveSAEnrolment(_)), Some(_)) => checkITSAAndSA(identifier).map(_.asRight)
-      case Enrolments(Some(ActiveSAEnrolment(_)), None)    => checkSAPreference(identifier).map(_.getOrElse(NoDigitalFootprint).asRight)
-      case Enrolments(_, Some(_))                          => checkITSAPreference(identifier).map(_.getOrElse(ITSAOnlineNoPreference).asRight[String])
-      case Enrolments(_, None)                             => Future.successful(NoDigitalFootprint.asRight)
+      case Enrolments(Some(ActivatedSAEnrolment(_)), Some(_)) => checkITSAAndSA(identifier).map(_.asRight)
+      case Enrolments(Some(ActivatedSAEnrolment(_)), None)    => checkSAPreference(identifier).map(_.getOrElse(NoDigitalFootprint).asRight)
+      case Enrolments(_, Some(_))                             => checkITSAPreference(identifier).map(_.getOrElse(ITSAOnlineNoPreference).asRight[String])
+      case Enrolments(_, None)                                => Future.successful(NoDigitalFootprint.asRight)
     }
 
     EitherT(resolution)
@@ -66,13 +66,13 @@ class CustomerMigrationResolver @Inject()(
 
   private def checkITSAAndSA(identifier: Identifier)(implicit headerCarrier: HeaderCarrier): Future[CustomerType] =
     for {
-      saPreference   <- getSAPreference(identifier)
-      itsaPreference <- getITSAPreference(identifier)
+      saPreference   <- checkSAPreference(identifier)
+      itsaPreference <- checkITSAPreference(identifier)
     } yield
       (saPreference, itsaPreference) match {
-        case (Some(_), Some(_))              => SAandITSA
-        case (None, Some(preferenceDetails)) => maybeITSAPreference(preferenceDetails).getOrElse(ITSAOnlineNoPreference)
-        case _                               => ITSAOnlineNoPreference
+        case (Some(_), Some(_))       => SAandITSA
+        case (None, Some(itsaOnline)) => itsaOnline
+        case _                        => ITSAOnlineNoPreference
       }
 
   private def getSAPreference(identifier: Identifier)(implicit headerCarrier: HeaderCarrier): Future[Option[PreferenceDetails]] =
