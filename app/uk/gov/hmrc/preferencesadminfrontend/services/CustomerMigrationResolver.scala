@@ -40,18 +40,22 @@ class CustomerMigrationResolver @Inject()(
       .flatMap(resolve(_, identifier))
       .value
 
-  private def getEnrolments(identifier: Identifier)(implicit headerCarrier: HeaderCarrier): EitherT[Future, String, Enrolments] =
+  private def getEnrolments(identifier: Identifier)(implicit headerCarrier: HeaderCarrier): EitherT[Future, String, Enrolments] = {
+    val saUtrTaxId = TaxIdentifier("sautr", identifier.utr)
+    val itsaTaxId = TaxIdentifier("itsa", identifier.itsaId)
+
     for {
-      saEnrolment   <- EitherT(enrolmentStoreConnector.getUserIds(identifier.utr))
+      saEnrolment   <- EitherT(enrolmentStoreConnector.getUserIds(saUtrTaxId))
       saPrincipal   <- EitherT.fromEither[Future](validatePrincipal(saEnrolment))
       saStatus      <- EitherT(getSaStatus(saPrincipal, identifier))
-      itsaEnrolment <- EitherT(enrolmentStoreConnector.getUserIds(identifier.itsaId))
+      itsaEnrolment <- EitherT(enrolmentStoreConnector.getUserIds(itsaTaxId))
       itsaPrinciple <- EitherT.fromEither[Future](validatePrincipal(itsaEnrolment))
     } yield
       Enrolments(
         (saPrincipal, saStatus).mapN(StatefulSAEnrolment.apply),
         itsaPrinciple
       )
+  }
 
   private def resolve(enrolments: Enrolments, identifier: Identifier)(implicit headerCarrier: HeaderCarrier): EitherT[Future, String, CustomerType] = {
     val resolution = enrolments match {
@@ -105,6 +109,6 @@ class CustomerMigrationResolver @Inject()(
     identifier: Identifier
   )(implicit headerCarrier: HeaderCarrier): Future[Either[String, Option[UserState]]] =
     principalUserId
-      .map(enrolmentStoreConnector.getUserState(_, identifier.utr))
+      .map(enrolmentStoreConnector.getUserState(_, TaxIdentifier("sautr", identifier.utr)))
       .getOrElse(Future.successful(none.asRight))
 }

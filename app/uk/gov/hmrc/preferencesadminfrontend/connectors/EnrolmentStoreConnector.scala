@@ -16,12 +16,14 @@
 
 package uk.gov.hmrc.preferencesadminfrontend.connectors
 
+import cats.data.EitherT
 import cats.syntax.either._
 import cats.syntax.option._
 import play.api.http.Status._
 import uk.gov.hmrc.http.{ HeaderCarrier, HttpClient, HttpResponse }
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.preferencesadminfrontend.model.{ PrincipalUserId, PrincipalUserIds, UserState }
+import uk.gov.hmrc.preferencesadminfrontend.services.model.TaxIdentifier
 
 import javax.inject.{ Inject, Singleton }
 import scala.concurrent.{ ExecutionContext, Future }
@@ -31,15 +33,23 @@ class EnrolmentStoreConnector @Inject()(httpClient: HttpClient, val servicesConf
 
   def serviceUrl: String = servicesConfig.baseUrl("enrolment-store")
 
-  def getUserIds(enrolmentKey: String)(implicit hc: HeaderCarrier): Future[Either[String, List[PrincipalUserId]]] =
-    httpClient
-      .GET[HttpResponse](s"$serviceUrl/enrolments-store/enrolments/$enrolmentKey/users?type=principal")
-      .map(handleGetUserIdsResponse)
+  def getUserIds(taxIdentifier: TaxIdentifier)(implicit hc: HeaderCarrier): Future[Either[String, List[PrincipalUserId]]] =
+    (for {
+      id <- EitherT.fromEither[Future](resolveId(taxIdentifier))
+      response <- EitherT(
+                   httpClient
+                     .GET[HttpResponse](s"$serviceUrl/enrolments-store/enrolments/$id/users?type=principal")
+                     .map(handleGetUserIdsResponse))
+    } yield response).value
 
-  def getUserState(principalUserId: PrincipalUserId, saUtr: String)(implicit hc: HeaderCarrier): Future[Either[String, Option[UserState]]] =
-    httpClient
-      .GET[HttpResponse](s"$serviceUrl/enrolments-store/users/${principalUserId.id}/enrolments/$saUtr")
-      .map(handleCheckEnrolmentsResponse)
+  def getUserState(principalUserId: PrincipalUserId, saUtr: TaxIdentifier)(implicit hc: HeaderCarrier): Future[Either[String, Option[UserState]]] =
+    (for {
+      id <- EitherT.fromEither[Future](resolveId(saUtr))
+      response <- EitherT(
+                   httpClient
+                     .GET[HttpResponse](s"$serviceUrl/enrolments-store/users/${principalUserId.id}/enrolments/$id")
+                     .map(handleCheckEnrolmentsResponse))
+    } yield response).value
 
   private def handleGetUserIdsResponse(httpResponse: HttpResponse): Either[String, List[PrincipalUserId]] =
     httpResponse.status match {
@@ -53,5 +63,12 @@ class EnrolmentStoreConnector @Inject()(httpClient: HttpClient, val servicesConf
       case OK        => httpResponse.json.as[UserState].some.asRight
       case NOT_FOUND => none.asRight
       case other     => s"upstream error when checking enrolment state, $other ${httpResponse.body}".asLeft
+    }
+
+  def resolveId(taxIdentifier: TaxIdentifier): Either[String, String] =
+    taxIdentifier.name match {
+      case "sautr" => s"IR-SA~UTR~${taxIdentifier.value}".asRight
+      case "itsa"  => s"HMRC-MTD-IT~ITSAID~${taxIdentifier.value}".asRight
+      case _       => s"unknown tax identifier: ${taxIdentifier.name}, ${taxIdentifier.value}".asLeft
     }
 }

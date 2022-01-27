@@ -37,13 +37,13 @@ class CustomerMigrationResolverSpec extends PlaySpec with ScalaFutures with Eith
 
   "resolveCustomerType" must {
     "Activated SA enrolment with a preference and no ITSA enrolment => a SAOnline" in new Scope {
-      when(enrolmentStoreConnector.getUserIds(identifier.utr))
+      when(enrolmentStoreConnector.getUserIds(saTaxId))
         .thenReturn(Future.successful(List(saPrincipalUserId).asRight))
 
-      when(enrolmentStoreConnector.getUserIds(identifier.itsaId))
+      when(enrolmentStoreConnector.getUserIds(itsaTaxId))
         .thenReturn(Future.successful(List.empty.asRight))
 
-      when(enrolmentStoreConnector.getUserState(saPrincipalUserId, saUtr))
+      when(enrolmentStoreConnector.getUserState(saPrincipalUserId, saTaxId))
         .thenReturn(Future.successful(userState.some.asRight))
 
       when(entityResolverConnector.getPreferenceDetails(saTaxId))
@@ -57,13 +57,13 @@ class CustomerMigrationResolverSpec extends PlaySpec with ScalaFutures with Eith
     }
 
     "Activated SA enrolment with a preference and an ITSA enrolment with a preference => SAandITSA" in new Scope {
-      when(enrolmentStoreConnector.getUserIds(identifier.utr))
+      when(enrolmentStoreConnector.getUserIds(saTaxId))
         .thenReturn(Future.successful(List(saPrincipalUserId).asRight))
 
-      when(enrolmentStoreConnector.getUserIds(identifier.itsaId))
+      when(enrolmentStoreConnector.getUserIds(itsaTaxId))
         .thenReturn(Future.successful(List(itsaPrincipalUserId).asRight))
 
-      when(enrolmentStoreConnector.getUserState(saPrincipalUserId, saUtr))
+      when(enrolmentStoreConnector.getUserState(saPrincipalUserId, saTaxId))
         .thenReturn(Future.successful(userState.some.asRight))
 
       when(entityResolverConnector.getPreferenceDetails(saTaxId))
@@ -80,13 +80,13 @@ class CustomerMigrationResolverSpec extends PlaySpec with ScalaFutures with Eith
     }
 
     "Activated SA enrolment with no preference and an ITSA enrolment with a preference => ITSAOnlinePreference" in new Scope {
-      when(enrolmentStoreConnector.getUserIds(identifier.utr))
+      when(enrolmentStoreConnector.getUserIds(saTaxId))
         .thenReturn(Future.successful(List(saPrincipalUserId).asRight))
 
-      when(enrolmentStoreConnector.getUserIds(identifier.itsaId))
+      when(enrolmentStoreConnector.getUserIds(itsaTaxId))
         .thenReturn(Future.successful(List(itsaPrincipalUserId).asRight))
 
-      when(enrolmentStoreConnector.getUserState(saPrincipalUserId, saUtr))
+      when(enrolmentStoreConnector.getUserState(saPrincipalUserId, saTaxId))
         .thenReturn(Future.successful(userState.some.asRight))
 
       when(entityResolverConnector.getPreferenceDetails(saTaxId))
@@ -103,13 +103,13 @@ class CustomerMigrationResolverSpec extends PlaySpec with ScalaFutures with Eith
     }
 
     "Activated SA enrolment with a preference and an ITSA enrolment with no preference => ITSAOnlineNoPreference" in new Scope {
-      when(enrolmentStoreConnector.getUserIds(identifier.utr))
+      when(enrolmentStoreConnector.getUserIds(saTaxId))
         .thenReturn(Future.successful(List(saPrincipalUserId).asRight))
 
-      when(enrolmentStoreConnector.getUserIds(identifier.itsaId))
+      when(enrolmentStoreConnector.getUserIds(itsaTaxId))
         .thenReturn(Future.successful(List(itsaPrincipalUserId).asRight))
 
-      when(enrolmentStoreConnector.getUserState(saPrincipalUserId, saUtr))
+      when(enrolmentStoreConnector.getUserState(saPrincipalUserId, saTaxId))
         .thenReturn(Future.successful(userState.some.asRight))
 
       when(entityResolverConnector.getPreferenceDetails(saTaxId))
@@ -126,13 +126,13 @@ class CustomerMigrationResolverSpec extends PlaySpec with ScalaFutures with Eith
     }
 
     "Inactive SA enrolment with no preference and an ITSA enrolment with no preference => ITSAOnlineNoPreference" in new Scope {
-      when(enrolmentStoreConnector.getUserIds(identifier.utr))
+      when(enrolmentStoreConnector.getUserIds(saTaxId))
         .thenReturn(Future.successful(List(saPrincipalUserId).asRight))
 
-      when(enrolmentStoreConnector.getUserIds(identifier.itsaId))
+      when(enrolmentStoreConnector.getUserIds(itsaTaxId))
         .thenReturn(Future.successful(List(itsaPrincipalUserId).asRight))
 
-      when(enrolmentStoreConnector.getUserState(saPrincipalUserId, saUtr))
+      when(enrolmentStoreConnector.getUserState(saPrincipalUserId, saTaxId))
         .thenReturn(Future.successful(userState.copy(state = "NotYetActivated").some.asRight))
 
       when(entityResolverConnector.getPreferenceDetails(itsaTaxId))
@@ -146,13 +146,13 @@ class CustomerMigrationResolverSpec extends PlaySpec with ScalaFutures with Eith
     }
 
     "Inactive SA enrolment with no preference and no ITSA enrolment => NoDigitalFootprint" in new Scope {
-      when(enrolmentStoreConnector.getUserIds(identifier.utr))
+      when(enrolmentStoreConnector.getUserIds(saTaxId))
         .thenReturn(Future.successful(List(saPrincipalUserId).asRight))
 
-      when(enrolmentStoreConnector.getUserIds(identifier.itsaId))
+      when(enrolmentStoreConnector.getUserIds(itsaTaxId))
         .thenReturn(Future.successful(List.empty.asRight))
 
-      when(enrolmentStoreConnector.getUserState(saPrincipalUserId, saUtr))
+      when(enrolmentStoreConnector.getUserState(saPrincipalUserId, saTaxId))
         .thenReturn(Future.successful(userState.copy(state = "NotYetActivated").some.asRight))
 
       customerMigrationResolver

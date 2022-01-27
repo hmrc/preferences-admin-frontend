@@ -28,6 +28,7 @@ import uk.gov.hmrc.http.{ HeaderCarrier, HttpClient, HttpResponse }
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.preferencesadminfrontend.model.UserState.Activated
 import uk.gov.hmrc.preferencesadminfrontend.model.{ PrincipalUserId, PrincipalUserIds, UserState }
+import uk.gov.hmrc.preferencesadminfrontend.services.model.TaxIdentifier
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -35,12 +36,12 @@ import scala.concurrent.Future
 class EnrolmentStoreConnectorSpec extends PlaySpec with ScalaFutures with EitherValues with GuiceOneAppPerSuite {
 
   "getUserIds" must {
-    "return right SentStatus.Sent upon success" in new Scope {
+    "return right list of principal ids upon success" in new Scope {
       when(httpClient.GET[HttpResponse](expectedPrincipalPath))
         .thenReturn(Future.successful(HttpResponse(OK, Json.toJson(principalUserIds).toString())))
 
       enrolmentStoreConnector
-        .getUserIds(enrolmentKey)(headerCarrier)
+        .getUserIds(taxId)(headerCarrier)
         .futureValue
         .right
         .value mustBe List(principalUserId)
@@ -51,7 +52,7 @@ class EnrolmentStoreConnectorSpec extends PlaySpec with ScalaFutures with Either
         .thenReturn(Future.successful(httpResponse(NoContent, body = "")))
 
       enrolmentStoreConnector
-        .getUserIds(enrolmentKey)(headerCarrier)
+        .getUserIds(taxId)(headerCarrier)
         .futureValue
         .right
         .value mustBe List.empty
@@ -62,7 +63,7 @@ class EnrolmentStoreConnectorSpec extends PlaySpec with ScalaFutures with Either
         .thenReturn(Future.successful(httpResponse(Bad, body = "BAD_NEWS")))
 
       enrolmentStoreConnector
-        .getUserIds(enrolmentKey)(headerCarrier)
+        .getUserIds(taxId)(headerCarrier)
         .futureValue
         .left
         .value mustBe s"upstream error when getting principals, $Bad BAD_NEWS"
@@ -75,7 +76,7 @@ class EnrolmentStoreConnectorSpec extends PlaySpec with ScalaFutures with Either
         .thenReturn(Future.successful(httpResponse(OK, body = Json.toJson(userState).toString())))
 
       enrolmentStoreConnector
-        .getUserState(principalUserId, saUtr)(headerCarrier)
+        .getUserState(principalUserId, taxId)(headerCarrier)
         .futureValue
         .right
         .value mustBe userState.some
@@ -86,7 +87,7 @@ class EnrolmentStoreConnectorSpec extends PlaySpec with ScalaFutures with Either
         .thenReturn(Future.successful(httpResponse(NotFound, body = "")))
 
       enrolmentStoreConnector
-        .getUserState(principalUserId, saUtr)(headerCarrier)
+        .getUserState(principalUserId, taxId)(headerCarrier)
         .futureValue
         .right
         .value mustBe none
@@ -97,7 +98,7 @@ class EnrolmentStoreConnectorSpec extends PlaySpec with ScalaFutures with Either
         .thenReturn(Future.successful(httpResponse(Bad, body = "BAD_NEWS")))
 
       enrolmentStoreConnector
-        .getUserState(principalUserId, saUtr)(headerCarrier)
+        .getUserState(principalUserId, taxId)(headerCarrier)
         .futureValue
         .left
         .value mustBe s"upstream error when checking enrolment state, $Bad BAD_NEWS"
@@ -111,7 +112,7 @@ class EnrolmentStoreConnectorSpec extends PlaySpec with ScalaFutures with Either
     val NotFound = 404
 
     val saUtr = "MY-UTR"
-    val enrolmentKey = "SA-I-SAY"
+    val taxId: TaxIdentifier = TaxIdentifier("sautr", saUtr)
 
     val principalUserId: PrincipalUserId = PrincipalUserId("SA-ME-WE")
     val principalUserIds: PrincipalUserIds = PrincipalUserIds(List(principalUserId))
@@ -123,8 +124,8 @@ class EnrolmentStoreConnectorSpec extends PlaySpec with ScalaFutures with Either
 
     val enrolmentStoreConnector = new EnrolmentStoreConnector(httpClient, servicesConfig)
     val enrolmentStoreServiceUrl: String = app.injector.instanceOf[ServicesConfig].baseUrl("enrolment-store")
-    val expectedPrincipalPath = s"$enrolmentStoreServiceUrl/enrolments-store/enrolments/$enrolmentKey/users?type=principal"
-    val expectedUserStatePath = s"$enrolmentStoreServiceUrl/enrolments-store/users/${principalUserId.id}/enrolments/$saUtr"
+    val expectedPrincipalPath = s"$enrolmentStoreServiceUrl/enrolments-store/enrolments/IR-SA~UTR~$saUtr/users?type=principal"
+    val expectedUserStatePath = s"$enrolmentStoreServiceUrl/enrolments-store/users/${principalUserId.id}/enrolments/IR-SA~UTR~$saUtr"
 
     def httpResponse(status: Int, body: String): HttpResponse = HttpResponse(
       status = status,
