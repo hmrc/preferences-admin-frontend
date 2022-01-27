@@ -16,18 +16,22 @@
 
 package uk.gov.hmrc.preferencesadminfrontend.services.model
 
-import play.api.libs.json.Json
+import uk.gov.hmrc.preferencesadminfrontend.model.UserState.Activated
+import uk.gov.hmrc.preferencesadminfrontend.model.{ PrincipalUserId, UserState }
 
-case class TaxIdentifier(name: String, value: String) {
-  val regime = name match {
-    case "sautr" => "sa"
-    case "itsa"  => "itsa"
-    case "nino"  => "paye"
-    case "email" => "email"
-    case _       => throw new RuntimeException("Invalid tax id name")
+sealed trait StatefulSAEnrolment
+
+object StatefulSAEnrolment {
+  def apply(principalUserId: PrincipalUserId, userState: UserState): StatefulSAEnrolment = userState match {
+    case UserState(Activated) => ActivatedSAEnrolment(principalUserId)
+    case _                    => InactiveSAEnrolment(principalUserId)
   }
 }
 
-object TaxIdentifier {
-  implicit val format = Json.format[TaxIdentifier]
-}
+case class ActivatedSAEnrolment(
+  saEnrolment: PrincipalUserId
+) extends StatefulSAEnrolment
+
+case class InactiveSAEnrolment(
+  saEnrolment: PrincipalUserId
+) extends StatefulSAEnrolment

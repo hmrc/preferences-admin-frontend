@@ -14,20 +14,13 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.preferencesadminfrontend.services.model
+package uk.gov.hmrc.preferencesadminfrontend.model
 
-import play.api.libs.json.Json
+import play.api.libs.json.{ Json, OFormat }
 
-case class TaxIdentifier(name: String, value: String) {
-  val regime = name match {
-    case "sautr" => "sa"
-    case "itsa"  => "itsa"
-    case "nino"  => "paye"
-    case "email" => "email"
-    case _       => throw new RuntimeException("Invalid tax id name")
-  }
-}
+case class UserState(state: String)
 
-object TaxIdentifier {
-  implicit val format = Json.format[TaxIdentifier]
+object UserState {
+  val Activated = "Activated"
+  implicit val fmt: OFormat[UserState] = Json.format[UserState]
 }

@@ -24,7 +24,9 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+import uk.gov.hmrc.preferencesadminfrontend.services.SentStatus
 import uk.gov.hmrc.preferencesadminfrontend.services.model.{ Email, EntityId, TaxIdentifier }
+import cats.syntax.either._
 
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.Try
@@ -102,6 +104,19 @@ class EntityResolverConnector @Inject()(httpClient: HttpClient, val servicesConf
           PreferenceNotFound
       }
   }
+
+  def confirm(entityId: String, itsaId: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[String, Unit]] =
+    httpClient
+      .doEmptyPost(
+        s"$serviceUrl/preferences/confirm/$entityId/$itsaId",
+        hc.headers(Seq(HeaderNames.authorisation))
+      )
+      .map { httpResponse =>
+        httpResponse.status match {
+          case status if Status.isSuccessful(status) => ().asRight
+          case other                                 => s"upstream error when confirming ITSA preference, $other ${httpResponse.body}".asLeft
+        }
+      }
 }
 
 trait OptOutResult
