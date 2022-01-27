@@ -29,7 +29,6 @@ import uk.gov.hmrc.preferencesadminfrontend.services.{ Identifier, MigratePrefer
 
 import uk.gov.hmrc.preferencesadminfrontend.model.{ MigrationEntries, MigrationSummary, SummaryItem, SyncEntries }
 
-
 import uk.gov.hmrc.preferencesadminfrontend.views.html.{ migration_entries, migration_status, migration_summary }
 import java.net.IDN
 import javax.inject.Inject
@@ -60,11 +59,11 @@ class MessageController @Inject()(
           parse(input.entries) match {
             case Right(identifiers) =>
               sendMessageService.migrate(identifiers, dryRun = false).map {
-                resut =>
+                result =>
                   val identifiersSerialized = Json.toJson(identifiers).toString()
 
-                  val total = testData
-                  val group = testData.groupBy(_.status)
+                  val total = result
+                  val group = result.groupBy(_.status)
                   val noDigitalFootPrint = group("NoDigital")
                   val saOnline = group("SAOnlineCustomer")
                   val ItsaOnlineNoPreference = group("ITSAOnlineNoPreference")
@@ -123,40 +122,5 @@ class MessageController @Inject()(
     }
     parseEntries(lines)
   }
-
-  def testData = List(
-    MigrationResult(Identifier("123", "456"), "NoDigital", "", "reason"),
-    MigrationResult(Identifier("123", "456"), "NoDigital", "", "reason"),
-    MigrationResult(Identifier("123", "456"), "NoDigital", "", "reason"),
-    MigrationResult(Identifier("123", "456"), "NoDigital", "", "reason"),
-    MigrationResult(Identifier("123", "456"), "NoDigital", "", "reason"),
-    MigrationResult(Identifier("123", "456"), "SAOnlineCustomer", "", "reason"),
-    MigrationResult(Identifier("123", "456"), "SAOnlineCustomer", "", "reason"),
-    MigrationResult(Identifier("123", "456"), "SAOnlineCustomer", "", "reason"),
-    MigrationResult(Identifier("123", "456"), "SAOnlineCustomer", "", "reason"),
-    MigrationResult(Identifier("123", "456"), "SAOnlineCustomer", "", "reason"),
-    MigrationResult(Identifier("123", "456"), "SAOnlineCustomer", "", "reason"),
-    MigrationResult(Identifier("123", "456"), "SAOnlineCustomer", "", "reason"),
-    MigrationResult(Identifier("123", "456"), "SAOnlineCustomer", "", "reason"),
-    MigrationResult(Identifier("456", "123"), "ITSAOnlineNoPreference", "", "reason"),
-    MigrationResult(Identifier("456", "123"), "ITSAOnlineNoPreference", "", "reason"),
-    MigrationResult(Identifier("456", "123"), "ITSAOnlineNoPreference", "", "reason"),
-    MigrationResult(Identifier("456", "123"), "ITSAOnlineNoPreference", "", "reason"),
-    MigrationResult(Identifier("456", "123"), "ITSAOnlineNoPreference", "", "reason"),
-    MigrationResult(Identifier("456", "123"), "ITSAOnlineNoPreference", "", "reason"),
-    MigrationResult(Identifier("456", "123"), "ITSAOnlineNoPreference", "", "reason"),
-    MigrationResult(Identifier("899", "322"), "ITSAOnline", "", "reason"),
-    MigrationResult(Identifier("899", "322"), "ITSAOnline", "", "reason"),
-    MigrationResult(Identifier("899", "322"), "ITSAOnline", "", "reason"),
-    MigrationResult(Identifier("899", "322"), "ITSAOnline", "", "reason"),
-    MigrationResult(Identifier("899", "322"), "ITSAOnline", "", "reason"),
-    MigrationResult(Identifier("899", "322"), "ITSAOnline", "", "reason"),
-    MigrationResult(Identifier("899", "322"), "ITSAOnline", "", "reason"),
-    MigrationResult(Identifier("534", "286"), "SA&ITSACustomer", "", "reason"),
-    MigrationResult(Identifier("534", "286"), "SA&ITSACustomer", "", "reason"),
-    MigrationResult(Identifier("534", "286"), "SA&ITSACustomer", "", "reason"),
-    MigrationResult(Identifier("534", "286"), "SA&ITSACustomer", "", "reason"),
-    MigrationResult(Identifier("534", "286"), "SA&ITSACustomer", "", "reason")
-  )
 
 }
