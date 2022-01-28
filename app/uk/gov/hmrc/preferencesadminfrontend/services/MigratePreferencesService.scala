@@ -95,10 +95,7 @@ object MigrationResult {
       reason = exception.getMessage
     )
 
-  def status(customerType: CustomerType): String = customerType match {
-    case _: SAOnline | _: ITSAOnlinePreference => SentStatus.Sent
-    case _                                     => SentStatus.NoPreferenceToMigrate
-  }
+  def status(customerType: CustomerType): String = customerType.getClass.getSimpleName
 }
 
 object DisplayType {
