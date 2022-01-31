@@ -20,32 +20,32 @@ import play.api.Logging
 import play.api.data.FormError
 import play.api.i18n.I18nSupport
 import play.api.libs.json.Json
-import play.api.mvc.{ MessagesControllerComponents, Result }
+import play.api.mvc.{ Action, AnyContent, MessagesControllerComponents, Request, Result }
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
-import uk.gov.hmrc.preferencesadminfrontend.model.{ MigrationEntries, MigrationSummary }
+import uk.gov.hmrc.preferencesadminfrontend.model.{ MigrationEntries, MigrationSummary, SummaryItem, SyncEntries }
+import uk.gov.hmrc.preferencesadminfrontend.services.Identifier._
 import uk.gov.hmrc.preferencesadminfrontend.services.{ Identifier, MigratePreferencesService, MigrationResult }
 import uk.gov.hmrc.preferencesadminfrontend.views.html.{ migration_entries, migration_status, migration_summary }
 
-import java.net.IDN
 import javax.inject.Inject
 import scala.concurrent.{ ExecutionContext, Future }
-import Identifier._
 
 class MessageController @Inject()(
   authorisedAction: AuthorisedAction,
   migrationEntriesView: migration_entries,
   migrationSummaryView: migration_summary,
   migrationStatusView: migration_status,
-  sendMessageService: MigratePreferencesService,
+  migratePreferencesService: MigratePreferencesService,
   mcc: MessagesControllerComponents)(implicit appConfig: AppConfig, ec: ExecutionContext)
     extends FrontendController(mcc) with I18nSupport with Logging {
 
-  def show() = authorisedAction.async { implicit request => implicit user =>
+  def show(): Action[AnyContent] = authorisedAction.async { implicit request => implicit user =>
     Future.successful(Ok(migrationEntriesView(MigrationEntries())))
   }
 
-  def check() = authorisedAction.async { implicit request => implicit user =>
+  def check(): Action[AnyContent] = authorisedAction.async { implicit request => implicit user =>
     MigrationEntries()
       .bindFromRequest()
       .fold(
@@ -53,31 +53,77 @@ class MessageController @Inject()(
           Future.successful(BadRequest(migrationEntriesView(formWithErrors)))
         },
         input => {
-          parse(input.entries) match {
-            case Right(identifiers) =>
-              sendMessageService.migrate(identifiers = identifiers, dryRun = false).map { resut =>
-                val identifiersSerialized = Json.toJson(identifiers).toString()
+          summaryResult(input.entries)
+        }
+      )
+  }
 
-                Ok(migrationSummaryView(MigrationSummary(50, 10, 20, 60, 30, 20), identifiers, identifiersSerialized))
-              }
-            case Left(value) => Future.successful(BadRequest(migrationEntriesView(MigrationEntries().withError(FormError("identifiers", value)))))
+  def sync(): Action[AnyContent] = authorisedAction.async { implicit request => implicit user =>
+    SyncEntries()
+      .bindFromRequest()
+      .fold(
+        _ => {
+          Future.successful(Redirect(routes.MessageController.show()))
+        },
+        input => {
+          request.body.asFormUrlEncoded.flatMap(_.get("accepted")) match {
+            case Some(_) =>
+              validateIdentities(input.entries)
+                .fold(
+                  _ => returnEntriesLost,
+                  identifiers =>
+                    migratePreferencesService.migrate(identifiers = identifiers, dryRun = false).map { result =>
+                      Ok(migrationStatusView(result))
+                  }
+                )
+            case None =>
+              validateIdentities(input.entries)
+                .fold(
+                  _ => returnEntriesLost,
+                  identifiers =>
+                    dryRun(identifiers).map { result =>
+                      Ok(
+                        migrationSummaryView(
+                          summary(result),
+                          identifiers,
+                          SyncEntries()
+                            .fill(SyncEntries(Json.toJson(identifiers).toString(), false))
+                            .withError(FormError("accepted", "We have to confirm migration"))
+                        )
+                      )
+
+                  }
+                )
+
           }
         }
       )
   }
 
-  def sync() = authorisedAction.async { implicit request => implicit user =>
-    val json = request.body.asFormUrlEncoded.get("entries").toList.head
+  private def validateIdentities(entries: String) =
+    Json
+      .parse(entries)
+      .validate[List[Identifier]]
 
-    val identifiers = Json.parse(json).validate[List[Identifier]].get
+  private def returnEntriesLost()(implicit request: Request[AnyContent]) =
+    Future.successful(
+      BadRequest(
+        migrationEntriesView(MigrationEntries()
+          .withError(FormError("identifiers", "We lost identifiers please start again")))))
 
-    sendMessageService.migrate(identifiers = identifiers, dryRun = true).map { resut: List[MigrationResult] =>
-      Ok(migrationStatusView(resut))
+  private def dryRun(identifiers: List[Identifier])(implicit hc: HeaderCarrier) =
+    migratePreferencesService.migrate(identifiers, dryRun = true)
+
+  private def summaryResult(entries: String)(implicit request: Request[AnyContent]): Future[Result] =
+    parse(entries) match {
+      case Right(identifiers) =>
+        dryRun(identifiers).map { result =>
+          Ok(migrationSummaryView(summary(result), identifiers, SyncEntries().fill(SyncEntries(Json.toJson(identifiers).toString(), true))))
+        }
+      case Left(value) => Future.successful(BadRequest(migrationEntriesView(MigrationEntries().withError(FormError("identifiers", value)))))
     }
 
-  }
-
-  def parse(input: String): Either[String, List[Identifier]] = {
+  private[controllers] def parse(input: String): Either[String, List[Identifier]] = {
     val lines: List[String] = input.split("\n").toList
     def parseEntries(lines: List[String]): Either[String, List[Identifier]] = {
       def add(line: String): Either[String, Identifier] =
@@ -101,5 +147,24 @@ class MessageController @Inject()(
       loop(lines, Right(List.empty))
     }
     parseEntries(lines)
+  }
+
+  private def summary(result: List[MigrationResult]) = {
+    val total = result
+    val group = result.groupBy(_.status)
+    val noDigitalFootPrint = group.get("NoDigital")
+    val saOnline = group.get("SAOnlineCustomer")
+    val ItsaOnlineNoPreference = group.get("ITSAOnlineNoPreference")
+    val ItsaOnlinewithPreference = group.get("ITSAOnline")
+    val saItsaCustomer = group.get("SAandITSA")
+
+    MigrationSummary(
+      total = SummaryItem(total.size, total),
+      noDigitalFootprint = SummaryItem(noDigitalFootPrint.size, noDigitalFootPrint.getOrElse(List.empty)),
+      saOnlineCustomer = SummaryItem(saOnline.size, saOnline.getOrElse(List.empty)),
+      itsaOnlineNoPreference = SummaryItem(ItsaOnlineNoPreference.size, ItsaOnlineNoPreference.getOrElse(List.empty)),
+      itsaOnlineCustomerPreference = SummaryItem(ItsaOnlinewithPreference.size, ItsaOnlinewithPreference.getOrElse(List.empty)),
+      saAndItsaCustomer = SummaryItem(saItsaCustomer.size, saItsaCustomer.getOrElse(List.empty))
+    )
   }
 }

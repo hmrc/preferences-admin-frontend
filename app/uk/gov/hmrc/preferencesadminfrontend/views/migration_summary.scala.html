@@ -20,7 +20,7 @@
 @import uk.gov.hmrc.preferencesadminfrontend.controllers.routes
 
 @this(layout: Layout, govukButton: GovukButton, form: FormWithCSRF)
-@(summary: MigrationSummary, entries: List[Identifier], data: String)(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
+@(summary: MigrationSummary, entries: List[Identifier], syncEntries: Form[SyncEntries])(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
 
 @layout(pageTitle = Some("Send message by UTR's")) {
 
@@ -29,107 +29,225 @@
 <h1 class="heading-large">Summary of Items that will be Migrated</h1>
 @form(action = routes.MessageController.sync) {
 
-
+<div>
+@syncEntries("accepted").errors.map { error =>
+<span class="error-message" id="error-message-utr-list" style="color:red;">@{error.message}</span>
+}
+</div>
 
 <div class="section">
-
     <table class="govuk-table">
-
         <thead class="govuk-table__head">
-
         </thead>
         <tbody class="govuk-table__body">
-
-
         <tr>
-            <td>Total records that will be processed</td>
-            <td>@summary.total</td>
+            <td>
+                <details class="govuk-details" data-module="govuk-details">
+                    <summary class="govuk-details__summary">
+                       <span class="govuk-details__summary-text">
+                           Total records that will be processed (@summary.total.count)
+                         </span>
+                    </summary>
+                    <div class="govuk-details__text">
+                        <table class="govuk-table">
+                            <thead class="govuk-table__head">
+                            <tr class="govuk-table__row">
+                                <th scope="col" class="govuk-table__header">ItsaID</th>
+                                <th scope="col" class="govuk-table__header">UTR</th>
+                                <th scope="col" class="govuk-table__header">Status</th>
+                            </tr>
+                            </thead>
+                            <tbody class="govuk-table__body">
+                            @for(entry <- summary.total.items) {
+                            <tr>
+                                <td>@{entry.identifier.itsaId}</td>
+                                <td>@{entry.identifier.utr}</td>
+                                <td>@{entry.status}</td>
+                            </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                </details>
+            </td>
         </tr>
-
         <tr>
-            <td>No digital footprint Count</td>
-            <td>@summary.noDigitalFootprint</td>
+            <td>
+                <details class="govuk-details" data-module="govuk-details">
+                    <summary class="govuk-details__summary">
+                       <span class="govuk-details__summary-text">
+                           No digital footprint Count (@summary.noDigitalFootprint.count)
+                         </span>
+                    </summary>
+                    <div class="govuk-details__text">
+                        <table class="govuk-table">
+                            <thead class="govuk-table__head">
+                            <tr class="govuk-table__row">
+                                <th scope="col" class="govuk-table__header">ItsaID</th>
+                                <th scope="col" class="govuk-table__header">UTR</th>
+                                <th scope="col" class="govuk-table__header">Status</th>
+                            </tr>
+                            </thead>
+                            <tbody class="govuk-table__body">
+                            @for(entry <- summary.noDigitalFootprint.items) {
+                            <tr>
+                                <td>@{entry.identifier.itsaId}</td>
+                                <td>@{entry.identifier.utr}</td>
+                                <td>@{entry.status}</td>
+                            </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                </details>
+            </td>
         </tr>
-
-
         <tr>
-            <td>SA Online Customer</td>
-            <td>@summary.saOnlineCustomer</td>
+            <td>
+                <details class="govuk-details" data-module="govuk-details">
+                    <summary class="govuk-details__summary">
+                       <span class="govuk-details__summary-text">
+                           SA Online Customer (@summary.saOnlineCustomer.count)
+                         </span>
+                    </summary>
+                    <div class="govuk-details__text">
+                        <table class="govuk-table">
+                            <thead class="govuk-table__head">
+                            <tr class="govuk-table__row">
+                                <th scope="col" class="govuk-table__header">ItsaID</th>
+                                <th scope="col" class="govuk-table__header">UTR</th>
+                                <th scope="col" class="govuk-table__header">Status</th>
+                            </tr>
+                            </thead>
+                            <tbody class="govuk-table__body">
+                            @for(entry <- summary.saOnlineCustomer.items) {
+                            <tr>
+                                <td>@{entry.identifier.itsaId}</td>
+                                <td>@{entry.identifier.utr}</td>
+                                <td>@{entry.status}</td>
+                            </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                </details>
+            </td>
         </tr>
-
-
         <tr>
-            <td>ITSA Online customers (no preference)</td>
-            <td>@summary.itsaOnlineNoPreference</td>
+            <td>
+                <details class="govuk-details" data-module="govuk-details">
+                    <summary class="govuk-details__summary">
+                       <span class="govuk-details__summary-text">
+                           ITSA Online customers (no preference) (@summary.itsaOnlineNoPreference.count)
+                         </span>
+                    </summary>
+                    <div class="govuk-details__text">
+                        <table class="govuk-table">
+                            <thead class="govuk-table__head">
+                            <tr class="govuk-table__row">
+                                <th scope="col" class="govuk-table__header">ItsaID</th>
+                                <th scope="col" class="govuk-table__header">UTR</th>
+                                <th scope="col" class="govuk-table__header">Status</th>
+                            </tr>
+                            </thead>
+                            <tbody class="govuk-table__body">
+                            @for(entry <- summary.itsaOnlineNoPreference.items) {
+                            <tr>
+                                <td>@{entry.identifier.itsaId}</td>
+                                <td>@{entry.identifier.utr}</td>
+                                <td>@{entry.status}</td>
+                            </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                </details>
+            </td>
         </tr>
-
-
         <tr>
-            <td>ITSA Online customers (preference)</td>
-            <td>@summary.itsaOnlineCustomerPreference</td>
+            <td>
+                <details class="govuk-details" data-module="govuk-details">
+                    <summary class="govuk-details__summary">
+                       <span class="govuk-details__summary-text">
+                           ITSA Online customers (preference) (@summary.itsaOnlineCustomerPreference.count)
+                         </span>
+                    </summary>
+                    <div class="govuk-details__text">
+                        <table class="govuk-table">
+                            <thead class="govuk-table__head">
+                            <tr class="govuk-table__row">
+                                <th scope="col" class="govuk-table__header">ItsaID</th>
+                                <th scope="col" class="govuk-table__header">UTR</th>
+                                <th scope="col" class="govuk-table__header">Status</th>
+                            </tr>
+                            </thead>
+                            <tbody class="govuk-table__body">
+                            @for(entry <- summary.itsaOnlineCustomerPreference.items) {
+                            <tr>
+                                <td>@{entry.identifier.itsaId}</td>
+                                <td>@{entry.identifier.utr}</td>
+                                <td>@{entry.status}</td>
+                            </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                </details>
+            </td>
         </tr>
-
         <tr>
-            <td>SA & ITSA customer</td>
-            <td>@summary.saAndItsaCustomer</td>
+            <td>
+                <details class="govuk-details" data-module="govuk-details">
+                    <summary class="govuk-details__summary">
+                       <span class="govuk-details__summary-text">
+                           SA & ITSA customer (@summary.saAndItsaCustomer.count)
+                         </span>
+                    </summary>
+                    <div class="govuk-details__text">
+                        <table class="govuk-table">
+                            <thead class="govuk-table__head">
+                            <tr class="govuk-table__row">
+                                <th scope="col" class="govuk-table__header">ItsaID</th>
+                                <th scope="col" class="govuk-table__header">UTR</th>
+                                <th scope="col" class="govuk-table__header">Status</th>
+                            </tr>
+                            </thead>
+                            <tbody class="govuk-table__body">
+                            @for(entry <- summary.saAndItsaCustomer.items) {
+                            <tr>
+                                <td>@{entry.identifier.itsaId}</td>
+                                <td>@{entry.identifier.utr}</td>
+                                <td>@{entry.status}</td>
+                            </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                </details>
+            </td>
         </tr>
-
         </tbody>
     </table>
 </div>
-    <input type="hidden" name="entries" value=@data>
+<input type="hidden" name="entries" value=@syncEntries("entries").value>
 
-
-
+<div class="govuk-form-group">
+    <fieldset class="govuk-fieldset">
+        <div class="govuk-checkboxes" data-module="govuk-checkboxes">
+            <div class="govuk-checkboxes__item">
+                <input class="govuk-checkboxes__input" id="accepted" name="accepted" type="checkbox" value=@syncEntries("accepted").value>
+                <label class="govuk-label govuk-checkboxes__label" for="accepted">
+                    Are you sure you want to Sync? You might even end up in Prison
+                </label>
+            </div>
+        </div>
+    </fieldset>
+</div>
 
 @if(appConfig.featureFlag == "true") {
 @govukButton(Button(
 content = Text("Sync")
 ))
 }
-
-
 }
-
-
-<details class="govuk-details" data-module="govuk-details">
-    <summary class="govuk-details__summary">
-    <span class="govuk-details__summary-text">
-      View records
-    </span>
-    </summary>
-
-            <div class="govuk-details__text">
-
-                <table class="govuk-table">
-
-                    <thead class="govuk-table__head">
-                    <tr class="govuk-table__row">
-                        <th scope="col" class="govuk-table__header">ItsaID</th>
-                        <th scope="col" class="govuk-table__header">UTR</th>
-                    </tr>
-                    </thead>
-                    <tbody class="govuk-table__body">
-                    @for(entry <- entries) {
-
-                    <tr>
-                        <td>@{entry.itsaId}</td>
-                        <td>@{entry.utr}</td>
-                    </tr>
-
-                    }
-
-                    </tbody>
-                </table>
-
-
-
-
-
-
-
-    </div>
-</details>
-
-
 }
