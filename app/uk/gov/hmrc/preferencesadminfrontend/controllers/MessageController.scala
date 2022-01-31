@@ -37,7 +37,7 @@ class MessageController @Inject()(
   migrationEntriesView: migration_entries,
   migrationSummaryView: migration_summary,
   migrationStatusView: migration_status,
-  sendMessageService: MigratePreferencesService,
+  migratePreferencesService: MigratePreferencesService,
   mcc: MessagesControllerComponents)(implicit appConfig: AppConfig, ec: ExecutionContext)
     extends FrontendController(mcc) with I18nSupport with Logging {
 
@@ -72,7 +72,7 @@ class MessageController @Inject()(
                 .fold(
                   _ => returnEntriesLost,
                   identifiers =>
-                    sendMessageService.migrate(identifiers = identifiers, dryRun = false).map { result =>
+                    migratePreferencesService.migrate(identifiers = identifiers, dryRun = false).map { result =>
                       Ok(migrationStatusView(result))
                   }
                 )
@@ -112,7 +112,7 @@ class MessageController @Inject()(
           .withError(FormError("identifiers", "We lost identifiers please start again")))))
 
   private def dryRun(identifiers: List[Identifier])(implicit hc: HeaderCarrier) =
-    sendMessageService.migrate(identifiers, dryRun = true)
+    migratePreferencesService.migrate(identifiers, dryRun = true)
 
   private def summaryResult(entries: String)(implicit request: Request[AnyContent]): Future[Result] =
     parse(entries) match {
@@ -152,19 +152,19 @@ class MessageController @Inject()(
   private def summary(result: List[MigrationResult]) = {
     val total = result
     val group = result.groupBy(_.status)
-    val noDigitalFootPrint = group("NoDigital")
-    val saOnline = group("SAOnlineCustomer")
-    val ItsaOnlineNoPreference = group("ITSAOnlineNoPreference")
-    val ItsaOnlinewithPreference = group("ITSAOnline")
-    val saItsaCustomer = group("SAandITSA")
+    val noDigitalFootPrint = group.get("NoDigital")
+    val saOnline = group.get("SAOnlineCustomer")
+    val ItsaOnlineNoPreference = group.get("ITSAOnlineNoPreference")
+    val ItsaOnlinewithPreference = group.get("ITSAOnline")
+    val saItsaCustomer = group.get("SAandITSA")
 
     MigrationSummary(
       total = SummaryItem(total.size, total),
-      noDigitalFootprint = SummaryItem(noDigitalFootPrint.size, noDigitalFootPrint),
-      saOnlineCustomer = SummaryItem(saOnline.size, saOnline),
-      itsaOnlineNoPreference = SummaryItem(ItsaOnlineNoPreference.size, ItsaOnlineNoPreference),
-      itsaOnlineCustomerPreference = SummaryItem(ItsaOnlinewithPreference.size, ItsaOnlinewithPreference),
-      saAndItsaCustomer = SummaryItem(saItsaCustomer.size, saItsaCustomer)
+      noDigitalFootprint = SummaryItem(noDigitalFootPrint.size, noDigitalFootPrint.getOrElse(List.empty)),
+      saOnlineCustomer = SummaryItem(saOnline.size, saOnline.getOrElse(List.empty)),
+      itsaOnlineNoPreference = SummaryItem(ItsaOnlineNoPreference.size, ItsaOnlineNoPreference.getOrElse(List.empty)),
+      itsaOnlineCustomerPreference = SummaryItem(ItsaOnlinewithPreference.size, ItsaOnlinewithPreference.getOrElse(List.empty)),
+      saAndItsaCustomer = SummaryItem(saItsaCustomer.size, saItsaCustomer.getOrElse(List.empty))
     )
   }
 }
