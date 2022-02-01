@@ -39,8 +39,9 @@ class EnrolmentStoreConnector @Inject()(httpClient: HttpClient, val servicesConf
       id <- EitherT.fromEither[Future](resolveId(taxIdentifier))
       response <- EitherT(
                    httpClient
-                     .GET[HttpResponse](s"$serviceUrl/enrolment-store/enrolments/$id/users?type=principal")
+                     .GET[HttpResponse](s"$serviceUrl/enrolment-store-proxy/enrolment-store/enrolments/$id/users?type=principal")
                      .map(handleGetUserIdsResponse))
+      _ = logger.logger.warn("------------ getUserIds: " + response.map(_.id))
     } yield response).value
 
   def getUserState(principalUserId: PrincipalUserId, saUtr: TaxIdentifier)(implicit hc: HeaderCarrier): Future[Either[String, Option[UserState]]] =
@@ -48,8 +49,9 @@ class EnrolmentStoreConnector @Inject()(httpClient: HttpClient, val servicesConf
       id <- EitherT.fromEither[Future](resolveId(saUtr))
       response <- EitherT(
                    httpClient
-                     .GET[HttpResponse](s"$serviceUrl/enrolment-store/users/${principalUserId.id}/enrolments/$id")
+                     .GET[HttpResponse](s"$serviceUrl/enrolment-store-proxy/enrolment-store/users/${principalUserId.id}/enrolments/$id")
                      .map(handleCheckEnrolmentsResponse))
+      _ = logger.logger.warn("------------ getUserState: " + response.map(_.state))
     } yield response).value
 
   private def handleGetUserIdsResponse(httpResponse: HttpResponse): Either[String, List[PrincipalUserId]] =
