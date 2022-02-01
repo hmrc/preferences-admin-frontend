@@ -19,17 +19,18 @@ package uk.gov.hmrc.preferencesadminfrontend.connectors
 import cats.data.EitherT
 import cats.syntax.either._
 import cats.syntax.option._
+import play.api.Logging
 import play.api.http.Status._
-import uk.gov.hmrc.http.{ HeaderCarrier, HttpClient, HttpResponse }
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-import uk.gov.hmrc.preferencesadminfrontend.model.{ PrincipalUserId, PrincipalUserIds, UserState }
+import uk.gov.hmrc.preferencesadminfrontend.model.{PrincipalUserId, PrincipalUserIds, UserState}
 import uk.gov.hmrc.preferencesadminfrontend.services.model.TaxIdentifier
 
-import javax.inject.{ Inject, Singleton }
-import scala.concurrent.{ ExecutionContext, Future }
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class EnrolmentStoreConnector @Inject()(httpClient: HttpClient, val servicesConfig: ServicesConfig)(implicit ec: ExecutionContext) {
+class EnrolmentStoreConnector @Inject()(httpClient: HttpClient, val servicesConfig: ServicesConfig)(implicit ec: ExecutionContext)  extends Logging{
 
   def serviceUrl: String = servicesConfig.baseUrl("enrolment-store")
 
@@ -38,7 +39,7 @@ class EnrolmentStoreConnector @Inject()(httpClient: HttpClient, val servicesConf
       id <- EitherT.fromEither[Future](resolveId(taxIdentifier))
       response <- EitherT(
                    httpClient
-                     .GET[HttpResponse](s"$serviceUrl/enrolments-store/enrolments/$id/users?type=principal")
+                     .GET[HttpResponse](s"$serviceUrl/enrolment-store/enrolments/$id/users?type=principal")
                      .map(handleGetUserIdsResponse))
     } yield response).value
 
@@ -47,7 +48,7 @@ class EnrolmentStoreConnector @Inject()(httpClient: HttpClient, val servicesConf
       id <- EitherT.fromEither[Future](resolveId(saUtr))
       response <- EitherT(
                    httpClient
-                     .GET[HttpResponse](s"$serviceUrl/enrolments-store/users/${principalUserId.id}/enrolments/$id")
+                     .GET[HttpResponse](s"$serviceUrl/enrolment-store/users/${principalUserId.id}/enrolments/$id")
                      .map(handleCheckEnrolmentsResponse))
     } yield response).value
 
