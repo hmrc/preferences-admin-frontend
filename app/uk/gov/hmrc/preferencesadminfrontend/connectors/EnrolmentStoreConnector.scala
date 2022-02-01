@@ -71,7 +71,7 @@ class EnrolmentStoreConnector @Inject()(httpClient: HttpClient, val servicesConf
   def resolveId(taxIdentifier: TaxIdentifier): Either[String, String] =
     taxIdentifier.name match {
       case "sautr" => s"IR-SA~UTR~${taxIdentifier.value}".asRight
-      case "itsa"  => s"HMRC-MTD-IT~ITSAID~${taxIdentifier.value}".asRight
+      case "itsa"  => s"HMRC-MTD-IT~MTDITID~${taxIdentifier.value}".asRight
       case _       => s"unknown tax identifier: ${taxIdentifier.name}, ${taxIdentifier.value}".asLeft
     }
 }
