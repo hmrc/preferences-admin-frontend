@@ -95,7 +95,7 @@ object MigrationResult {
       reason = exception.getMessage
     )
 
-  def status(customerType: CustomerType): String = customerType.getClass.getSimpleName
+  def status(customerType: CustomerType): String = customerType.getClass.getSimpleName.stripSuffix("$")
 }
 
 object DisplayType {

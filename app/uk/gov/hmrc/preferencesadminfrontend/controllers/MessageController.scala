@@ -152,11 +152,11 @@ class MessageController @Inject()(
   private def summary(result: List[MigrationResult]) = {
     val total = result
     val group = result.groupBy(_.status)
-    val noDigitalFootPrint = group.get("NoDigitalFootprint$")
-    val saOnline = group.get("SAOnline$")
-    val ItsaOnlineNoPreference = group.get("ITSAOnlineNoPreference$")
-    val ItsaOnlinewithPreference = group.get("ITSAOnlinePreference$")
-    val saItsaCustomer = group.get("SAandITSA$")
+    val noDigitalFootPrint = group.get("NoDigitalFootprint")
+    val saOnline = group.get("SAOnline")
+    val ItsaOnlineNoPreference = group.get("ITSAOnlineNoPreference")
+    val ItsaOnlinewithPreference = group.get("ITSAOnlinePreference")
+    val saItsaCustomer = group.get("SAandITSA")
 
     MigrationSummary(
       total = SummaryItem(total.size, total),
