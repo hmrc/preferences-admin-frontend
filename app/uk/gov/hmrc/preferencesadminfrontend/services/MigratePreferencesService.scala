@@ -17,6 +17,7 @@
 package uk.gov.hmrc.preferencesadminfrontend.services
 
 import cats.syntax.either._
+import play.api.Logger
 import play.api.libs.json.{ Json, OFormat }
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.preferencesadminfrontend.model.MTDPMigration._
@@ -31,16 +32,22 @@ object Identifier {
 }
 
 class MigratePreferencesService @Inject()(customerMigrationResolver: CustomerMigrationResolver, customerPreferenceMigrator: CustomerPreferenceMigrator) {
-
+  val logger = Logger(getClass)
   def migrate(
     identifiers: List[Identifier],
     dryRun: Boolean
   )(implicit headerCarrier: HeaderCarrier, executionContext: ExecutionContext): Future[List[MigrationResult]] = {
+    logger.debug(s"migrate identifiers ${identifiers.map(i => i.itsaId + i.utr)} with dryrun $dryRun")
     val results = identifiers.map { identifier =>
       customerMigrationResolver
         .resolveCustomerType(identifier)
         .flatMap(migrate(_, identifier, dryRun))
-        .recover { case exception: Exception => MigrationResult(exception, identifier) }
+        .recover {
+          case exception: Exception => {
+            logger.debug(s"migrateFunctionOutput ${exception.getMessage}")
+            MigrationResult(exception, identifier)
+          }
+        }
     }
 
     Future.sequence(results)
@@ -50,10 +57,15 @@ class MigratePreferencesService @Inject()(customerMigrationResolver: CustomerMig
     result: Either[String, CustomerType],
     identifier: Identifier,
     dryRun: Boolean
-  )(implicit headerCarrier: HeaderCarrier, executionContext: ExecutionContext): Future[MigrationResult] = result match {
-    case Right(m: MigratingCustomer)    => migrateCustomer(identifier, m, dryRun).map(MigrationResult(_, identifier, m))
-    case Right(n: NonMigratingCustomer) => Future.successful(MigrationResult(n, identifier))
-    case Left(error)                    => Future.successful(MigrationResult(identifier, SentStatus.Failed, DisplayType.Red, error))
+  )(implicit headerCarrier: HeaderCarrier, executionContext: ExecutionContext): Future[MigrationResult] = {
+
+    logger.debug(s"migratePrivate ${result.map(_.toString)}")
+
+    result match {
+      case Right(m: MigratingCustomer)    => migrateCustomer(identifier, m, dryRun).map(MigrationResult(_, identifier, m))
+      case Right(n: NonMigratingCustomer) => Future.successful(MigrationResult(n, identifier))
+      case Left(error)                    => Future.successful(MigrationResult(identifier, SentStatus.Failed, DisplayType.Red, error))
+    }
   }
 
   private def migrateCustomer(identifier: Identifier, migratingCustomer: MigratingCustomer, dryRun: Boolean)(
@@ -63,6 +75,7 @@ class MigratePreferencesService @Inject()(customerMigrationResolver: CustomerMig
     if (dryRun) {
       Future.successful(().asRight)
     } else {
+      logger.debug(s"migrateCustomerprivate ${identifier.itsaId} and $migratingCustomer  ")
       customerPreferenceMigrator.migrateCustomer(identifier, migratingCustomer)
     }
 }
@@ -95,7 +108,7 @@ object MigrationResult {
       reason = exception.getMessage
     )
 
-  def status(customerType: CustomerType): String = customerType.getClass.getSimpleName
+  def status(customerType: CustomerType): String = customerType.getClass.getSimpleName.stripSuffix("$")
 }
 
 object DisplayType {

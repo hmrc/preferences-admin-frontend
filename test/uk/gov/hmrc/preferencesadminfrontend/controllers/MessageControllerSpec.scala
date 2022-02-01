@@ -31,11 +31,11 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.http.{ HeaderCarrier, RequestChain }
 import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
 import uk.gov.hmrc.preferencesadminfrontend.controllers.model.User
-import uk.gov.hmrc.preferencesadminfrontend.model.MigrationEntries
+import uk.gov.hmrc.preferencesadminfrontend.model.{ MigrationEntries, PrincipalUserIds }
 import uk.gov.hmrc.preferencesadminfrontend.services.{ Identifier, MigratePreferencesService, MigrationResult }
 import uk.gov.hmrc.preferencesadminfrontend.views.html.{ migration_entries, migration_status, migration_summary }
 import org.mockito.ArgumentMatchers._
-import play.api.libs.json.Json
+import play.api.libs.json.{ JsValue, Json }
 import play.api.libs.json.Reads.path
 import sttp.model.HeaderNames.Host
 

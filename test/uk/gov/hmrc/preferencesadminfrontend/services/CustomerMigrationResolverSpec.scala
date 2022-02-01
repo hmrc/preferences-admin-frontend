@@ -168,8 +168,8 @@ class CustomerMigrationResolverSpec extends PlaySpec with ScalaFutures with Eith
     val itsaId = "I-AM-ITSA"
     val identifier: Identifier = Identifier(itsaId, saUtr)
 
-    val saPrincipalUserId: PrincipalUserId = PrincipalUserId("MY-ID-SA")
-    val itsaPrincipalUserId: PrincipalUserId = PrincipalUserId("MY-ID-ITSA")
+    val saPrincipalUserId = "MY-ID-SA"
+    val itsaPrincipalUserId = "MY-ID-ITSA"
 
     val userState: UserState = UserState(Activated)
 

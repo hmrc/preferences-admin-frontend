@@ -152,19 +152,19 @@ class MessageController @Inject()(
   private def summary(result: List[MigrationResult]) = {
     val total = result
     val group = result.groupBy(_.status)
-    val noDigitalFootPrint = group.get("NoDigital")
-    val saOnline = group.get("SAOnlineCustomer")
+    val noDigitalFootPrint = group.get("NoDigitalFootprint")
+    val saOnline = group.get("SAOnline")
     val ItsaOnlineNoPreference = group.get("ITSAOnlineNoPreference")
-    val ItsaOnlinewithPreference = group.get("ITSAOnline")
+    val ItsaOnlinewithPreference = group.get("ITSAOnlinePreference")
     val saItsaCustomer = group.get("SAandITSA")
 
     MigrationSummary(
       total = SummaryItem(total.size, total),
-      noDigitalFootprint = SummaryItem(noDigitalFootPrint.size, noDigitalFootPrint.getOrElse(List.empty)),
-      saOnlineCustomer = SummaryItem(saOnline.size, saOnline.getOrElse(List.empty)),
-      itsaOnlineNoPreference = SummaryItem(ItsaOnlineNoPreference.size, ItsaOnlineNoPreference.getOrElse(List.empty)),
-      itsaOnlineCustomerPreference = SummaryItem(ItsaOnlinewithPreference.size, ItsaOnlinewithPreference.getOrElse(List.empty)),
-      saAndItsaCustomer = SummaryItem(saItsaCustomer.size, saItsaCustomer.getOrElse(List.empty))
+      noDigitalFootprint = SummaryItem(noDigitalFootPrint.getOrElse(List.empty).size, noDigitalFootPrint.getOrElse(List.empty)),
+      saOnlineCustomer = SummaryItem(saOnline.getOrElse(List.empty).size, saOnline.getOrElse(List.empty)),
+      itsaOnlineNoPreference = SummaryItem(ItsaOnlineNoPreference.getOrElse(List.empty).size, ItsaOnlineNoPreference.getOrElse(List.empty)),
+      itsaOnlineCustomerPreference = SummaryItem(ItsaOnlinewithPreference.getOrElse(List.empty).size, ItsaOnlinewithPreference.getOrElse(List.empty)),
+      saAndItsaCustomer = SummaryItem(saItsaCustomer.getOrElse(List.empty).size, saItsaCustomer.getOrElse(List.empty))
     )
   }
 }
