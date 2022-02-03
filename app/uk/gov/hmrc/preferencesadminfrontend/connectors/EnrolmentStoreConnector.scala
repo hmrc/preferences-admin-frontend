@@ -19,7 +19,7 @@ package uk.gov.hmrc.preferencesadminfrontend.connectors
 import cats.data.EitherT
 import cats.syntax.either._
 import cats.syntax.option._
-import play.api.Logging
+import play.api.{ Logger, Logging }
 import play.api.http.Status._
 import uk.gov.hmrc.http.{ HeaderCarrier, HttpClient, HttpResponse }
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -30,7 +30,9 @@ import javax.inject.{ Inject, Singleton }
 import scala.concurrent.{ ExecutionContext, Future }
 
 @Singleton
-class EnrolmentStoreConnector @Inject()(httpClient: HttpClient, val servicesConfig: ServicesConfig)(implicit ec: ExecutionContext) extends Logging {
+class EnrolmentStoreConnector @Inject()(httpClient: HttpClient, val servicesConfig: ServicesConfig)(implicit ec: ExecutionContext) {
+
+  val logger = Logger(getClass)
 
   def serviceUrl: String = servicesConfig.baseUrl("enrolment-store")
 
@@ -41,7 +43,7 @@ class EnrolmentStoreConnector @Inject()(httpClient: HttpClient, val servicesConf
                    httpClient
                      .GET[HttpResponse](s"$serviceUrl/enrolment-store-proxy/enrolment-store/enrolments/$id/users?type=principal")
                      .map(handleGetUserIdsResponse))
-      _ = logger.logger.warn("------------ getUserIds: " + response.map(_.id))
+      _ = logger.warn("------------ getUserIds: " + response.map(_.id))
     } yield response).value
 
   def getUserState(principalUserId: PrincipalUserId, saUtr: TaxIdentifier)(implicit hc: HeaderCarrier): Future[Either[String, Option[UserState]]] =
@@ -51,7 +53,7 @@ class EnrolmentStoreConnector @Inject()(httpClient: HttpClient, val servicesConf
                    httpClient
                      .GET[HttpResponse](s"$serviceUrl/enrolment-store-proxy/enrolment-store/users/${principalUserId.id}/enrolments/$id")
                      .map(handleCheckEnrolmentsResponse))
-      _ = logger.logger.warn("------------ getUserState: " + response.map(_.state))
+      _ = logger.warn("------------ getUserState: " + response.map(_.state))
     } yield response).value
 
   private def handleGetUserIdsResponse(httpResponse: HttpResponse): Either[String, List[PrincipalUserId]] =

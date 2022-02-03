@@ -20,6 +20,7 @@ import cats.data.EitherT
 import cats.implicits.catsSyntaxTuple2Semigroupal
 import cats.syntax.either._
 import cats.syntax.option._
+import play.api.{ Logger, Logging }
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.preferencesadminfrontend.connectors.{ EnrolmentStoreConnector, EntityResolverConnector, PreferenceDetails }
 import uk.gov.hmrc.preferencesadminfrontend.model.MTDPMigration._
@@ -34,7 +35,7 @@ class CustomerMigrationResolver @Inject()(
   enrolmentStoreConnector: EnrolmentStoreConnector,
   entityResolverConnector: EntityResolverConnector
 )(implicit executionContext: ExecutionContext) {
-
+  val logger = Logger(getClass)
   def resolveCustomerType(identifier: Identifier)(implicit head: HeaderCarrier): Future[Either[String, CustomerType]] =
     getEnrolments(identifier)
       .flatMap(resolve(_, identifier))
@@ -50,11 +51,17 @@ class CustomerMigrationResolver @Inject()(
       saStatus      <- EitherT(getSaStatus(saPrincipal, identifier))
       itsaEnrolment <- EitherT(enrolmentStoreConnector.getUserIds(itsaTaxId))
       itsaPrinciple <- EitherT.fromEither[Future](validatePrincipal(itsaEnrolment))
-    } yield
+    } yield {
+
+      logger.warn(s"AdminGetEnrolmentssaPrincipal: $saPrincipal")
+      logger.warn(s"AdminGetEnrolmentssaStatus: $saStatus")
+      logger.warn(s"AdminGetEnrolmentsitsaPrinciple: $itsaPrinciple")
+
       Enrolments(
         (saPrincipal, saStatus).mapN(StatefulSAEnrolment.apply),
         itsaPrinciple
       )
+    }
   }
 
   private def resolve(enrolments: Enrolments, identifier: Identifier)(implicit headerCarrier: HeaderCarrier): EitherT[Future, String, CustomerType] = {
@@ -74,9 +81,18 @@ class CustomerMigrationResolver @Inject()(
       itsaPreference <- checkITSAPreference(identifier)
     } yield
       (saPreference, itsaPreference) match {
-        case (Some(_), Some(_))       => SAandITSA
-        case (None, Some(itsaOnline)) => itsaOnline
-        case _                        => ITSAOnlineNoPreference
+        case (Some(_), Some(_)) => {
+          logger.warn(s"AdmincheckITSAAndSA: $saPreference - $itsaPreference")
+          SAandITSA
+        }
+        case (None, Some(itsaOnline)) => {
+          logger.warn(s"AdmincheckITSAAndSAitsaOnline: $itsaOnline")
+          itsaOnline
+        }
+        case _ => {
+          logger.warn(s"AdmincheckITSAAndSA: noPreference")
+          ITSAOnlineNoPreference
+        }
       }
 
   private def getSAPreference(identifier: Identifier)(implicit headerCarrier: HeaderCarrier): Future[Option[PreferenceDetails]] =
