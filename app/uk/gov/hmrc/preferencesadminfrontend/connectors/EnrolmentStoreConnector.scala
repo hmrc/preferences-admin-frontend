@@ -43,7 +43,7 @@ class EnrolmentStoreConnector @Inject()(httpClient: HttpClient, val servicesConf
                    httpClient
                      .GET[HttpResponse](s"$serviceUrl/enrolment-store-proxy/enrolment-store/enrolments/$id/users?type=principal")
                      .map(handleGetUserIdsResponse))
-      _ = logger.warn("------------ getUserIds: " + response.map(_.id))
+      _ = logger.debug("------------ getUserIds: " + response.map(_.id))
     } yield response).value
 
   def getUserState(principalUserId: PrincipalUserId, saUtr: TaxIdentifier)(implicit hc: HeaderCarrier): Future[Either[String, Option[UserState]]] =
@@ -53,7 +53,7 @@ class EnrolmentStoreConnector @Inject()(httpClient: HttpClient, val servicesConf
                    httpClient
                      .GET[HttpResponse](s"$serviceUrl/enrolment-store-proxy/enrolment-store/users/${principalUserId.id}/enrolments/$id")
                      .map(handleCheckEnrolmentsResponse))
-      _ = logger.warn("------------ getUserState: " + response.map(_.state))
+      _ = logger.debug("------------ getUserState: " + response.map(_.state))
     } yield response).value
 
   private def handleGetUserIdsResponse(httpResponse: HttpResponse): Either[String, List[PrincipalUserId]] =

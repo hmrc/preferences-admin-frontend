@@ -53,9 +53,9 @@ class CustomerMigrationResolver @Inject()(
       itsaPrinciple <- EitherT.fromEither[Future](validatePrincipal(itsaEnrolment))
     } yield {
 
-      logger.warn(s"AdminGetEnrolmentssaPrincipal: $saPrincipal")
-      logger.warn(s"AdminGetEnrolmentssaStatus: $saStatus")
-      logger.warn(s"AdminGetEnrolmentsitsaPrinciple: $itsaPrinciple")
+      logger.debug(s"AdminGetEnrolmentssaPrincipal: $saPrincipal")
+      logger.debug(s"AdminGetEnrolmentssaStatus: $saStatus")
+      logger.debug(s"AdminGetEnrolmentsitsaPrinciple: $itsaPrinciple")
 
       Enrolments(
         (saPrincipal, saStatus).mapN(StatefulSAEnrolment.apply),
@@ -82,15 +82,15 @@ class CustomerMigrationResolver @Inject()(
     } yield
       (saPreference, itsaPreference) match {
         case (Some(_), Some(_)) => {
-          logger.warn(s"AdmincheckITSAAndSA: $saPreference - $itsaPreference")
+          logger.debug(s"AdmincheckITSAAndSA: $saPreference - $itsaPreference")
           SAandITSA
         }
         case (None, Some(itsaOnline)) => {
-          logger.warn(s"AdmincheckITSAAndSAitsaOnline: $itsaOnline")
+          logger.debug(s"AdmincheckITSAAndSAitsaOnline: $itsaOnline")
           itsaOnline
         }
         case _ => {
-          logger.warn(s"AdmincheckITSAAndSA: noPreference")
+          logger.debug(s"AdmincheckITSAAndSA: noPreference")
           ITSAOnlineNoPreference
         }
       }
