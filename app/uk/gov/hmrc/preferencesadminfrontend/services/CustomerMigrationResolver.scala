@@ -66,12 +66,15 @@ class CustomerMigrationResolver @Inject()(
   }
 
   private def resolve(enrolments: Enrolments, identifier: Identifier)(implicit headerCarrier: HeaderCarrier): EitherT[Future, String, CustomerType] = {
+    logger.info(s"resolveEnrolments: $enrolments")
     val resolution = enrolments match {
       case Enrolments(Some(ActivatedSAEnrolment(_)), Some(_)) => checkITSAAndSA(identifier).map(_.asRight)
       case Enrolments(Some(ActivatedSAEnrolment(_)), None)    => checkSAPreference(identifier).map(_.getOrElse(NoDigitalFootprint).asRight)
       case Enrolments(_, Some(_))                             => checkITSAPreference(identifier).map(_.getOrElse(ITSAOnlineNoPreference).asRight[String])
       case Enrolments(_, None)                                => Future.successful(NoDigitalFootprint.asRight)
     }
+
+    resolution.map(_.map(x => logger.info(s"resolveEnrolments ${x.some}"))).value
 
     EitherT(resolution)
   }

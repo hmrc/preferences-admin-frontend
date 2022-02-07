@@ -42,7 +42,14 @@ class MigratePreferencesService @Inject()(customerMigrationResolver: CustomerMig
       customerMigrationResolver
         .resolveCustomerType(identifier)
         .flatMap(migrate(_, identifier, dryRun))
-        .recover { case exception: Exception => MigrationResult(exception, identifier) }
+        .recover {
+          case exception: Exception => {
+
+            logger.info(s"migrateFunctionOutput ${exception.getMessage}")
+
+            MigrationResult(exception, identifier)
+          }
+        }
     }
 
     Future.sequence(results)
@@ -52,10 +59,15 @@ class MigratePreferencesService @Inject()(customerMigrationResolver: CustomerMig
     result: Either[String, CustomerType],
     identifier: Identifier,
     dryRun: Boolean
-  )(implicit headerCarrier: HeaderCarrier, executionContext: ExecutionContext): Future[MigrationResult] = result match {
-    case Right(m: MigratingCustomer)    => migrateCustomer(identifier, m, dryRun).map(MigrationResult(_, identifier, m))
-    case Right(n: NonMigratingCustomer) => Future.successful(MigrationResult(n, identifier))
-    case Left(error)                    => Future.successful(MigrationResult(identifier, SentStatus.Failed, DisplayType.Red, error))
+  )(implicit headerCarrier: HeaderCarrier, executionContext: ExecutionContext): Future[MigrationResult] = {
+
+    logger.info(s"migratePrivate ${result.map(_.toString)}")
+
+    result match {
+      case Right(m: MigratingCustomer)    => migrateCustomer(identifier, m, dryRun).map(MigrationResult(_, identifier, m))
+      case Right(n: NonMigratingCustomer) => Future.successful(MigrationResult(n, identifier))
+      case Left(error)                    => Future.successful(MigrationResult(identifier, SentStatus.Failed, DisplayType.Red, error))
+    }
   }
 
   private def migrateCustomer(identifier: Identifier, migratingCustomer: MigratingCustomer, dryRun: Boolean)(
