@@ -37,7 +37,7 @@ class MigratePreferencesService @Inject()(customerMigrationResolver: CustomerMig
     identifiers: List[Identifier],
     dryRun: Boolean
   )(implicit headerCarrier: HeaderCarrier, executionContext: ExecutionContext): Future[List[MigrationResult]] = {
-    logger.debug(s"$migrate identifiers ${identifiers.map(i => i.itsaId + i.utr)} with dryrun $dryRun")
+    logger.debug(s"migrate identifiers ${identifiers.map(i => i.itsaId + i.utr)} with dryrun $dryRun")
     val results = identifiers.map { identifier =>
       customerMigrationResolver
         .resolveCustomerType(identifier)
