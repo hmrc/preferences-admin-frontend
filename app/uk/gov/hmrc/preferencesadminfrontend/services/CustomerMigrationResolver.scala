@@ -44,7 +44,7 @@ class CustomerMigrationResolver @Inject()(
   private def getEnrolments(identifier: Identifier)(implicit headerCarrier: HeaderCarrier): EitherT[Future, String, Enrolments] = {
     val saUtrTaxId = TaxIdentifier("sautr", identifier.utr)
     val itsaTaxId = TaxIdentifier("itsa", identifier.itsaId)
-
+    logger.debug(s"getEnrolments for $saUtrTaxId and $itsaTaxId")
     for {
       saEnrolment   <- EitherT(enrolmentStoreConnector.getUserIds(saUtrTaxId))
       saPrincipal   <- EitherT.fromEither[Future](validatePrincipal(saEnrolment))

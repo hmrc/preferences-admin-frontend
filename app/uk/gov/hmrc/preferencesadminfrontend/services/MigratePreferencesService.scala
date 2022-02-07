@@ -17,6 +17,7 @@
 package uk.gov.hmrc.preferencesadminfrontend.services
 
 import cats.syntax.either._
+import play.api.Logger
 import play.api.libs.json.{ Json, OFormat }
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.preferencesadminfrontend.model.MTDPMigration._
@@ -31,11 +32,12 @@ object Identifier {
 }
 
 class MigratePreferencesService @Inject()(customerMigrationResolver: CustomerMigrationResolver, customerPreferenceMigrator: CustomerPreferenceMigrator) {
-
+  val logger = Logger(getClass)
   def migrate(
     identifiers: List[Identifier],
     dryRun: Boolean
   )(implicit headerCarrier: HeaderCarrier, executionContext: ExecutionContext): Future[List[MigrationResult]] = {
+    logger.debug(s"$migrate identifiers ${identifiers.map(i => i.itsaId + i.utr)} with dryrun $dryRun")
     val results = identifiers.map { identifier =>
       customerMigrationResolver
         .resolveCustomerType(identifier)
