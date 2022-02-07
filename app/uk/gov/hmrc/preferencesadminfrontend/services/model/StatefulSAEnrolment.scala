@@ -22,16 +22,16 @@ import uk.gov.hmrc.preferencesadminfrontend.model.{ PrincipalUserId, UserState }
 sealed trait StatefulSAEnrolment
 
 object StatefulSAEnrolment {
-  def apply(principalUserId: PrincipalUserId, userState: UserState): StatefulSAEnrolment = userState match {
+  def apply(principalUserId: String, userState: UserState): StatefulSAEnrolment = userState match {
     case UserState(Activated) => ActivatedSAEnrolment(principalUserId)
     case _                    => InactiveSAEnrolment(principalUserId)
   }
 }
 
 case class ActivatedSAEnrolment(
-  saEnrolment: PrincipalUserId
+  saEnrolment: String
 ) extends StatefulSAEnrolment
 
 case class InactiveSAEnrolment(
-  saEnrolment: PrincipalUserId
+  saEnrolment: String
 ) extends StatefulSAEnrolment

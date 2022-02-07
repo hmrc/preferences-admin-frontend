@@ -53,6 +53,7 @@ class CustomerMigrationResolver @Inject()(
       itsaPrinciple <- EitherT.fromEither[Future](validatePrincipal(itsaEnrolment))
     } yield {
 
+      logger.info(s"AdminGetEnrolmentssaEnrolment: $saEnrolment")
       logger.info(s"AdminGetEnrolmentssaPrincipal: $saPrincipal")
       logger.info(s"AdminGetEnrolmentssaStatus: $saStatus")
       logger.info(s"AdminGetEnrolmentsitsaPrinciple: $itsaPrinciple")
@@ -113,7 +114,7 @@ class CustomerMigrationResolver @Inject()(
   private def getITSAPreference(identifier: Identifier)(implicit headerCarrier: HeaderCarrier): Future[Option[PreferenceDetails]] =
     entityResolverConnector.getPreferenceDetails(TaxIdentifier("itsa", identifier.itsaId))
 
-  private def validatePrincipal(principals: List[PrincipalUserId]): Either[String, Option[PrincipalUserId]] =
+  private def validatePrincipal(principals: List[String]): Either[String, Option[String]] =
     principals match {
       case one :: Nil => one.some.asRight
       case Nil        => none.asRight
@@ -121,7 +122,7 @@ class CustomerMigrationResolver @Inject()(
     }
 
   private def getSaStatus(
-    principalUserId: Option[PrincipalUserId],
+    principalUserId: Option[String],
     identifier: Identifier
   )(implicit headerCarrier: HeaderCarrier): Future[Either[String, Option[UserState]]] =
     principalUserId

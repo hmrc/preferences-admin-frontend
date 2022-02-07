@@ -20,5 +20,5 @@ import uk.gov.hmrc.preferencesadminfrontend.model.PrincipalUserId
 
 case class Enrolments(
   statefulSAEnrolment: Option[StatefulSAEnrolment],
-  itsaEnrolment: Option[PrincipalUserId]
+  itsaEnrolment: Option[String]
 )

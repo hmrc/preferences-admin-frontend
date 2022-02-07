@@ -114,8 +114,15 @@ class EnrolmentStoreConnectorSpec extends PlaySpec with ScalaFutures with Either
     val saUtr = "MY-UTR"
     val taxId: TaxIdentifier = TaxIdentifier("sautr", saUtr)
 
-    val principalUserId: PrincipalUserId = PrincipalUserId("SA-ME-WE")
-    val principalUserIds: PrincipalUserIds = PrincipalUserIds(List(principalUserId))
+    val principalUserId: String = "6696231619140440"
+    val principalUserIds: PrincipalUserIds = Json.parse("""{
+                                                          |
+                                                          |    "principalUserIds":[
+                                                          |        "6696231619140440"
+                                                          |    ]
+                                                          |
+                                                          |
+                                                          |}""".stripMargin).as[PrincipalUserIds]
     val userState: UserState = UserState(Activated)
 
     implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
@@ -125,7 +132,7 @@ class EnrolmentStoreConnectorSpec extends PlaySpec with ScalaFutures with Either
     val enrolmentStoreConnector = new EnrolmentStoreConnector(httpClient, servicesConfig)
     val enrolmentStoreServiceUrl: String = app.injector.instanceOf[ServicesConfig].baseUrl("enrolment-store")
     val expectedPrincipalPath = s"$enrolmentStoreServiceUrl/enrolment-store-proxy/enrolment-store/enrolments/IR-SA~UTR~$saUtr/users?type=principal"
-    val expectedUserStatePath = s"$enrolmentStoreServiceUrl/enrolment-store-proxy/enrolment-store/users/${principalUserId.id}/enrolments/IR-SA~UTR~$saUtr"
+    val expectedUserStatePath = s"$enrolmentStoreServiceUrl/enrolment-store-proxy/enrolment-store/users/$principalUserId/enrolments/IR-SA~UTR~$saUtr"
 
     def httpResponse(status: Int, body: String): HttpResponse = HttpResponse(
       status = status,
