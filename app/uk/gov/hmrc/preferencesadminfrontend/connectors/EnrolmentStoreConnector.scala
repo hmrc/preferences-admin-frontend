@@ -37,7 +37,7 @@ class EnrolmentStoreConnector @Inject()(httpClient: HttpClient, val servicesConf
   def serviceUrl: String = servicesConfig.baseUrl("enrolment-store")
 
   def getUserIds(taxIdentifier: TaxIdentifier)(implicit hc: HeaderCarrier): Future[Either[String, List[PrincipalUserId]]] = {
-    logger.debug("------------ getUserIdsForTaxIdentifier: " + taxIdentifier.name + taxIdentifier.value)
+    logger.info("------------ getUserIdsForTaxIdentifier: " + taxIdentifier.name + taxIdentifier.value)
 
     (for {
       id <- EitherT.fromEither[Future](resolveId(taxIdentifier))
@@ -45,7 +45,7 @@ class EnrolmentStoreConnector @Inject()(httpClient: HttpClient, val servicesConf
                    httpClient
                      .GET[HttpResponse](s"$serviceUrl/enrolment-store-proxy/enrolment-store/enrolments/$id/users?type=principal")
                      .map(handleGetUserIdsResponse))
-      _ = logger.debug("------------ getUserIds: " + response.map(_.id))
+      _ = logger.info("------------ getUserIds: " + response.map(_.id))
     } yield response).value
   }
 
@@ -56,7 +56,7 @@ class EnrolmentStoreConnector @Inject()(httpClient: HttpClient, val servicesConf
                    httpClient
                      .GET[HttpResponse](s"$serviceUrl/enrolment-store-proxy/enrolment-store/users/${principalUserId.id}/enrolments/$id")
                      .map(handleCheckEnrolmentsResponse))
-      _ = logger.debug("------------ getUserState: " + response.map(_.state))
+      _ = logger.info("------------ getUserState: " + response.map(_.state))
     } yield response).value
 
   private def handleGetUserIdsResponse(httpResponse: HttpResponse): Either[String, List[PrincipalUserId]] =

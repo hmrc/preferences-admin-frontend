@@ -44,7 +44,7 @@ class CustomerMigrationResolver @Inject()(
   private def getEnrolments(identifier: Identifier)(implicit headerCarrier: HeaderCarrier): EitherT[Future, String, Enrolments] = {
     val saUtrTaxId = TaxIdentifier("sautr", identifier.utr)
     val itsaTaxId = TaxIdentifier("itsa", identifier.itsaId)
-    logger.debug(s"getEnrolments for $saUtrTaxId and $itsaTaxId")
+    logger.info(s"getEnrolments for $saUtrTaxId and $itsaTaxId")
     for {
       saEnrolment   <- EitherT(enrolmentStoreConnector.getUserIds(saUtrTaxId))
       saPrincipal   <- EitherT.fromEither[Future](validatePrincipal(saEnrolment))
@@ -53,9 +53,9 @@ class CustomerMigrationResolver @Inject()(
       itsaPrinciple <- EitherT.fromEither[Future](validatePrincipal(itsaEnrolment))
     } yield {
 
-      logger.debug(s"AdminGetEnrolmentssaPrincipal: $saPrincipal")
-      logger.debug(s"AdminGetEnrolmentssaStatus: $saStatus")
-      logger.debug(s"AdminGetEnrolmentsitsaPrinciple: $itsaPrinciple")
+      logger.info(s"AdminGetEnrolmentssaPrincipal: $saPrincipal")
+      logger.info(s"AdminGetEnrolmentssaStatus: $saStatus")
+      logger.info(s"AdminGetEnrolmentsitsaPrinciple: $itsaPrinciple")
 
       Enrolments(
         (saPrincipal, saStatus).mapN(StatefulSAEnrolment.apply),
@@ -82,15 +82,15 @@ class CustomerMigrationResolver @Inject()(
     } yield
       (saPreference, itsaPreference) match {
         case (Some(_), Some(_)) => {
-          logger.debug(s"AdmincheckITSAAndSA: $saPreference - $itsaPreference")
+          logger.info(s"AdmincheckITSAAndSA: $saPreference - $itsaPreference")
           SAandITSA
         }
         case (None, Some(itsaOnline)) => {
-          logger.debug(s"AdmincheckITSAAndSAitsaOnline: $itsaOnline")
+          logger.info(s"AdmincheckITSAAndSAitsaOnline: $itsaOnline")
           itsaOnline
         }
         case _ => {
-          logger.debug(s"AdmincheckITSAAndSA: noPreference")
+          logger.info(s"AdmincheckITSAAndSA: noPreference")
           ITSAOnlineNoPreference
         }
       }
