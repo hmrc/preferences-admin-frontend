@@ -81,13 +81,17 @@ class CustomerMigrationResolver @Inject()(
 
   private def checkITSAAndSA(identifier: Identifier)(implicit headerCarrier: HeaderCarrier): Future[CustomerType] =
     for {
-      saPreference   <- checkSAPreference(identifier)
-      itsaPreference <- checkITSAPreference(identifier)
+      saPreference: Option[CustomerType] <- checkSAPreference(identifier)
+      itsaPreference                     <- checkITSAPreference(identifier)
     } yield
       (saPreference, itsaPreference) match {
         case (Some(_), Some(_)) => {
           logger.info(s"AdmincheckITSAAndSA: $saPreference - $itsaPreference")
           SAandITSA
+        }
+        case (Some(sautr), None) => {
+          logger.info(s"AdmincheckITSAAndSA: $saPreference - $sautr")
+          sautr
         }
         case (None, Some(itsaOnline)) => {
           logger.info(s"AdmincheckITSAAndSAitsaOnline: $itsaOnline")
