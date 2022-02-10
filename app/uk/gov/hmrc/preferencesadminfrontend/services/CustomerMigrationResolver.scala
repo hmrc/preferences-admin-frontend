@@ -89,10 +89,10 @@ class CustomerMigrationResolver @Inject()(
           logger.info(s"AdmincheckITSAAndSA: $saPreference - $itsaPreference")
           SAandITSA
         }
-        case (Some(sautr), None) => {
-          logger.info(s"AdmincheckITSAAndSA: $saPreference - $sautr")
-          sautr
-        }
+//        case (Some(sautr), None) => {
+//          logger.info(s"AdmincheckITSAAndSA: $saPreference - $sautr")
+//          sautr
+//        }
         case (None, Some(itsaOnline)) => {
           logger.info(s"AdmincheckITSAAndSAitsaOnline: $itsaOnline")
           itsaOnline
