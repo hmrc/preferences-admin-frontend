@@ -77,6 +77,7 @@ class MigratePreferencesService @Inject()(customerMigrationResolver: CustomerMig
     if (dryRun) {
       Future.successful(().asRight)
     } else {
+      logger.info(s"migrateCustomerprivate ${identifier.itsaId} and $migratingCustomer  ")
       customerPreferenceMigrator.migrateCustomer(identifier, migratingCustomer)
     }
 }

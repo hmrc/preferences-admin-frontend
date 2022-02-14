@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.preferencesadminfrontend.services
 
+import play.api.Logger
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.preferencesadminfrontend.connectors.ChannelPreferencesConnector.StatusUpdate
 import uk.gov.hmrc.preferencesadminfrontend.connectors.{ ChannelPreferencesConnector, EntityResolverConnector }
@@ -30,6 +31,7 @@ class CustomerPreferenceMigrator @Inject()(
   entityResolverConnector: EntityResolverConnector,
   channelPreferencesConnector: ChannelPreferencesConnector
 ) {
+  val logger = Logger(getClass)
   def migrateCustomer(identifier: Identifier, migratingCustomer: MigratingCustomer)(
     implicit headerCarrier: HeaderCarrier,
     executionContext: ExecutionContext): Future[Either[String, Unit]] =
@@ -40,10 +42,14 @@ class CustomerPreferenceMigrator @Inject()(
 
   private def migrateSAOnline(identifier: Identifier, saOnline: SAOnline)(
     implicit headerCarrier: HeaderCarrier,
-    executionContext: ExecutionContext): Future[Either[String, Unit]] =
+    executionContext: ExecutionContext): Future[Either[String, Unit]] = {
+    logger.info(s"migrateSAOnline with ${saOnline.entityId.value} and ${identifier.itsaId}")
     entityResolverConnector.confirm(saOnline.entityId.value, identifier.itsaId)
+  }
 
   private def migrateITSAOnline(identifier: Identifier, itsaOnlinePreference: ITSAOnlinePreference)(
-    implicit headerCarrier: HeaderCarrier): Future[Either[String, Unit]] =
+    implicit headerCarrier: HeaderCarrier): Future[Either[String, Unit]] = {
+    logger.info(s"migrateITSAOnline with ${identifier.itsaId} and ${itsaOnlinePreference.isPaperless}")
     channelPreferencesConnector.updateStatus(StatusUpdate(identifier.itsaId, itsaOnlinePreference.isPaperless))
+  }
 }

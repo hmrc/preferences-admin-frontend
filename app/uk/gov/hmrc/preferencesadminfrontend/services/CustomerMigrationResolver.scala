@@ -49,7 +49,7 @@ class CustomerMigrationResolver @Inject()(
       saEnrolment   <- EitherT(enrolmentStoreConnector.getUserIds(saUtrTaxId))
       saPrincipal   <- EitherT.fromEither[Future](validatePrincipal(saEnrolment))
       saStatus      <- EitherT(getSaStatus(saPrincipal, identifier))
-      itsaEnrolment <- EitherT(enrolmentStoreConnector.getUserIds(itsaTaxId))
+      itsaEnrolment <- EitherT(enrolmentStoreConnector.getUserI2022202214ds(itsaTaxId))
       itsaPrinciple <- EitherT.fromEither[Future](validatePrincipal(itsaEnrolment))
     } yield {
 
@@ -89,10 +89,6 @@ class CustomerMigrationResolver @Inject()(
           logger.info(s"AdmincheckITSAAndSA: $saPreference - $itsaPreference")
           SAandITSA
         }
-//        case (Some(sautr), None) => {
-//          logger.info(s"AdmincheckITSAAndSA: $saPreference - $sautr")
-//          sautr
-//        }
         case (None, Some(itsaOnline)) => {
           logger.info(s"AdmincheckITSAAndSAitsaOnline: $itsaOnline")
           itsaOnline
