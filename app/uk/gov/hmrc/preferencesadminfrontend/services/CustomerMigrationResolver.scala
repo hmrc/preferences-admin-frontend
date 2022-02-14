@@ -49,7 +49,7 @@ class CustomerMigrationResolver @Inject()(
       saEnrolment   <- EitherT(enrolmentStoreConnector.getUserIds(saUtrTaxId))
       saPrincipal   <- EitherT.fromEither[Future](validatePrincipal(saEnrolment))
       saStatus      <- EitherT(getSaStatus(saPrincipal, identifier))
-      itsaEnrolment <- EitherT(enrolmentStoreConnector.getUserI2022202214ds(itsaTaxId))
+      itsaEnrolment <- EitherT(enrolmentStoreConnector.getUserIds(itsaTaxId))
       itsaPrinciple <- EitherT.fromEither[Future](validatePrincipal(itsaEnrolment))
     } yield {
 
