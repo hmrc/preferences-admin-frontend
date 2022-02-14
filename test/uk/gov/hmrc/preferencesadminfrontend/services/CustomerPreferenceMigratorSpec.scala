@@ -65,7 +65,7 @@ class CustomerPreferenceMigratorSpec extends PlaySpec with ScalaFutures with Eit
     val saEntityId: EntityId = EntityId("SA-I-DO")
     val saOnline: SAOnline = SAOnline(saEntityId)
     val itsaOnlinePreference: ITSAOnlinePreference = ITSAOnlinePreference(true)
-    val statusUpdate: StatusUpdate = StatusUpdate(s"HMRC-MTD-IT~MTDITID~${identifier.itsaId}", itsaOnlinePreference.isPaperless)
+    val statusUpdate: StatusUpdate = StatusUpdate(s"HMRC-MTD-IT~MTDBSA~${identifier.itsaId}", itsaOnlinePreference.isPaperless)
 
     implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
 
