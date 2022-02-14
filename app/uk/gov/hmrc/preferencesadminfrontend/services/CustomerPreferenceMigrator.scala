@@ -43,13 +43,13 @@ class CustomerPreferenceMigrator @Inject()(
   private def migrateSAOnline(identifier: Identifier, saOnline: SAOnline)(
     implicit headerCarrier: HeaderCarrier,
     executionContext: ExecutionContext): Future[Either[String, Unit]] = {
-    logger.info(s"migrateSAOnline with ${saOnline.entityId.value} and ${identifier.itsaId}")
+    logger.debug(s"migrateSAOnline with ${saOnline.entityId.value} and ${identifier.itsaId}")
     entityResolverConnector.confirm(saOnline.entityId.value, identifier.itsaId)
   }
 
   private def migrateITSAOnline(identifier: Identifier, itsaOnlinePreference: ITSAOnlinePreference)(
     implicit headerCarrier: HeaderCarrier): Future[Either[String, Unit]] = {
-    logger.info(s"migrateITSAOnline with ${identifier.itsaId} and ${itsaOnlinePreference.isPaperless}")
+    logger.debug(s"migrateITSAOnline with ${identifier.itsaId} and ${itsaOnlinePreference.isPaperless}")
     channelPreferencesConnector.updateStatus(StatusUpdate(s"HMRC-MTD-IT~MTDBSA~${identifier.itsaId}", itsaOnlinePreference.isPaperless))
   }
 }

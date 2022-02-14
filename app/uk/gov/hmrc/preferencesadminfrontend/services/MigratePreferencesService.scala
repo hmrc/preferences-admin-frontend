@@ -37,16 +37,14 @@ class MigratePreferencesService @Inject()(customerMigrationResolver: CustomerMig
     identifiers: List[Identifier],
     dryRun: Boolean
   )(implicit headerCarrier: HeaderCarrier, executionContext: ExecutionContext): Future[List[MigrationResult]] = {
-    logger.info(s"migrate identifiers ${identifiers.map(i => i.itsaId + i.utr)} with dryrun $dryRun")
+    logger.debug(s"migrate identifiers ${identifiers.map(i => i.itsaId + i.utr)} with dryrun $dryRun")
     val results = identifiers.map { identifier =>
       customerMigrationResolver
         .resolveCustomerType(identifier)
         .flatMap(migrate(_, identifier, dryRun))
         .recover {
           case exception: Exception => {
-
-            logger.info(s"migrateFunctionOutput ${exception.getMessage}")
-
+            logger.debug(s"migrateFunctionOutput ${exception.getMessage}")
             MigrationResult(exception, identifier)
           }
         }
@@ -61,7 +59,7 @@ class MigratePreferencesService @Inject()(customerMigrationResolver: CustomerMig
     dryRun: Boolean
   )(implicit headerCarrier: HeaderCarrier, executionContext: ExecutionContext): Future[MigrationResult] = {
 
-    logger.info(s"migratePrivate ${result.map(_.toString)}")
+    logger.debug(s"migratePrivate ${result.map(_.toString)}")
 
     result match {
       case Right(m: MigratingCustomer)    => migrateCustomer(identifier, m, dryRun).map(MigrationResult(_, identifier, m))
@@ -77,7 +75,7 @@ class MigratePreferencesService @Inject()(customerMigrationResolver: CustomerMig
     if (dryRun) {
       Future.successful(().asRight)
     } else {
-      logger.info(s"migrateCustomerprivate ${identifier.itsaId} and $migratingCustomer  ")
+      logger.debug(s"migrateCustomerprivate ${identifier.itsaId} and $migratingCustomer  ")
       customerPreferenceMigrator.migrateCustomer(identifier, migratingCustomer)
     }
 }

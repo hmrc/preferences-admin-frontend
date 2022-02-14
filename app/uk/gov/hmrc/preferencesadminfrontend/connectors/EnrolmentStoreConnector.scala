@@ -32,22 +32,17 @@ import scala.concurrent.{ ExecutionContext, Future }
 @Singleton
 class EnrolmentStoreConnector @Inject()(httpClient: HttpClient, val servicesConfig: ServicesConfig)(implicit ec: ExecutionContext) {
 
-  val logger = Logger(getClass)
-
   def serviceUrl: String = servicesConfig.baseUrl("enrolment-store")
 
-  def getUserIds(taxIdentifier: TaxIdentifier)(implicit hc: HeaderCarrier): Future[Either[String, List[String]]] = {
-    logger.info("------------ getUserIdsForTaxIdentifier: " + taxIdentifier.name + taxIdentifier.value)
-
+  def getUserIds(taxIdentifier: TaxIdentifier)(implicit hc: HeaderCarrier): Future[Either[String, List[String]]] =
     (for {
       id <- EitherT.fromEither[Future](resolveId(taxIdentifier))
       response <- EitherT(
                    httpClient
                      .GET[HttpResponse](s"$serviceUrl/enrolment-store-proxy/enrolment-store/enrolments/$id/users?type=principal")
                      .map(handleGetUserIdsResponse))
-      _ = logger.info("------------ getUserIds: " + response)
+
     } yield response).value
-  }
 
   def getUserState(principalUserId: String, saUtr: TaxIdentifier)(implicit hc: HeaderCarrier): Future[Either[String, Option[UserState]]] =
     (for {
@@ -56,17 +51,14 @@ class EnrolmentStoreConnector @Inject()(httpClient: HttpClient, val servicesConf
                    httpClient
                      .GET[HttpResponse](s"$serviceUrl/enrolment-store-proxy/enrolment-store/users/$principalUserId/enrolments/$id")
                      .map(handleCheckEnrolmentsResponse))
-      _ = logger.info("------------ getUserState: " + response.map(_.state))
     } yield response).value
 
-  private def handleGetUserIdsResponse(httpResponse: HttpResponse): Either[String, List[String]] = {
-    logger.info(s"handleGetUserIdsResponse $httpResponse")
+  private def handleGetUserIdsResponse(httpResponse: HttpResponse): Either[String, List[String]] =
     httpResponse.status match {
       case OK         => httpResponse.json.as[PrincipalUserIds].principalUserIds.asRight
       case NO_CONTENT => List.empty[String].asRight
       case other      => s"upstream error when getting principals, $other ${httpResponse.body}".asLeft
     }
-  }
 
   private def handleCheckEnrolmentsResponse(httpResponse: HttpResponse): Either[String, Option[UserState]] =
     httpResponse.status match {

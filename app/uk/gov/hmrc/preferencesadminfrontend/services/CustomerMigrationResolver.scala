@@ -35,7 +35,6 @@ class CustomerMigrationResolver @Inject()(
   enrolmentStoreConnector: EnrolmentStoreConnector,
   entityResolverConnector: EntityResolverConnector
 )(implicit executionContext: ExecutionContext) {
-  val logger = Logger(getClass)
   def resolveCustomerType(identifier: Identifier)(implicit head: HeaderCarrier): Future[Either[String, CustomerType]] =
     getEnrolments(identifier)
       .flatMap(resolve(_, identifier))
@@ -44,7 +43,6 @@ class CustomerMigrationResolver @Inject()(
   private def getEnrolments(identifier: Identifier)(implicit headerCarrier: HeaderCarrier): EitherT[Future, String, Enrolments] = {
     val saUtrTaxId = TaxIdentifier("sautr", identifier.utr)
     val itsaTaxId = TaxIdentifier("itsa", identifier.itsaId)
-    logger.info(s"getEnrolments for $saUtrTaxId and $itsaTaxId")
     for {
       saEnrolment   <- EitherT(enrolmentStoreConnector.getUserIds(saUtrTaxId))
       saPrincipal   <- EitherT.fromEither[Future](validatePrincipal(saEnrolment))
@@ -52,12 +50,6 @@ class CustomerMigrationResolver @Inject()(
       itsaEnrolment <- EitherT(enrolmentStoreConnector.getUserIds(itsaTaxId))
       itsaPrinciple <- EitherT.fromEither[Future](validatePrincipal(itsaEnrolment))
     } yield {
-
-      logger.info(s"AdminGetEnrolmentssaEnrolment: $saEnrolment")
-      logger.info(s"AdminGetEnrolmentssaPrincipal: $saPrincipal")
-      logger.info(s"AdminGetEnrolmentssaStatus: $saStatus")
-      logger.info(s"AdminGetEnrolmentsitsaPrinciple: $itsaPrinciple")
-
       Enrolments(
         (saPrincipal, saStatus).mapN(StatefulSAEnrolment.apply),
         itsaPrinciple
@@ -66,16 +58,12 @@ class CustomerMigrationResolver @Inject()(
   }
 
   private def resolve(enrolments: Enrolments, identifier: Identifier)(implicit headerCarrier: HeaderCarrier): EitherT[Future, String, CustomerType] = {
-    logger.info(s"resolveEnrolments: $enrolments")
     val resolution = enrolments match {
       case Enrolments(Some(ActivatedSAEnrolment(_)), Some(_)) => checkITSAAndSA(identifier).map(_.asRight)
       case Enrolments(Some(ActivatedSAEnrolment(_)), None)    => checkSAPreference(identifier).map(_.getOrElse(NoDigitalFootprint).asRight)
       case Enrolments(_, Some(_))                             => checkITSAPreference(identifier).map(_.getOrElse(ITSAOnlineNoPreference).asRight[String])
       case Enrolments(_, None)                                => Future.successful(NoDigitalFootprint.asRight)
     }
-
-    resolution.map(_.map(x => logger.info(s"resolveEnrolments ${x.some}"))).value
-
     EitherT(resolution)
   }
 
@@ -86,15 +74,12 @@ class CustomerMigrationResolver @Inject()(
     } yield
       (saPreference, itsaPreference) match {
         case (Some(_), Some(_)) => {
-          logger.info(s"AdmincheckITSAAndSA: $saPreference - $itsaPreference")
           SAandITSA
         }
         case (None, Some(itsaOnline)) => {
-          logger.info(s"AdmincheckITSAAndSAitsaOnline: $itsaOnline")
           itsaOnline
         }
         case _ => {
-          logger.info(s"AdmincheckITSAAndSA: noPreference")
           ITSAOnlineNoPreference
         }
       }
