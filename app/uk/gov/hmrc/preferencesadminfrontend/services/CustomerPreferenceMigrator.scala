@@ -50,6 +50,6 @@ class CustomerPreferenceMigrator @Inject()(
   private def migrateITSAOnline(identifier: Identifier, itsaOnlinePreference: ITSAOnlinePreference)(
     implicit headerCarrier: HeaderCarrier): Future[Either[String, Unit]] = {
     logger.info(s"migrateITSAOnline with ${identifier.itsaId} and ${itsaOnlinePreference.isPaperless}")
-    channelPreferencesConnector.updateStatus(StatusUpdate(identifier.itsaId, itsaOnlinePreference.isPaperless))
+    channelPreferencesConnector.updateStatus(StatusUpdate(s"HMRC-MTD-IT~MTDITID~${identifier.itsaId}", itsaOnlinePreference.isPaperless))
   }
 }
