@@ -18,7 +18,7 @@ package uk.gov.hmrc.preferencesadminfrontend.model
 
 import play.api.libs.json.{ Json, OFormat }
 
-case class PrincipalUserIds(principalUserIds: List[PrincipalUserId])
+case class PrincipalUserIds(principalUserIds: List[String])
 
 object PrincipalUserIds {
   implicit val fmt: OFormat[PrincipalUserIds] = Json.format[PrincipalUserIds]

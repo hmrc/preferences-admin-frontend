@@ -20,6 +20,7 @@ import cats.data.EitherT
 import cats.implicits.catsSyntaxTuple2Semigroupal
 import cats.syntax.either._
 import cats.syntax.option._
+import play.api.{ Logger, Logging }
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.preferencesadminfrontend.connectors.{ EnrolmentStoreConnector, EntityResolverConnector, PreferenceDetails }
 import uk.gov.hmrc.preferencesadminfrontend.model.MTDPMigration._
@@ -34,7 +35,6 @@ class CustomerMigrationResolver @Inject()(
   enrolmentStoreConnector: EnrolmentStoreConnector,
   entityResolverConnector: EntityResolverConnector
 )(implicit executionContext: ExecutionContext) {
-
   def resolveCustomerType(identifier: Identifier)(implicit head: HeaderCarrier): Future[Either[String, CustomerType]] =
     getEnrolments(identifier)
       .flatMap(resolve(_, identifier))
@@ -43,18 +43,18 @@ class CustomerMigrationResolver @Inject()(
   private def getEnrolments(identifier: Identifier)(implicit headerCarrier: HeaderCarrier): EitherT[Future, String, Enrolments] = {
     val saUtrTaxId = TaxIdentifier("sautr", identifier.utr)
     val itsaTaxId = TaxIdentifier("itsa", identifier.itsaId)
-
     for {
       saEnrolment   <- EitherT(enrolmentStoreConnector.getUserIds(saUtrTaxId))
       saPrincipal   <- EitherT.fromEither[Future](validatePrincipal(saEnrolment))
       saStatus      <- EitherT(getSaStatus(saPrincipal, identifier))
       itsaEnrolment <- EitherT(enrolmentStoreConnector.getUserIds(itsaTaxId))
       itsaPrinciple <- EitherT.fromEither[Future](validatePrincipal(itsaEnrolment))
-    } yield
+    } yield {
       Enrolments(
         (saPrincipal, saStatus).mapN(StatefulSAEnrolment.apply),
         itsaPrinciple
       )
+    }
   }
 
   private def resolve(enrolments: Enrolments, identifier: Identifier)(implicit headerCarrier: HeaderCarrier): EitherT[Future, String, CustomerType] = {
@@ -64,19 +64,24 @@ class CustomerMigrationResolver @Inject()(
       case Enrolments(_, Some(_))                             => checkITSAPreference(identifier).map(_.getOrElse(ITSAOnlineNoPreference).asRight[String])
       case Enrolments(_, None)                                => Future.successful(NoDigitalFootprint.asRight)
     }
-
     EitherT(resolution)
   }
 
   private def checkITSAAndSA(identifier: Identifier)(implicit headerCarrier: HeaderCarrier): Future[CustomerType] =
     for {
-      saPreference   <- checkSAPreference(identifier)
-      itsaPreference <- checkITSAPreference(identifier)
+      saPreference: Option[CustomerType] <- checkSAPreference(identifier)
+      itsaPreference                     <- checkITSAPreference(identifier)
     } yield
       (saPreference, itsaPreference) match {
-        case (Some(_), Some(_))       => SAandITSA
-        case (None, Some(itsaOnline)) => itsaOnline
-        case _                        => ITSAOnlineNoPreference
+        case (Some(_), Some(_)) => {
+          SAandITSA
+        }
+        case (None, Some(itsaOnline)) => {
+          itsaOnline
+        }
+        case _ => {
+          ITSAOnlineNoPreference
+        }
       }
 
   private def getSAPreference(identifier: Identifier)(implicit headerCarrier: HeaderCarrier): Future[Option[PreferenceDetails]] =
@@ -97,7 +102,7 @@ class CustomerMigrationResolver @Inject()(
   private def getITSAPreference(identifier: Identifier)(implicit headerCarrier: HeaderCarrier): Future[Option[PreferenceDetails]] =
     entityResolverConnector.getPreferenceDetails(TaxIdentifier("itsa", identifier.itsaId))
 
-  private def validatePrincipal(principals: List[PrincipalUserId]): Either[String, Option[PrincipalUserId]] =
+  private def validatePrincipal(principals: List[String]): Either[String, Option[String]] =
     principals match {
       case one :: Nil => one.some.asRight
       case Nil        => none.asRight
@@ -105,7 +110,7 @@ class CustomerMigrationResolver @Inject()(
     }
 
   private def getSaStatus(
-    principalUserId: Option[PrincipalUserId],
+    principalUserId: Option[String],
     identifier: Identifier
   )(implicit headerCarrier: HeaderCarrier): Future[Either[String, Option[UserState]]] =
     principalUserId
