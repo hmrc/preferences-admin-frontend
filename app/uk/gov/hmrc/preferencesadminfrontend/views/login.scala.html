@@ -39,17 +39,17 @@ govukBreadcrumbs: GovukBreadcrumbs)
       )
     )
 
-    <h1>Login</h1>
-    <p>Enter your details to access the admin console</p>
+    <h1 class="govuk-heading-l">Login</h1>
+    <p class="govuk-body">Enter your details to access the admin console</p>
     @form(action = routes.LoginController.loginAction) {
-        <fieldset @if(userForm.hasGlobalErrors) { class="form-field--error" }>
+        <fieldset class='govuk-fieldset @{if(userForm.hasGlobalErrors) "form-field--error" }'>
             @for(error <- userForm.globalErrors) {
-                <span class="error-notification">@Messages(error.message)</span>
+                <span class="error-notification govuk-error-message">@Messages(error.message)</span>
             }
             @govukInput(
                 Input(
                     label = Label(
-                        classes = "govuk-label--l",
+                        classes = "govuk-label--m",
                         content = Text("User ID")
                     )
                 ).withFormField(userForm("username"))
@@ -59,7 +59,7 @@ govukBreadcrumbs: GovukBreadcrumbs)
                 Input(
                     inputType = "password",
                     label = Label(
-                        classes = "govuk-label--l",
+                        classes = "govuk-label--m",
                         content = Text("Password")
                     )
                 ).withFormField(userForm("password"))
