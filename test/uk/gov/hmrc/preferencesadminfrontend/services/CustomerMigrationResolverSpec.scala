@@ -53,7 +53,7 @@ class CustomerMigrationResolverSpec extends PlaySpec with ScalaFutures with Eith
         .resolveCustomerType(identifier)(headerCarrier)
         .futureValue
         .right
-        .value mustBe SAOnline(saEntityId)
+        .value mustBe SAOnline(saEntityId, true)
     }
 
     "Activated SA enrolment with a preference and an ITSA enrolment with a preference => SAandITSA" in new Scope {

@@ -24,7 +24,7 @@ object MTDPMigration {
   sealed trait MigratingCustomer extends CustomerType
   sealed trait NonMigratingCustomer extends CustomerType
 
-  case class SAOnline(entityId: EntityId) extends MigratingCustomer
+  case class SAOnline(entityId: EntityId, isPaperless: Boolean) extends MigratingCustomer
   case class ITSAOnlinePreference(isPaperless: Boolean) extends MigratingCustomer
 
   case object NoDigitalFootprint extends NonMigratingCustomer
