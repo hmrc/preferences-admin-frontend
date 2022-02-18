@@ -97,7 +97,10 @@ class CustomerMigrationResolver @Inject()(
     preferenceDetails.isPaperless.map(ITSAOnlinePreference)
 
   def maybeSAPreference(preferenceDetails: PreferenceDetails): Option[SAOnline] =
-    preferenceDetails.entityId.map(SAOnline)
+    for {
+      entityId    <- preferenceDetails.entityId
+      isPaperless <- preferenceDetails.isPaperless
+    } yield SAOnline(entityId, isPaperless)
 
   private def getITSAPreference(identifier: Identifier)(implicit headerCarrier: HeaderCarrier): Future[Option[PreferenceDetails]] =
     entityResolverConnector.getPreferenceDetails(TaxIdentifier("itsa", identifier.itsaId))

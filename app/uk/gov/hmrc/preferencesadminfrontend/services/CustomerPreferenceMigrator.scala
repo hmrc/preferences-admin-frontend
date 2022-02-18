@@ -44,7 +44,10 @@ class CustomerPreferenceMigrator @Inject()(
     implicit headerCarrier: HeaderCarrier,
     executionContext: ExecutionContext): Future[Either[String, Unit]] = {
     logger.debug(s"migrateSAOnline with ${saOnline.entityId.value} and ${identifier.itsaId}")
-    entityResolverConnector.confirm(saOnline.entityId.value, identifier.itsaId)
+    for {
+      _         <- entityResolverConnector.confirm(saOnline.entityId.value, identifier.itsaId)
+      enrolment <- channelPreferencesConnector.updateStatus(StatusUpdate(s"HMRC-MTD-IT~MTDBSA~${identifier.itsaId}", saOnline.isPaperless))
+    } yield enrolment
   }
 
   private def migrateITSAOnline(identifier: Identifier, itsaOnlinePreference: ITSAOnlinePreference)(

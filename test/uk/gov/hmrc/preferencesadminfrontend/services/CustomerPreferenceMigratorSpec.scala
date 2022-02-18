@@ -17,6 +17,7 @@
 package uk.gov.hmrc.preferencesadminfrontend.services
 
 import cats.syntax.either._
+import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
 import org.scalatest.EitherValues
 import org.scalatest.concurrent.ScalaFutures
@@ -37,7 +38,8 @@ class CustomerPreferenceMigratorSpec extends PlaySpec with ScalaFutures with Eit
     "migrate an SAOnline customer" in new Scope {
       when(entityResolverConnector.confirm(saEntityId.value, identifier.itsaId))
         .thenReturn(Future.successful(().asRight))
-
+      when(channelPreferencesConnector.updateStatus(StatusUpdate(s"HMRC-MTD-IT~MTDBSA~${identifier.itsaId}", true)))
+        .thenReturn(Future.successful(().asRight))
       customerPreferenceMigrator
         .migrateCustomer(identifier, saOnline)
         .futureValue
@@ -63,7 +65,7 @@ class CustomerPreferenceMigratorSpec extends PlaySpec with ScalaFutures with Eit
     val identifier: Identifier = Identifier(itsaId, saUtr)
 
     val saEntityId: EntityId = EntityId("SA-I-DO")
-    val saOnline: SAOnline = SAOnline(saEntityId)
+    val saOnline: SAOnline = SAOnline(saEntityId, true)
     val itsaOnlinePreference: ITSAOnlinePreference = ITSAOnlinePreference(true)
     val statusUpdate: StatusUpdate = StatusUpdate(s"HMRC-MTD-IT~MTDBSA~${identifier.itsaId}", itsaOnlinePreference.isPaperless)
 
