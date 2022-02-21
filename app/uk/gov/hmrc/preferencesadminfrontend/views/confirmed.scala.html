@@ -35,14 +35,18 @@
     )
   )
 
-  <div class="transaction-banner--complete">
-      <h1 class="transaction-banner__heading">User manually opted out</h1>
-      <p>You successfully opted out the user in the below summary</p>
-  </div>
+    <div class="govuk-panel govuk-panel--confirmation">
+        <h1 class="govuk-panel__title">
+            User manually opted out
+        </h1>
+        <p class="govuk-panel__body govuk-!-font-size-24">
+            You successfully opted out the user in the below summary
+        </p>
+    </div>
 
   @uk.gov.hmrc.preferencesadminfrontend.views.html.user_summary(govukSummaryList, preference)
 
-  <div style="margin-top: 100px;">
-      <a class="back-link" href="/paperless/admin/search">Opt out another user</a>
+  <div style="margin-top: 100px;" class = "govuk-body">
+      <a class="back-link govuk-link" href="/paperless/admin/search">Opt out another user</a>
   </div>
 }
