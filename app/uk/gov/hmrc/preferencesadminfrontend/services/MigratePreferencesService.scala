@@ -44,7 +44,7 @@ class MigratePreferencesService @Inject()(customerMigrationResolver: CustomerMig
         .flatMap(migrate(_, identifier, dryRun))
         .recover {
           case exception: Exception => {
-            logger.debug(s"migrateFunctionOutput ${exception.getMessage}")
+            logger.warn(s"migrateFunctionOutput ${exception.getMessage}")
             MigrationResult(exception, identifier)
           }
         }
@@ -59,7 +59,8 @@ class MigratePreferencesService @Inject()(customerMigrationResolver: CustomerMig
     dryRun: Boolean
   )(implicit headerCarrier: HeaderCarrier, executionContext: ExecutionContext): Future[MigrationResult] = {
 
-    logger.debug(s"migratePrivate ${result.map(_.toString)}")
+    logger.warn(s"migratePrivateSuccessResult ${result.map(_)}")
+    logger.warn(s"migratePrivateFailureResult ${result.left.map(_)}")
 
     result match {
       case Right(m: MigratingCustomer)    => migrateCustomer(identifier, m, dryRun).map(MigrationResult(_, identifier, m))
