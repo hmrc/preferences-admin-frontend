@@ -32,6 +32,7 @@ import scala.concurrent.{ ExecutionContext, Future }
 @Singleton
 class EnrolmentStoreConnector @Inject()(httpClient: HttpClient, val servicesConfig: ServicesConfig)(implicit ec: ExecutionContext) {
 
+  val logger = Logger(getClass)
   def serviceUrl: String = servicesConfig.baseUrl("enrolment-store")
 
   def getUserIds(taxIdentifier: TaxIdentifier)(implicit hc: HeaderCarrier): Future[Either[String, List[String]]] =
@@ -40,6 +41,7 @@ class EnrolmentStoreConnector @Inject()(httpClient: HttpClient, val servicesConf
       response <- EitherT(
                    httpClient
                      .GET[HttpResponse](s"$serviceUrl/enrolment-store-proxy/enrolment-store/enrolments/$id/users?type=principal")
+                     .map(handleLogging("getUserIdsStatus", _))
                      .map(handleGetUserIdsResponse))
 
     } yield response).value
@@ -50,21 +52,33 @@ class EnrolmentStoreConnector @Inject()(httpClient: HttpClient, val servicesConf
       response <- EitherT(
                    httpClient
                      .GET[HttpResponse](s"$serviceUrl/enrolment-store-proxy/enrolment-store/users/$principalUserId/enrolments/$id")
+                     .map(handleLogging("getUserStateStatus", _))
                      .map(handleCheckEnrolmentsResponse))
     } yield response).value
+
+  private def handleLogging(prefix: String, httpResponse: HttpResponse): HttpResponse = {
+    logger.warn(s"$prefix ${httpResponse.status}: ${httpResponse.body}")
+    httpResponse
+  }
 
   private def handleGetUserIdsResponse(httpResponse: HttpResponse): Either[String, List[String]] =
     httpResponse.status match {
       case OK         => httpResponse.json.as[PrincipalUserIds].principalUserIds.asRight
       case NO_CONTENT => List.empty[String].asRight
-      case other      => s"upstream error when getting principals, $other ${httpResponse.body}".asLeft
+      case other => {
+        logger.warn(s"handleGetUserIdsResponseError ${httpResponse.body}")
+        s"upstream error when getting principals, $other ${httpResponse.body}".asLeft
+      }
     }
 
   private def handleCheckEnrolmentsResponse(httpResponse: HttpResponse): Either[String, Option[UserState]] =
     httpResponse.status match {
       case OK        => httpResponse.json.as[UserState].some.asRight
       case NOT_FOUND => none.asRight
-      case other     => s"upstream error when checking enrolment state, $other ${httpResponse.body}".asLeft
+      case other => {
+        logger.warn(s"handleCheckEnrolmentsResponseError ${httpResponse.body}")
+        s"upstream error when checking enrolment state, $other ${httpResponse.body}".asLeft
+      }
     }
 
   def resolveId(taxIdentifier: TaxIdentifier): Either[String, String] =
