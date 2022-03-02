@@ -59,8 +59,8 @@ class MigratePreferencesService @Inject()(customerMigrationResolver: CustomerMig
     dryRun: Boolean
   )(implicit headerCarrier: HeaderCarrier, executionContext: ExecutionContext): Future[MigrationResult] = {
 
-    logger.warn(s"migratePrivateSuccessResult ${result.map(_)}")
-    logger.warn(s"migratePrivateFailureResult ${result.left.map(_)}")
+    logger.warn(s"migratePrivateSuccessResult ${result.map(x => x)}")
+    logger.warn(s"migratePrivateFailureResult ${result.left.map(x => x)}")
 
     result match {
       case Right(m: MigratingCustomer)    => migrateCustomer(identifier, m, dryRun).map(MigrationResult(_, identifier, m))
