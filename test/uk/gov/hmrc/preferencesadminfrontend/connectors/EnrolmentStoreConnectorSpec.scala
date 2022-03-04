@@ -131,7 +131,7 @@ class EnrolmentStoreConnectorSpec extends PlaySpec with ScalaFutures with Either
 
     val enrolmentStoreConnector = new EnrolmentStoreConnector(httpClient, servicesConfig)
     val enrolmentStoreServiceUrl: String = app.injector.instanceOf[ServicesConfig].baseUrl("enrolment-store")
-    val expectedPrincipalPath = s"$enrolmentStoreServiceUrl/enrolment-store-proxy/enrolment-store/enrolments/IR-SA~UTR~$saUtr/users?type=principal"
+    val expectedPrincipalPath = s"$enrolmentStoreServiceUrl/enrolment-store-proxy/enrolment-store/enrolments/IR-SA~UTR~$saUtr/users?type=principa"
     val expectedUserStatePath = s"$enrolmentStoreServiceUrl/enrolment-store-proxy/enrolment-store/users/$principalUserId/enrolments/IR-SA~UTR~$saUtr"
 
     def httpResponse(status: Int, body: String): HttpResponse = HttpResponse(
