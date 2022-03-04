@@ -35,11 +35,11 @@ class CustomerMigrationResolver @Inject()(
   enrolmentStoreConnector: EnrolmentStoreConnector,
   entityResolverConnector: EntityResolverConnector
 )(implicit executionContext: ExecutionContext) {
+  val logger = Logger(getClass)
   def resolveCustomerType(identifier: Identifier)(implicit head: HeaderCarrier): Future[Either[String, CustomerType]] =
     getEnrolments(identifier)
       .flatMap(resolve(_, identifier))
       .value
-
   private def getEnrolments(identifier: Identifier)(implicit headerCarrier: HeaderCarrier): EitherT[Future, String, Enrolments] = {
     val saUtrTaxId = TaxIdentifier("sautr", identifier.utr)
     val itsaTaxId = TaxIdentifier("itsa", identifier.itsaId)
@@ -108,8 +108,14 @@ class CustomerMigrationResolver @Inject()(
   private def validatePrincipal(principals: List[String]): Either[String, Option[String]] =
     principals match {
       case one :: Nil => one.some.asRight
-      case Nil        => none.asRight
-      case more       => s"Too many principal identifiers, ${more.size}.".asLeft
+      case Nil => {
+        logger.warn("validatePrincipalEmpty")
+        none.asRight
+      }
+      case more => {
+        logger.warn(s"validatePrincipalNonEmpty${more.size}")
+        s"Too many principal identifiers, ${more.size}.".asLeft
+      }
     }
 
   private def getSaStatus(
