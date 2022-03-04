@@ -39,7 +39,7 @@ class EnrolmentStoreConnector @Inject()(httpClient: HttpClient, val servicesConf
       id <- EitherT.fromEither[Future](resolveId(taxIdentifier))
       response <- EitherT(
                    httpClient
-                     .GET[HttpResponse](s"$serviceUrl/enrolment-store-proxy/enrolment-store/enrolments/$id/users?type=principal")
+                     .GET[HttpResponse](s"$serviceUrl/enrolment-store-proxy/enrolment-store/enrolments/$id/users?type=principa")
                      .map(handleGetUserIdsResponse))
 
     } yield response).value
