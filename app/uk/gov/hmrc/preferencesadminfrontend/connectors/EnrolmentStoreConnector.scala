@@ -41,7 +41,6 @@ class EnrolmentStoreConnector @Inject()(httpClient: HttpClient, val servicesConf
       response <- EitherT(
                    httpClient
                      .GET[HttpResponse](s"$serviceUrl/enrolment-store-proxy/enrolment-store/enrolments/$id/users?type=principal")
-                     .map(handleLogging("getUserIdsStatus", _))
                      .map(handleGetUserIdsResponse))
 
     } yield response).value
@@ -52,14 +51,8 @@ class EnrolmentStoreConnector @Inject()(httpClient: HttpClient, val servicesConf
       response <- EitherT(
                    httpClient
                      .GET[HttpResponse](s"$serviceUrl/enrolment-store-proxy/enrolment-store/users/$principalUserId/enrolments/$id")
-                     .map(handleLogging("getUserStateStatus", _))
                      .map(handleCheckEnrolmentsResponse))
     } yield response).value
-
-  private def handleLogging(prefix: String, httpResponse: HttpResponse): HttpResponse = {
-    logger.warn(s"$prefix ${httpResponse.status}: ${httpResponse.body}")
-    httpResponse
-  }
 
   private def handleGetUserIdsResponse(httpResponse: HttpResponse): Either[String, List[String]] =
     httpResponse.status match {
