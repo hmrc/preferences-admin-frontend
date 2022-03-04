@@ -40,6 +40,7 @@ class EntityResolverConnector @Inject()(httpClient: HttpClient, val servicesConf
   def serviceUrl = servicesConfig.baseUrl("entity-resolver")
 
   def getTaxIdentifiers(taxId: TaxIdentifier)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[TaxIdentifier]] = {
+    def warnNotOptedOut(message: String) = s"getTaxIdentifiersTaxId $message"
     val response = httpClient.GET[Option[Entity]](s"$serviceUrl/entity-resolver/${taxId.regime}/${taxId.value}")
     response
       .map(
@@ -51,13 +52,27 @@ class EntityResolverConnector @Inject()(httpClient: HttpClient, val servicesConf
             ).flatten)
       )
       .recover {
-        case ex: BadRequestException                             => Seq.empty
-        case ex @ Upstream4xxResponse(_, Status.NOT_FOUND, _, _) => Seq.empty
-        case ex @ Upstream4xxResponse(_, Status.CONFLICT, _, _)  => Seq.empty
+        case ex: BadRequestException => {
+          warnNotOptedOut(ex.message)
+          Seq.empty
+        }
+        case ex @ Upstream4xxResponse(_, Status.NOT_FOUND, _, _) => {
+          warnNotOptedOut(ex.message)
+          Seq.empty
+        }
+        case ex @ Upstream4xxResponse(_, Status.CONFLICT, _, _) => {
+          warnNotOptedOut(ex.message)
+          Seq.empty
+        }
+        case ex => {
+          warnNotOptedOut(ex.getMessage)
+          Seq.empty
+        }
       }
   }
 
   def getTaxIdentifiers(preferenceDetails: PreferenceDetails)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[TaxIdentifier]] = {
+    def warnNotOptedOut(message: String) = s"getTaxIdentifiersPreferenceDetails $message"
     val response = httpClient.GET[Option[Entity]](s"$serviceUrl/entity-resolver/${preferenceDetails.entityId.get}")
     response
       .map(
@@ -69,18 +84,47 @@ class EntityResolverConnector @Inject()(httpClient: HttpClient, val servicesConf
             ).flatten)
       )
       .recover {
-        case ex: BadRequestException                             => Seq.empty
-        case ex @ Upstream4xxResponse(_, Status.NOT_FOUND, _, _) => Seq.empty
-        case ex @ Upstream4xxResponse(_, Status.CONFLICT, _, _)  => Seq.empty
+        case ex: BadRequestException => {
+          warnNotOptedOut(ex.message)
+          Seq.empty
+        }
+        case ex @ Upstream4xxResponse(_, Status.NOT_FOUND, _, _) => {
+          warnNotOptedOut(ex.message)
+          Seq.empty
+        }
+        case ex @ Upstream4xxResponse(_, Status.CONFLICT, _, _) => {
+          warnNotOptedOut(ex.message)
+          Seq.empty
+        }
+        case ex => {
+          warnNotOptedOut(ex.getMessage)
+          Seq.empty
+        }
       }
   }
 
-  def getPreferenceDetails(taxId: TaxIdentifier)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[PreferenceDetails]] =
+  def getPreferenceDetails(taxId: TaxIdentifier)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[PreferenceDetails]] = {
+    def warnNotOptedOut(message: String) = s"getTaxIdentifiersPreferenceDetails $message"
+
     httpClient.GET[Option[PreferenceDetails]](s"$serviceUrl/portal/preferences/${taxId.regime}/${taxId.value}").recover {
-      case ex: BadRequestException                             => None
-      case ex @ Upstream4xxResponse(_, Status.NOT_FOUND, _, _) => None
-      case ex @ Upstream4xxResponse(_, Status.CONFLICT, _, _)  => None
+      case ex: BadRequestException => {
+        warnNotOptedOut(ex.message)
+        None
+      }
+      case ex @ Upstream4xxResponse(_, Status.NOT_FOUND, _, _) => {
+        warnNotOptedOut(ex.message)
+        None
+      }
+      case ex @ Upstream4xxResponse(_, Status.CONFLICT, _, _) => {
+        warnNotOptedOut(ex.message)
+        None
+      }
+      case ex => {
+        warnNotOptedOut(ex.getMessage)
+        None
+      }
     }
+  }
 
   def optOut(taxId: TaxIdentifier)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[OptOutResult] = {
 
