@@ -48,7 +48,8 @@ class EntityResolverConnector @Inject()(httpClient: HttpClient, val servicesConf
           entity =>
             Seq(
               entity.sautr.map(TaxIdentifier("sautr", _)),
-              entity.nino.map(TaxIdentifier("nino", _))
+              entity.nino.map(TaxIdentifier("nino", _)),
+              entity.itsaId.map(TaxIdentifier("HMRC-MTD-IT", _)),
             ).flatten)
       )
       .recover {
@@ -175,10 +176,18 @@ case object PreferenceNotFound extends OptOutResult {
   val errorCode: String = "PreferenceNotFound"
 }
 
-case class Entity(sautr: Option[String], nino: Option[String])
+case class Entity(sautr: Option[String], nino: Option[String], itsaId: Option[String])
 
 object Entity {
-  val formats = Json.format[Entity]
+  implicit val writes: Writes[Entity] = Json.writes[Entity]
+
+  implicit val reads: Reads[Entity] = (
+    (JsPath \ "sautr").readNullable[String] and
+      (JsPath \ "nino").readNullable[String] and
+      (JsPath \ "HMRC-MTD-IT").readNullable[String]
+  )((sautr, nino, itsaid) => Entity(sautr, nino, itsaid))
+
+  implicit val formats: Format[Entity] = Format(reads, writes)
 }
 
 case class PreferenceDetails(

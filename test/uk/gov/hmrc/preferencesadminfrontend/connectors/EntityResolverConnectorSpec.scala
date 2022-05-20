@@ -70,6 +70,30 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
       result must contain(sautr)
     }
 
+    "return all tax identifiers for nino along with itsaId" in new TestCase {
+      val expectedPath = s"$entityResolverserviceUrl/entity-resolver/paye/${nino.value}"
+      val responseJson = taxIdentifiersResponseFor(sautr, nino, itsaId)
+
+      val result = entityConnectorGetEntityMock(expectedPath, responseJson).getTaxIdentifiers(nino).futureValue
+
+      result.size mustBe (3)
+      result must contain(nino)
+      result must contain(sautr)
+      result must contain(itsaId)
+    }
+
+    "return all tax identifiers for sautr along with itsaId" in new TestCase {
+      val expectedPath = s"$entityResolverserviceUrl/entity-resolver/sa/${sautr.value}"
+      val responseJson = taxIdentifiersResponseFor(sautr, nino, itsaId)
+
+      val result = entityConnectorGetEntityMock(expectedPath, responseJson).getTaxIdentifiers(sautr).futureValue
+
+      result.size mustBe (3)
+      result must contain(nino)
+      result must contain(sautr)
+      result must contain(itsaId)
+    }
+
     "return empty sequence" in new TestCase {
       val expectedPath = s"$entityResolverserviceUrl/entity-resolver/paye/${nino.value}"
 
@@ -231,6 +255,7 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
   class TestCase {
     val sautr = TaxIdentifier("sautr", Random.nextInt(1000000).toString)
     val nino = TaxIdentifier("nino", "NA000914D")
+    val itsaId = TaxIdentifier("HMRC-MTD-IT", "XYIT00000067034")
 
     implicit val hc: HeaderCarrier = HeaderCarrier()
 
