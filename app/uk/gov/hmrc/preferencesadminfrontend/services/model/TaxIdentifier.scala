@@ -20,11 +20,12 @@ import play.api.libs.json.Json
 
 case class TaxIdentifier(name: String, value: String) {
   val regime = name match {
-    case "sautr" => "sa"
-    case "itsa"  => "itsa"
-    case "nino"  => "paye"
-    case "email" => "email"
-    case _       => throw new RuntimeException("Invalid tax id name")
+    case "sautr"       => "sa"
+    case "itsa"        => "itsa"
+    case "nino"        => "paye"
+    case "email"       => "email"
+    case "HMRC-MTD-IT" => "HMRC-MTD-IT"
+    case _             => throw new RuntimeException("Invalid tax id name")
   }
 }
 

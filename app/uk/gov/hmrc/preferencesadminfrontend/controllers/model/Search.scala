@@ -26,7 +26,7 @@ object Search {
     Form[TaxIdentifier](
       mapping(
         "name" -> text
-          .verifying("error.name_invalid", name => name == "sautr" || name == "nino" || name == "email"),
+          .verifying("error.name_invalid", name => name == "sautr" || name == "nino" || name == "email" || name == "HMRC-MTD-IT"),
         "value" -> nonEmptyText
       )((name, value) => TaxIdentifier.apply(name, value.toUpperCase))(TaxIdentifier.unapply))
 }
