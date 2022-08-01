@@ -81,7 +81,8 @@ class EntityResolverConnector @Inject()(httpClient: HttpClient, val servicesConf
           entity =>
             Seq(
               entity.sautr.map(TaxIdentifier("sautr", _)),
-              entity.nino.map(TaxIdentifier("nino", _))
+              entity.nino.map(TaxIdentifier("nino", _)),
+              entity.itsaId.map(TaxIdentifier("HMRC-MTD-IT", _))
             ).flatten)
       )
       .recover {
