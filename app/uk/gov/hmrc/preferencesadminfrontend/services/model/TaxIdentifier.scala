@@ -24,7 +24,7 @@ case class TaxIdentifier(name: String, value: String) {
     case "itsa"        => "itsa"
     case "nino"        => "paye"
     case "email"       => "email"
-    case "HMRC-MTD-IT" => "HMRC-MTD-IT"
+    case "HMRC-MTD-IT" => "itsa"
     case _             => throw new RuntimeException("Invalid tax id name")
   }
 }
