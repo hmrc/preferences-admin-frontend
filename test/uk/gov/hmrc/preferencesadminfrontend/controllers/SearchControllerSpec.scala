@@ -21,7 +21,7 @@ import org.joda.time.{ DateTime, DateTimeZone }
 import org.jsoup.Jsoup
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.{ times, verify, when }
-import org.mockito.{ ArgumentMatcher, ArgumentMatchers, Mockito }
+import org.mockito.{ ArgumentMatcher, ArgumentMatchers }
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
@@ -33,7 +33,6 @@ import play.api.test.CSRFTokenHelper._
 import play.api.test.Helpers.{ headers, _ }
 import play.api.test.{ FakeRequest, Helpers }
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.audit.http.connector.AuditResult
 import uk.gov.hmrc.play.audit.model.MergedDataEvent
 import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
 import uk.gov.hmrc.preferencesadminfrontend.connectors.OptedOut
@@ -70,11 +69,6 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
   }
 
   "search(taxIdentifier)" should {
-
-    val queryParamsForValidNino = "?name=nino&value=CE067583D"
-    val queryParamsForEmailid = "?name=email&value=test@test.com"
-    val queryParamsForValidLowercaseNino = "?name=nino&value=ce067583d"
-    val queryParamsForInvalidNino = "?name=nino&value=1234567"
     val genericUpdatedAt = Some(new DateTime(2018, 2, 15, 0, 0, DateTimeZone.UTC))
     val taxCreditsUpdatedAt = Some(new DateTime(2018, 2, 15, 0, 0, DateTimeZone.UTC))
     val verifiedOn = Some(new DateTime(2018, 2, 15, 0, 0, DateTimeZone.UTC))
@@ -82,7 +76,7 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
     "return a preference if tax identifier exists" in new SearchControllerTestCase {
 
       val preference = Preference(
-        entityId = Some(EntityId.generate),
+        entityId = Some(EntityId.generate()),
         genericPaperless = true,
         genericUpdatedAt = genericUpdatedAt,
         taxCreditsPaperless = true,
@@ -92,7 +86,10 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
       )
       when(searchServiceMock.searchPreference(any())(any(), any(), any())).thenReturn(Future.successful(List(preference)))
 
-      val result = searchController.search(FakeRequest("GET", queryParamsForValidNino).withSession(User.sessionKey -> "user").withCSRFToken)
+      val postRequest = FakeRequest("POST", "/search/q")
+        .withFormUrlEncodedBody(Seq(("name", "nino"), ("value", "CE067583D")): _*)
+
+      val result = searchController.search(postRequest.withSession(User.sessionKey -> "user").withCSRFToken)
 
       status(result) mustBe Status.OK
       val body: String = contentAsString(result)
@@ -102,7 +99,7 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
 
     "return a preference if email address exists" in new SearchControllerTestCase {
       val preference = Preference(
-        entityId = Some(EntityId.generate),
+        entityId = Some(EntityId.generate()),
         genericPaperless = true,
         genericUpdatedAt = genericUpdatedAt,
         taxCreditsPaperless = true,
@@ -112,7 +109,10 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
       )
       when(searchServiceMock.searchPreference(any())(any(), any(), any())).thenReturn(Future.successful(List(preference)))
 
-      val result = searchController.search(FakeRequest("GET", queryParamsForEmailid).withSession(User.sessionKey -> "user").withCSRFToken)
+      val postRequest = FakeRequest("POST", "/search/q")
+        .withFormUrlEncodedBody(Seq(("name", "email"), ("value", "test@test.com")): _*)
+
+      val result = searchController.search(postRequest.withSession(User.sessionKey -> "user").withCSRFToken)
 
       status(result) mustBe Status.OK
       val body: String = contentAsString(result)
@@ -120,10 +120,13 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
       body must include("15 February 2018 12:00:00 AM")
     }
 
-    "return a not found error message if the preference associated with that emailid is not found" in new SearchControllerTestCase {
+    "return a not found error message if the preference associated with that email is not found" in new SearchControllerTestCase {
       when(searchServiceMock.searchPreference(any())(any(), any(), any())).thenReturn(Future.successful(Nil))
-      Mockito.reset(auditConnectorMock)
-      val result = searchController.search(FakeRequest("GET", queryParamsForEmailid).withSession(User.sessionKey -> "user").withCSRFToken)
+
+      val postRequest = FakeRequest("POST", "/search/q")
+        .withFormUrlEncodedBody(Seq(("name", "email"), ("value", "test@test.com")): _*)
+
+      val result = searchController.search(postRequest.withSession(User.sessionKey -> "user").withCSRFToken)
 
       status(result) mustBe Status.OK
       val body: String = contentAsString(result)
@@ -133,7 +136,7 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
     "include a hidden form to opt the user out" in new SearchControllerTestCase {
 
       val preference = Preference(
-        entityId = Some(EntityId.generate),
+        entityId = Some(EntityId.generate()),
         genericPaperless = true,
         genericUpdatedAt = genericUpdatedAt,
         taxCreditsPaperless = true,
@@ -143,7 +146,10 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
       )
       when(searchServiceMock.searchPreference(any())(any(), any(), any())).thenReturn(Future.successful(List(preference)))
 
-      val result = searchController.search(FakeRequest("GET", queryParamsForValidNino).withSession(User.sessionKey -> "user").withCSRFToken)
+      val postRequest = FakeRequest("POST", "/search/q")
+        .withFormUrlEncodedBody(Seq(("name", "nino"), ("value", "CE067583D")): _*)
+
+      val result = searchController.search(postRequest.withSession(User.sessionKey -> "user").withCSRFToken)
 
       status(result) mustBe Status.OK
       private val document = Jsoup.parse(contentAsString(result))
@@ -153,8 +159,11 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
 
     "return a not found error message if the preference is not found" in new SearchControllerTestCase {
       when(searchServiceMock.searchPreference(any())(any(), any(), any())).thenReturn(Future.successful(Nil))
-      Mockito.reset(auditConnectorMock)
-      val result = searchController.search(FakeRequest("GET", queryParamsForValidNino).withSession(User.sessionKey -> "user").withCSRFToken)
+
+      val postRequest = FakeRequest("POST", "/search/q")
+        .withFormUrlEncodedBody(Seq(("name", "nino"), ("value", "CE067583D")): _*)
+
+      val result = searchController.search(postRequest.withSession(User.sessionKey -> "user").withCSRFToken)
 
       status(result) mustBe Status.OK
       contentAsString(result) must include("No paperless preference found for that identifier.")
@@ -162,7 +171,7 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
 
     "call the search service with an uppercase taxIdentifier if a lowercase taxIdentifier is provided through the Form" in new SearchControllerTestCase {
       val preference = Preference(
-        entityId = Some(EntityId.generate),
+        entityId = Some(EntityId.generate()),
         genericPaperless = true,
         genericUpdatedAt = genericUpdatedAt,
         taxCreditsPaperless = true,
@@ -172,7 +181,10 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
       )
       when(searchServiceMock.searchPreference(any())(any(), any(), any())).thenReturn(Future.successful(List(preference)))
 
-      val result = searchController.search(FakeRequest("GET", queryParamsForValidLowercaseNino).withSession(User.sessionKey -> "user").withCSRFToken)
+      val postRequest = FakeRequest("POST", "/search/q")
+        .withFormUrlEncodedBody(Seq(("name", "nino"), ("value", "ce067583d")): _*)
+
+      val result = searchController.search(postRequest.withSession(User.sessionKey -> "user").withCSRFToken)
 
       verify(searchServiceMock, times(1)).searchPreference(ArgumentMatchers.eq(TaxIdentifier("nino", "CE067583D")))(any(), any(), any())
       verify(searchServiceMock, times(0)).searchPreference(ArgumentMatchers.eq(TaxIdentifier("nino", "ce067583d")))(any(), any(), any())
@@ -184,19 +196,9 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
   }
 
   "submit opt out request" should {
-    val genericUpdatedAt = Some(new DateTime(2018, 2, 15, 0, 0, DateTimeZone.UTC))
-    val taxCreditsUpdatedAt = Some(new DateTime(2018, 2, 15, 0, 0, DateTimeZone.UTC))
-    val verifiedOn = Some(new DateTime(2018, 2, 15, 0, 0, DateTimeZone.UTC))
+
     "redirect to the confirm page" in new SearchControllerTestCase with ScalaFutures {
-      val preference = Preference(
-        entityId = Some(EntityId.generate),
-        genericPaperless = true,
-        genericUpdatedAt = genericUpdatedAt,
-        taxCreditsPaperless = true,
-        taxCreditsUpdatedAt = taxCreditsUpdatedAt,
-        Some(Email("john.doe@digital.hmrc.gov.uk", verified = true, verifiedOn = verifiedOn, language = None, false, None)),
-        Seq()
-      )
+
       when(searchServiceMock.optOut(ArgumentMatchers.eq(TaxIdentifier("nino", "CE067583D")), any())(any(), any(), any()))
         .thenReturn(Future.successful(OptedOut))
 
@@ -220,14 +222,11 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
     val customerIdentificationView: customer_identification = app.injector.instanceOf[customer_identification]
     val failedView: failed = app.injector.instanceOf[failed]
     val userOptOutView: user_opt_out = app.injector.instanceOf[user_opt_out]
+    val searchServiceMock: SearchService = mock[SearchService]
 
-    val searchServiceMock = mock[SearchService]
-    when(auditConnectorMock.sendEvent(any())(any(), any())).thenReturn(Future.successful(AuditResult.Success))
-
-    def searchController()(implicit messages: MessagesApi, appConfig: AppConfig) =
+    def searchController()(implicit messages: MessagesApi, appConfig: AppConfig): SearchController =
       new SearchController(
         authorisedAction,
-        auditConnectorMock,
         searchServiceMock,
         stubbedMCC,
         confirmedView,
