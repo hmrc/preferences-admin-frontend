@@ -10,8 +10,8 @@ GET         /home                                       uk.gov.hmrc.preferencesa
 GET         /search                                     uk.gov.hmrc.preferencesadminfrontend.controllers.SearchController.showSearchPage()
 POST        /search/q                                   uk.gov.hmrc.preferencesadminfrontend.controllers.SearchController.search()
 POST        /search/opt-out                             uk.gov.hmrc.preferencesadminfrontend.controllers.SearchController.optOut()
-POST        /search/confirmed                           uk.gov.hmrc.preferencesadminfrontend.controllers.SearchController.searchConfirmed()
-POST        /search/failed                              uk.gov.hmrc.preferencesadminfrontend.controllers.SearchController.searchFailed(failureCode: String)
+GET         /search/confirmed                           uk.gov.hmrc.preferencesadminfrontend.controllers.SearchController.searchConfirmed()
+GET         /search/failed                              uk.gov.hmrc.preferencesadminfrontend.controllers.SearchController.searchFailed(failureCode: String)
 GET         /rescindment                                uk.gov.hmrc.preferencesadminfrontend.controllers.RescindmentController.showRescindmentPage
 GET         /rescindment/q                              uk.gov.hmrc.preferencesadminfrontend.controllers.RescindmentController.rescindmentAction
 GET         /rescindment/send                           uk.gov.hmrc.preferencesadminfrontend.controllers.RescindmentController.showRescindmentAlertsPage

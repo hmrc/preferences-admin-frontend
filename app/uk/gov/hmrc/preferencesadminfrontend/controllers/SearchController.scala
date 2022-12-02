@@ -17,8 +17,6 @@
 package uk.gov.hmrc.preferencesadminfrontend.controllers
 
 import play.api.Logging
-import play.api.data.Form
-
 import javax.inject.{ Inject, Singleton }
 import play.api.i18n.{ I18nSupport, Messages }
 import play.api.mvc.{ Action, AnyContent, MessagesControllerComponents }
@@ -31,6 +29,7 @@ import uk.gov.hmrc.preferencesadminfrontend.services.model.TaxIdentifier
 import uk.gov.hmrc.preferencesadminfrontend.views.html.{ confirmed, customer_identification, failed, user_opt_out }
 
 import scala.concurrent.{ ExecutionContext, Future }
+import scala.util.{ Failure, Success, Try }
 
 @Singleton
 class SearchController @Inject()(
@@ -96,19 +95,25 @@ class SearchController @Inject()(
   }
 
   def searchConfirmed(): Action[AnyContent] = authorisedAction.async { implicit request => implicit user =>
-    val form = OptOutReasonWithIdentifier().bindFromRequest.get
-    searchService.getPreference(TaxIdentifier(form.identifierName, form.identifierValue)).map {
-      case Nil =>
-        Ok(failedView(TaxIdentifier(form.identifierName, form.identifierValue), Nil, PreferenceNotFound.errorCode))
-      case preferences =>
-        Ok(confirmedView(preferences))
+    Try(OptOutReasonWithIdentifier().bindFromRequest.get) match {
+      case Failure(_) => Future.successful(Ok(customerIdentificationView(Search().bindFromRequest.withError("value", Messages("error.preference_not_found")))))
+      case Success(form) =>
+        searchService.getPreference(TaxIdentifier(form.identifierName, form.identifierValue)).map {
+          case Nil =>
+            Ok(failedView(TaxIdentifier(form.identifierName, form.identifierValue), Nil, PreferenceNotFound.errorCode))
+          case preferences =>
+            Ok(confirmedView(preferences))
+        }
     }
   }
 
   def searchFailed(failureCode: String): Action[AnyContent] = authorisedAction.async { implicit request => implicit user =>
-    val form = OptOutReasonWithIdentifier().bindFromRequest.get
-    searchService.getPreference(TaxIdentifier(form.identifierName, form.identifierValue)).map { preference =>
-      Ok(failedView(TaxIdentifier(form.identifierName, form.identifierValue), preference, failureCode))
+    Try(OptOutReasonWithIdentifier().bindFromRequest.get) match {
+      case Failure(_) => Future.successful(Ok(customerIdentificationView(Search().bindFromRequest.withError("value", Messages("error.preference_not_found")))))
+      case Success(form) =>
+        searchService.getPreference(TaxIdentifier(form.identifierName, form.identifierValue)).map { preference =>
+          Ok(failedView(TaxIdentifier(form.identifierName, form.identifierValue), preference, failureCode))
+        }
     }
   }
 }
