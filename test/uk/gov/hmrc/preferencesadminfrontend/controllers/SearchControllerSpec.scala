@@ -55,13 +55,13 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
   "showSearchPage" should {
 
     "return ok if session is authorised" in new SearchControllerTestCase {
-      val result = searchController.showSearchPage("", "")(FakeRequest().withSession(User.sessionKey -> "user").withCSRFToken)
+      val result = searchController.showSearchPage()(FakeRequest().withSession(User.sessionKey -> "user").withCSRFToken)
 
       status(result) mustBe Status.OK
     }
 
     "redirect to login page if not authorised" in new SearchControllerTestCase {
-      val result = searchController.showSearchPage("", "")(FakeRequest().withSession().withCSRFToken)
+      val result = searchController.showSearchPage()(FakeRequest().withSession().withCSRFToken)
 
       status(result) mustBe Status.SEE_OTHER
       headers(result) must contain("Location" -> "/paperless/admin")
@@ -89,7 +89,7 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
       val postRequest = FakeRequest("POST", "/search/q")
         .withFormUrlEncodedBody(Seq(("name", "nino"), ("value", "CE067583D")): _*)
 
-      val result = searchController.search(postRequest.withSession(User.sessionKey -> "user").withCSRFToken)
+      val result = searchController.search()(postRequest.withSession(User.sessionKey -> "user").withCSRFToken)
 
       status(result) mustBe Status.OK
       val body: String = contentAsString(result)
@@ -112,7 +112,7 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
       val postRequest = FakeRequest("POST", "/search/q")
         .withFormUrlEncodedBody(Seq(("name", "email"), ("value", "test@test.com")): _*)
 
-      val result = searchController.search(postRequest.withSession(User.sessionKey -> "user").withCSRFToken)
+      val result = searchController.search()(postRequest.withSession(User.sessionKey -> "user").withCSRFToken)
 
       status(result) mustBe Status.OK
       val body: String = contentAsString(result)
@@ -126,7 +126,7 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
       val postRequest = FakeRequest("POST", "/search/q")
         .withFormUrlEncodedBody(Seq(("name", "email"), ("value", "test@test.com")): _*)
 
-      val result = searchController.search(postRequest.withSession(User.sessionKey -> "user").withCSRFToken)
+      val result = searchController.search()(postRequest.withSession(User.sessionKey -> "user").withCSRFToken)
 
       status(result) mustBe Status.OK
       val body: String = contentAsString(result)
@@ -149,12 +149,12 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
       val postRequest = FakeRequest("POST", "/search/q")
         .withFormUrlEncodedBody(Seq(("name", "nino"), ("value", "CE067583D")): _*)
 
-      val result = searchController.search(postRequest.withSession(User.sessionKey -> "user").withCSRFToken)
+      val result = searchController.search()(postRequest.withSession(User.sessionKey -> "user").withCSRFToken)
 
       status(result) mustBe Status.OK
       private val document = Jsoup.parse(contentAsString(result))
       document.body().getElementById("confirm").getElementsByTag("form").attr("action") mustBe
-        "/paperless/admin/search/opt-out?taxIdentifierName=nino&taxIdentifierValue=CE067583D"
+        "/paperless/admin/search/opt-out"
     }
 
     "return a not found error message if the preference is not found" in new SearchControllerTestCase {
@@ -163,7 +163,7 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
       val postRequest = FakeRequest("POST", "/search/q")
         .withFormUrlEncodedBody(Seq(("name", "nino"), ("value", "CE067583D")): _*)
 
-      val result = searchController.search(postRequest.withSession(User.sessionKey -> "user").withCSRFToken)
+      val result = searchController.search()(postRequest.withSession(User.sessionKey -> "user").withCSRFToken)
 
       status(result) mustBe Status.OK
       contentAsString(result) must include("No paperless preference found for that identifier.")
@@ -184,14 +184,14 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
       val postRequest = FakeRequest("POST", "/search/q")
         .withFormUrlEncodedBody(Seq(("name", "nino"), ("value", "ce067583d")): _*)
 
-      val result = searchController.search(postRequest.withSession(User.sessionKey -> "user").withCSRFToken)
+      val result = searchController.search()(postRequest.withSession(User.sessionKey -> "user").withCSRFToken)
 
       verify(searchServiceMock, times(1)).searchPreference(ArgumentMatchers.eq(TaxIdentifier("nino", "CE067583D")))(any(), any(), any())
       verify(searchServiceMock, times(0)).searchPreference(ArgumentMatchers.eq(TaxIdentifier("nino", "ce067583d")))(any(), any(), any())
       status(result) mustBe Status.OK
       private val document = Jsoup.parse(contentAsString(result))
       document.body().getElementById("confirm").getElementsByTag("form").attr("action") mustBe
-        "/paperless/admin/search/opt-out?taxIdentifierName=nino&taxIdentifierValue=CE067583D"
+        "/paperless/admin/search/opt-out"
     }
   }
 
@@ -202,14 +202,14 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
       when(searchServiceMock.optOut(ArgumentMatchers.eq(TaxIdentifier("nino", "CE067583D")), any())(any(), any(), any()))
         .thenReturn(Future.successful(OptedOut))
 
-      private val request = FakeRequest(Helpers.POST, controllers.routes.SearchController.optOut("nino", "CE067583D").url)
-        .withFormUrlEncodedBody("reason" -> "my optOut reason")
+      private val request = FakeRequest(Helpers.POST, controllers.routes.SearchController.optOut().url)
+        .withFormUrlEncodedBody("reason" -> "my optOut reason", "identifierName" -> "nino", "identifierValue" -> "CE067583D")
         .withSession(User.sessionKey -> "user")
 
-      val result = searchController.optOut("nino", "CE067583D")(request.withCSRFToken)
+      val result = searchController.optOut()(request.withCSRFToken)
 
       status(result) mustBe SEE_OTHER
-      header("Location", result) mustBe Some(controllers.routes.SearchController.searchConfirmed("nino", "CE067583D").url)
+      header("Location", result) mustBe Some(controllers.routes.SearchController.searchConfirmed().url)
     }
   }
 

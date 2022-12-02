@@ -16,7 +16,7 @@
 
 @import uk.gov.hmrc.govukfrontend.views.html.components._
 @import uk.gov.hmrc.govukfrontend.views.html.components.implicits._
-@import uk.gov.hmrc.preferencesadminfrontend.controllers.model.OptOutReason
+@import uk.gov.hmrc.preferencesadminfrontend.controllers.model.OptOutReasonWithIdentifier
 @import uk.gov.hmrc.preferencesadminfrontend.controllers.routes
 
 @this(
@@ -28,8 +28,7 @@
     govukWarningText : GovukWarningText,
     govukInsetText : GovukInsetText,
     form: FormWithCSRF)
-@(reasonForm: Form[OptOutReason],
-  searchTaxIdentifier: uk.gov.hmrc.preferencesadminfrontend.services.model.TaxIdentifier,
+@(reasonForm: Form[OptOutReasonWithIdentifier],
   preferences: List[uk.gov.hmrc.preferencesadminfrontend.services.model.Preference])(implicit request: Request[_], messages: Messages, appConfig: uk.gov.hmrc.preferencesadminfrontend.config.AppConfig)
 
 
@@ -42,7 +41,7 @@
         ),
         BreadcrumbsItem(
           content = Text("Paperless Admin"),
-          href = Some(s"/paperless/admin/search?taxIdentifierName=${searchTaxIdentifier.name}&taxIdentifierValue=${searchTaxIdentifier.value}")
+          href = Some("/paperless/admin/search")
         ),
         BreadcrumbsItem(
           content = Text("User Summary"),
@@ -89,7 +88,9 @@
                     iconFallbackText = "Warning",
                     content = Text("Are you sure you wish to opt this user out?")
                 ))
-                @form(action = routes.SearchController.optOut(preference.taxIdentifiers.last.name, preference.taxIdentifiers.last.value)) {
+                @form(action = routes.SearchController.optOut()) {
+                    <input type="hidden" name="identifierName" value="@{preference.taxIdentifiers.last.name}">
+                    <input type="hidden" name="identifierValue" value="@{preference.taxIdentifiers.last.value}">
                     @govukTextarea(
                         Textarea(
                             id = "reason",
@@ -104,7 +105,7 @@
                         @govukButton(Button(
                             content = Text("Yes")
                         ))
-                        <input type="button" onclick="location.href='/paperless/admin/search?taxIdentifierName=@{searchTaxIdentifier.name}&taxIdentifierValue=@{searchTaxIdentifier.value}';" class="govuk-button govuk-button--secondary" data-module="govuk-button" value="Cancel"/>
+                        <input type="button" onclick="location.href='/paperless/admin/search';" class="govuk-button govuk-button--secondary" data-module="govuk-button" value="Cancel"/>
                     </div>
                 }
             }
