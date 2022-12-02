@@ -17,19 +17,20 @@
 package uk.gov.hmrc.preferencesadminfrontend.controllers
 
 import play.api.Logging
+
 import javax.inject.{ Inject, Singleton }
 import play.api.i18n.{ I18nSupport, Messages }
-import play.api.mvc.{ Action, AnyContent, MessagesControllerComponents }
+import play.api.mvc.{ Action, AnyContent, MessagesControllerComponents, Request, Result }
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
 import uk.gov.hmrc.preferencesadminfrontend.connectors.{ AlreadyOptedOut, OptedOut, PreferenceNotFound }
-import uk.gov.hmrc.preferencesadminfrontend.controllers.model.{ OptOutReasonWithIdentifier, Search }
+import uk.gov.hmrc.preferencesadminfrontend.controllers.model.{ OptOutReasonWithIdentifier, Search, User }
 import uk.gov.hmrc.preferencesadminfrontend.services._
 import uk.gov.hmrc.preferencesadminfrontend.services.model.TaxIdentifier
 import uk.gov.hmrc.preferencesadminfrontend.views.html.{ confirmed, customer_identification, failed, user_opt_out }
 
 import scala.concurrent.{ ExecutionContext, Future }
-import scala.util.{ Failure, Success, Try }
 
 @Singleton
 class SearchController @Inject()(
@@ -83,37 +84,27 @@ class SearchController @Inject()(
       },
       optOutReason => {
         val identifier = TaxIdentifier(optOutReason.identifierName, optOutReason.identifierValue)
-        searchService.optOut(identifier, optOutReason.reason).map {
-          case OptedOut => Redirect(routes.SearchController.searchConfirmed())
+        searchService.optOut(identifier, optOutReason.reason).flatMap {
+          case OptedOut => searchConfirmed(identifier)
           case AlreadyOptedOut =>
-            Redirect(routes.SearchController.searchFailed(AlreadyOptedOut.errorCode))
+            searchFailed(identifier, AlreadyOptedOut.errorCode)
           case PreferenceNotFound =>
-            Redirect(routes.SearchController.searchFailed(PreferenceNotFound.errorCode))
+            searchFailed(identifier, PreferenceNotFound.errorCode)
         }
       }
     )
   }
 
-  def searchConfirmed(): Action[AnyContent] = authorisedAction.async { implicit request => implicit user =>
-    Try(OptOutReasonWithIdentifier().bindFromRequest.get) match {
-      case Failure(_) => Future.successful(Ok(customerIdentificationView(Search().bindFromRequest.withError("value", Messages("error.preference_not_found")))))
-      case Success(form) =>
-        searchService.getPreference(TaxIdentifier(form.identifierName, form.identifierValue)).map {
-          case Nil =>
-            Ok(failedView(TaxIdentifier(form.identifierName, form.identifierValue), Nil, PreferenceNotFound.errorCode))
-          case preferences =>
-            Ok(confirmedView(preferences))
-        }
+  def searchConfirmed(taxIdentifier: TaxIdentifier)(implicit request: Request[AnyContent], user: User, hc: HeaderCarrier): Future[Result] =
+    searchService.getPreference(taxIdentifier).map {
+      case Nil =>
+        Ok(failedView(taxIdentifier, Nil, PreferenceNotFound.errorCode))
+      case preferences =>
+        Ok(confirmedView(preferences))
     }
-  }
 
-  def searchFailed(failureCode: String): Action[AnyContent] = authorisedAction.async { implicit request => implicit user =>
-    Try(OptOutReasonWithIdentifier().bindFromRequest.get) match {
-      case Failure(_) => Future.successful(Ok(customerIdentificationView(Search().bindFromRequest.withError("value", Messages("error.preference_not_found")))))
-      case Success(form) =>
-        searchService.getPreference(TaxIdentifier(form.identifierName, form.identifierValue)).map { preference =>
-          Ok(failedView(TaxIdentifier(form.identifierName, form.identifierValue), preference, failureCode))
-        }
+  def searchFailed(taxIdentifier: TaxIdentifier, failureCode: String)(implicit request: Request[AnyContent], user: User, hc: HeaderCarrier): Future[Result] =
+    searchService.getPreference(taxIdentifier).map { preference =>
+      Ok(failedView(taxIdentifier, preference, failureCode))
     }
-  }
 }
