@@ -70,17 +70,13 @@ class SearchController @Inject()(
   def optOut(): Action[AnyContent] = authorisedAction.async { implicit request => implicit user =>
     OptOutReasonWithIdentifier().bindFromRequest.fold(
       errors => {
-        errors.value
-          .map(f => TaxIdentifier(f.identifierName, f.identifierValue))
-          .map { identifier =>
-            searchService.getPreference(identifier).map {
-              case Nil =>
-                Ok(customerIdentificationView(Search().bindFromRequest.withError("value", Messages("error.preference_not_found"))))
-              case preferences =>
-                Ok(userOptOutView(errors, preferences))
-            }
-          }
-          .getOrElse(Future(Ok(customerIdentificationView(Search().bindFromRequest.withError("value", Messages("error.preference_not_found"))))))
+        val identifier = TaxIdentifier(errors.data("identifierName"), errors.data("identifierValue"))
+        searchService.getPreference(identifier).map {
+          case Nil =>
+            Ok(customerIdentificationView(Search().bindFromRequest.withError("value", Messages("error.preference_not_found"))))
+          case preferences =>
+            Ok(userOptOutView(errors, preferences))
+        }
       },
       optOutReason => {
         val identifier = TaxIdentifier(optOutReason.identifierName, optOutReason.identifierValue)
