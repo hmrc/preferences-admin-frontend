@@ -7,11 +7,9 @@ POST        /login                                      uk.gov.hmrc.preferencesa
 POST        /logout                                     uk.gov.hmrc.preferencesadminfrontend.controllers.LoginController.logoutAction
 GET         /                                           uk.gov.hmrc.preferencesadminfrontend.controllers.LoginController.showLoginPage
 GET         /home                                       uk.gov.hmrc.preferencesadminfrontend.controllers.HomeController.showHomePage
-GET         /search                                     uk.gov.hmrc.preferencesadminfrontend.controllers.SearchController.showSearchPage(taxIdentifierName: String ?= "", taxIdentifierValue: String ?= "")
-GET         /search/q                                   uk.gov.hmrc.preferencesadminfrontend.controllers.SearchController.search
-POST        /search/opt-out                             uk.gov.hmrc.preferencesadminfrontend.controllers.SearchController.optOut(taxIdentifierName: String, taxIdentifierValue: String)
-GET         /search/confirmed                           uk.gov.hmrc.preferencesadminfrontend.controllers.SearchController.searchConfirmed(taxIdentifierName: String, taxIdentifierValue: String)
-GET         /search/failed                              uk.gov.hmrc.preferencesadminfrontend.controllers.SearchController.searchFailed(taxIdentifierName: String, taxIdentifierValue: String, failureCode: String)
+GET         /search                                     uk.gov.hmrc.preferencesadminfrontend.controllers.SearchController.showSearchPage()
+POST        /search/q                                   uk.gov.hmrc.preferencesadminfrontend.controllers.SearchController.search()
+POST        /search/opt-out                             uk.gov.hmrc.preferencesadminfrontend.controllers.SearchController.optOut()
 GET         /rescindment                                uk.gov.hmrc.preferencesadminfrontend.controllers.RescindmentController.showRescindmentPage
 GET         /rescindment/q                              uk.gov.hmrc.preferencesadminfrontend.controllers.RescindmentController.rescindmentAction
 GET         /rescindment/send                           uk.gov.hmrc.preferencesadminfrontend.controllers.RescindmentController.showRescindmentAlertsPage

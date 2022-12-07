@@ -20,12 +20,12 @@ import play.api.Logging
 
 import javax.inject.{ Inject, Singleton }
 import play.api.i18n.{ I18nSupport, Messages }
-import play.api.mvc.MessagesControllerComponents
-import uk.gov.hmrc.play.audit.http.connector.AuditConnector
+import play.api.mvc.{ Action, AnyContent, MessagesControllerComponents, Request, Result }
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
 import uk.gov.hmrc.preferencesadminfrontend.connectors.{ AlreadyOptedOut, OptedOut, PreferenceNotFound }
-import uk.gov.hmrc.preferencesadminfrontend.controllers.model.{ OptOutReason, Search }
+import uk.gov.hmrc.preferencesadminfrontend.controllers.model.{ OptOutReasonWithIdentifier, Search, User }
 import uk.gov.hmrc.preferencesadminfrontend.services._
 import uk.gov.hmrc.preferencesadminfrontend.services.model.TaxIdentifier
 import uk.gov.hmrc.preferencesadminfrontend.views.html.{ confirmed, customer_identification, failed, user_opt_out }
@@ -35,7 +35,6 @@ import scala.concurrent.{ ExecutionContext, Future }
 @Singleton
 class SearchController @Inject()(
   authorisedAction: AuthorisedAction,
-  auditConnector: AuditConnector,
   searchService: SearchService,
   mcc: MessagesControllerComponents,
   confirmedView: confirmed,
@@ -44,17 +43,17 @@ class SearchController @Inject()(
   userOptOutView: user_opt_out)(implicit appConfig: AppConfig, ec: ExecutionContext)
     extends FrontendController(mcc) with I18nSupport with Logging {
 
-  def showSearchPage(taxIdentifierName: String, taxIdentifierValue: String) =
+  def showSearchPage(): Action[AnyContent] =
     authorisedAction.async { implicit request => implicit user =>
       Future.successful(
         Ok(
           customerIdentificationView(
             Search()
-              .bind(Map("name" -> taxIdentifierName, "value" -> taxIdentifierValue))
+              .bind(Map("name" -> "", "value" -> ""))
               .discardingErrors)))
     }
 
-  def search = authorisedAction.async { implicit request => implicit user =>
+  def search(): Action[AnyContent] = authorisedAction.async { implicit request => implicit user =>
     Search().bindFromRequest.fold(
       errors => Future.successful(BadRequest(customerIdentificationView(errors))),
       searchTaxIdentifier => {
@@ -62,45 +61,46 @@ class SearchController @Inject()(
           case Nil =>
             Ok(customerIdentificationView(Search().bindFromRequest.withError("value", "error.preference_not_found")))
           case preferenceList =>
-            Ok(userOptOutView(OptOutReason(), searchTaxIdentifier, preferenceList))
+            Ok(userOptOutView(OptOutReasonWithIdentifier(), preferenceList))
         }
       }
     )
   }
 
-  def optOut(taxIdentifierName: String, taxIdentifierValue: String) = authorisedAction.async { implicit request => implicit user =>
-    val identifier = TaxIdentifier(taxIdentifierName, taxIdentifierValue)
-    OptOutReason().bindFromRequest.fold(
+  def optOut(): Action[AnyContent] = authorisedAction.async { implicit request => implicit user =>
+    OptOutReasonWithIdentifier().bindFromRequest.fold(
       errors => {
+        val identifier = TaxIdentifier(errors.data("identifierName"), errors.data("identifierValue"))
         searchService.getPreference(identifier).map {
           case Nil =>
             Ok(customerIdentificationView(Search().bindFromRequest.withError("value", Messages("error.preference_not_found"))))
           case preferences =>
-            Ok(userOptOutView(errors, identifier, preferences))
+            Ok(userOptOutView(errors, preferences))
         }
       },
       optOutReason => {
-        searchService.optOut(identifier, optOutReason.reason).map {
-          case OptedOut           => Redirect(routes.SearchController.searchConfirmed(taxIdentifierName, taxIdentifierValue))
-          case AlreadyOptedOut    => Redirect(routes.SearchController.searchFailed(taxIdentifierName, taxIdentifierValue, AlreadyOptedOut.errorCode))
-          case PreferenceNotFound => Redirect(routes.SearchController.searchFailed(taxIdentifierName, taxIdentifierValue, PreferenceNotFound.errorCode))
+        val identifier = TaxIdentifier(optOutReason.identifierName, optOutReason.identifierValue)
+        searchService.optOut(identifier, optOutReason.reason).flatMap {
+          case OptedOut => searchConfirmed(identifier)
+          case AlreadyOptedOut =>
+            searchFailed(identifier, AlreadyOptedOut.errorCode)
+          case PreferenceNotFound =>
+            searchFailed(identifier, PreferenceNotFound.errorCode)
         }
       }
     )
   }
 
-  def searchConfirmed(taxIdentifierName: String, taxIdentifierValue: String) = authorisedAction.async { implicit request => implicit user =>
-    searchService.getPreference(TaxIdentifier(taxIdentifierName, taxIdentifierValue)).map {
+  def searchConfirmed(taxIdentifier: TaxIdentifier)(implicit request: Request[AnyContent], user: User, hc: HeaderCarrier): Future[Result] =
+    searchService.getPreference(taxIdentifier).map {
       case Nil =>
-        Ok(failedView(TaxIdentifier(taxIdentifierName, taxIdentifierValue), Nil, PreferenceNotFound.errorCode))
+        Ok(failedView(taxIdentifier, Nil, PreferenceNotFound.errorCode))
       case preferences =>
         Ok(confirmedView(preferences))
     }
-  }
 
-  def searchFailed(taxIdentifierName: String, taxIdentifierValue: String, failureCode: String) = authorisedAction.async { implicit request => implicit user =>
-    searchService.getPreference(TaxIdentifier(taxIdentifierName, taxIdentifierValue)).map { preference =>
-      Ok(failedView(TaxIdentifier(taxIdentifierName, taxIdentifierValue), preference, failureCode))
+  def searchFailed(taxIdentifier: TaxIdentifier, failureCode: String)(implicit request: Request[AnyContent], user: User, hc: HeaderCarrier): Future[Result] =
+    searchService.getPreference(taxIdentifier).map { preference =>
+      Ok(failedView(taxIdentifier, preference, failureCode))
     }
-  }
 }
