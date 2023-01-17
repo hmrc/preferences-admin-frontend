@@ -3,31 +3,31 @@
 ->          /hmrc-frontend                              hmrcfrontend.Routes
 GET         /assets/*file                               controllers.Assets.versioned(path = "/public", file: Asset)
 
-POST        /login                                      uk.gov.hmrc.preferencesadminfrontend.controllers.LoginController.loginAction
-POST        /logout                                     uk.gov.hmrc.preferencesadminfrontend.controllers.LoginController.logoutAction
-GET         /                                           uk.gov.hmrc.preferencesadminfrontend.controllers.LoginController.showLoginPage
-GET         /home                                       uk.gov.hmrc.preferencesadminfrontend.controllers.HomeController.showHomePage
+POST        /login                                      uk.gov.hmrc.preferencesadminfrontend.controllers.LoginController.loginAction()
+POST        /logout                                     uk.gov.hmrc.preferencesadminfrontend.controllers.LoginController.logoutAction()
+GET         /                                           uk.gov.hmrc.preferencesadminfrontend.controllers.LoginController.showLoginPage()
+GET         /home                                       uk.gov.hmrc.preferencesadminfrontend.controllers.HomeController.showHomePage()
 GET         /search                                     uk.gov.hmrc.preferencesadminfrontend.controllers.SearchController.showSearchPage()
 POST        /search/q                                   uk.gov.hmrc.preferencesadminfrontend.controllers.SearchController.search()
 POST        /search/opt-out                             uk.gov.hmrc.preferencesadminfrontend.controllers.SearchController.optOut()
-GET         /rescindment                                uk.gov.hmrc.preferencesadminfrontend.controllers.RescindmentController.showRescindmentPage
-GET         /rescindment/q                              uk.gov.hmrc.preferencesadminfrontend.controllers.RescindmentController.rescindmentAction
-GET         /rescindment/send                           uk.gov.hmrc.preferencesadminfrontend.controllers.RescindmentController.showRescindmentAlertsPage
-GET         /rescindment/send/q                         uk.gov.hmrc.preferencesadminfrontend.controllers.RescindmentController.sendRescindmentAlerts
-GET         /allowlist                                  uk.gov.hmrc.preferencesadminfrontend.controllers.AllowlistController.showAllowlistPage
-GET         /allowlist/add                              uk.gov.hmrc.preferencesadminfrontend.controllers.AllowlistController.addFormId
-POST        /allowlist/add                              uk.gov.hmrc.preferencesadminfrontend.controllers.AllowlistController.confirmAdd
+GET         /rescindment                                uk.gov.hmrc.preferencesadminfrontend.controllers.RescindmentController.showRescindmentPage()
+GET         /rescindment/q                              uk.gov.hmrc.preferencesadminfrontend.controllers.RescindmentController.rescindmentAction()
+GET         /rescindment/send                           uk.gov.hmrc.preferencesadminfrontend.controllers.RescindmentController.showRescindmentAlertsPage()
+GET         /rescindment/send/q                         uk.gov.hmrc.preferencesadminfrontend.controllers.RescindmentController.sendRescindmentAlerts()
+GET         /allowlist                                  uk.gov.hmrc.preferencesadminfrontend.controllers.AllowlistController.showAllowlistPage()
+GET         /allowlist/add                              uk.gov.hmrc.preferencesadminfrontend.controllers.AllowlistController.addFormId()
+POST        /allowlist/add                              uk.gov.hmrc.preferencesadminfrontend.controllers.AllowlistController.confirmAdd()
 GET         /allowlist/delete/:formId                   uk.gov.hmrc.preferencesadminfrontend.controllers.AllowlistController.deleteFormId(formId: String)
-POST        /allowlist/delete                           uk.gov.hmrc.preferencesadminfrontend.controllers.AllowlistController.confirmDelete
-GET         /message-brake                              uk.gov.hmrc.preferencesadminfrontend.controllers.MessageBrakeController.showAdminPage
-POST        /message-brake/preview                      uk.gov.hmrc.preferencesadminfrontend.controllers.MessageBrakeController.previewMessage
-GET         /message-brake/approve                      uk.gov.hmrc.preferencesadminfrontend.controllers.MessageBrakeController.showApproveBatchConfirmationPage
-GET         /message-brake/reject                       uk.gov.hmrc.preferencesadminfrontend.controllers.MessageBrakeController.showRejectBatchConfirmationPage
-POST        /message-brake/approve/confirmation         uk.gov.hmrc.preferencesadminfrontend.controllers.MessageBrakeController.confirmApproveBatch
-POST        /message-brake/reject/confirmation          uk.gov.hmrc.preferencesadminfrontend.controllers.MessageBrakeController.confirmRejectBatch
+POST        /allowlist/delete                           uk.gov.hmrc.preferencesadminfrontend.controllers.AllowlistController.confirmDelete()
+GET         /message-brake                              uk.gov.hmrc.preferencesadminfrontend.controllers.MessageBrakeController.showAdminPage()
+POST        /message-brake/preview                      uk.gov.hmrc.preferencesadminfrontend.controllers.MessageBrakeController.previewMessage()
+GET         /message-brake/approve                      uk.gov.hmrc.preferencesadminfrontend.controllers.MessageBrakeController.showApproveBatchConfirmationPage()
+GET         /message-brake/reject                       uk.gov.hmrc.preferencesadminfrontend.controllers.MessageBrakeController.showRejectBatchConfirmationPage()
+POST        /message-brake/approve/confirmation         uk.gov.hmrc.preferencesadminfrontend.controllers.MessageBrakeController.confirmApproveBatch()
+POST        /message-brake/reject/confirmation          uk.gov.hmrc.preferencesadminfrontend.controllers.MessageBrakeController.confirmRejectBatch()
 
 # Temporaty endpoits to migrate MDTP to ETMP
-GET         /migration                              uk.gov.hmrc.preferencesadminfrontend.controllers.MessageController.show
-POST        /migration                               uk.gov.hmrc.preferencesadminfrontend.controllers.MessageController.check
+GET         /migration                              uk.gov.hmrc.preferencesadminfrontend.controllers.MessageController.show()
+POST        /migration                               uk.gov.hmrc.preferencesadminfrontend.controllers.MessageController.check()
 
-POST        /migrate                               uk.gov.hmrc.preferencesadminfrontend.controllers.MessageController.sync
+POST        /migrate                               uk.gov.hmrc.preferencesadminfrontend.controllers.MessageController.sync()
