@@ -7,8 +7,7 @@ object AppDependencies {
   val compile = Seq(
     ws,
     "uk.gov.hmrc"                  %% "bootstrap-frontend-play-28" % "5.16.0",
-    "com.vladsch.flexmark"         % "flexmark-all"                % "0.36.8",
-    "uk.gov.hmrc"                  %% "play-frontend-hmrc"         % "1.31.0-play-28",
+    "uk.gov.hmrc"                  %% "play-frontend-hmrc"         % "6.2.0-play-28",
     "uk.gov.hmrc"                  %% "auth-client"                % "5.7.0-play-28",
     "uk.gov.hmrc"                  %% "play-partials"              % "8.2.0-play-28",
     "com.typesafe.play"            %% "play-json-joda"             % "2.8.2",
@@ -25,6 +24,7 @@ object AppDependencies {
     "org.scalatestplus.play" %% "scalatestplus-play"          % "5.1.0"   % Test,
     "org.mockito"            % "mockito-core"                 % "3.9.0"   % Test,
     "org.scalatestplus"      %% "mockito-3-4"                 % "3.2.8.0" % Test,
-    "org.scalamock"          %% "scalamock-scalatest-support" % "3.5.0"   % Test
+    "org.scalamock"          %% "scalamock-scalatest-support" % "3.5.0"   % Test,
+    "com.vladsch.flexmark"   % "flexmark-all"                 % "0.36.8"  % Test
   )
 }

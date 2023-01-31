@@ -1,18 +1,12 @@
 import com.lucidchart.sbt.scalafmt.ScalafmtCorePlugin.autoImport._
 import sbt.Keys._
-import sbt.Tests.{Group, SubProcess}
 import sbt._
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin._
 import uk.gov.hmrc._
 import DefaultBuildSettings._
-import uk.gov.hmrc.{SbtAutoBuildPlugin, SbtBuildInfo, ShellPrompt}
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin
-import uk.gov.hmrc.versioning.SbtGitVersioning
 import uk.gov.hmrc.versioning.SbtGitVersioning.autoImport.majorVersion
-import uk.gov.hmrc.ForkedJvmPerTestSettings.oneForkedJvmPerTest
-import sbt.Keys._
-import com.lucidchart.sbt.scalafmt.ScalafmtCorePlugin.autoImport._
-import play.sbt.routes.RoutesKeys._
+import uk.gov.hmrc.DefaultBuildSettings.oneForkedJvmPerTest
 
 val appName: String = "preferences-admin-frontend"
 
