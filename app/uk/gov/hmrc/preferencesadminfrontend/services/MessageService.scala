@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,15 +33,40 @@ import uk.gov.hmrc.templates.views.html.penaltyChargeApologies
 class MessageService @Inject()(messageConnector: MessageConnector) {
 
   def getGmcBatches()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[Seq[GmcBatch], String]] =
-    messageConnector.getGmcBatches.map(response =>
-      response.status match {
-        case OK =>
-          Json.parse(response.body).validate[Seq[GmcBatch]].asOpt match {
-            case Some(batches) => Left(batches)
-            case None          => Right("The GMC batches retrieved do not appear to be valid.")
-          }
-        case _ => Right(response.body)
-    })
+    for {
+      v3Batches <- getGmcBatchesV3()
+      v4Batches <- getGmcBatchesV4()
+    } yield
+      v3Batches match {
+        case Left(value)  => Left(value ++ v4Batches.left.getOrElse(Nil))
+        case Right(value) => Right(value)
+      }
+
+  def getGmcBatchesV3()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[Seq[GmcBatch], String]] =
+    messageConnector
+      .getGmcBatches("v3")
+      .map(response =>
+        response.status match {
+          case OK =>
+            Json.parse(response.body).validate[Seq[GmcBatch]].asOpt match {
+              case Some(batches) => Left(batches)
+              case None          => Right("The GMC batches retrieved do not appear to be valid.")
+            }
+          case _ => Right(response.body)
+      })
+
+  def getGmcBatchesV4()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[Seq[GmcBatch], String]] =
+    messageConnector
+      .getGmcBatches("v4")
+      .map(response =>
+        response.status match {
+          case OK =>
+            Json.parse(response.body).validate[Seq[GmcBatch]].asOpt match {
+              case Some(batches) => Left(batches.map(_.copy(version = Some("v4"))))
+              case None          => Right("The GMC batches retrieved for version v4 do not appear to be valid.")
+            }
+          case _ => Right(response.body)
+      })
 
   def getRandomMessagePreview(batch: GmcBatch)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[BatchMessagePreview, String]] =
     messageConnector

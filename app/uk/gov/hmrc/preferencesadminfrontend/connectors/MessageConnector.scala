@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,9 @@ import scala.concurrent.{ ExecutionContext, Future }
 @Singleton
 class MessageConnector @Inject()(httpClient: HttpClient, val servicesConfig: ServicesConfig)(implicit ec: ExecutionContext) {
 
-  def serviceUrl: String = servicesConfig.baseUrl("message")
+  private def serviceUrl(version: String): String = if (version matches "v3") servicesConfig.baseUrl("message") else servicesConfig.baseUrl("secure-message")
+
+  val serviceUrl: String = serviceUrl("v3")
 
   def addRescindments(rescindmentRequest: RescindmentRequest)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[RescindmentUpdateResult] =
     httpClient.POST[RescindmentRequest, RescindmentUpdateResult](s"$serviceUrl/admin/message/add-rescindments", rescindmentRequest)
@@ -51,8 +53,8 @@ class MessageConnector @Inject()(httpClient: HttpClient, val servicesConfig: Ser
       case e: Exception => HttpResponse(BAD_GATEWAY, None, Map(), Some(e.getMessage))
     }
 
-  def getGmcBatches()(implicit hc: HeaderCarrier): Future[HttpResponse] =
-    httpClient.GET[HttpResponse](s"$serviceUrl/admin/message/brake/gmc/batches").recover {
+  def getGmcBatches(version: String)(implicit hc: HeaderCarrier): Future[HttpResponse] =
+    httpClient.GET[HttpResponse](s"${serviceUrl(version)}/admin/message/brake/gmc/batches").recover {
       case e: Exception => HttpResponse(BAD_GATEWAY, None, Map(), Some(e.getMessage))
     }
 
