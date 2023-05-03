@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,21 +38,25 @@ class MessageServiceSpec extends PlaySpec with ScalaFutures with IntegrationPati
 
     "return a valid update result" in new MessageServiceTestCase {
       val response = HttpResponse(Status.OK, Some(validGmcBatchSeqResponseJson))
-      when(messageConnectorMock.getGmcBatches()).thenReturn(Future.successful(response))
-      messageService.getGmcBatches().futureValue mustBe Left(Seq(gmcBatch))
+      when(messageConnectorMock.getGmcBatches("v3")).thenReturn(Future.successful(response))
+      when(messageConnectorMock.getGmcBatches("v4")).thenReturn(Future.successful(response))
+      messageService.getGmcBatches().futureValue mustBe Left(Seq(gmcBatch, gmcBatch.copy(version = Some("v4"))))
     }
 
     "return an error message if status is 200 but there no valid batches returned" in new MessageServiceTestCase {
       val responseJson = Json.parse("""[{"blah": "test"}]""".stripMargin)
       val response = HttpResponse(Status.OK, Some(responseJson))
-      when(messageConnectorMock.getGmcBatches()).thenReturn(Future.successful(response))
+      when(messageConnectorMock.getGmcBatches("v3")).thenReturn(Future.successful(response))
+      when(messageConnectorMock.getGmcBatches("v4")).thenReturn(Future.successful(response))
       messageService.getGmcBatches().futureValue mustBe
-        Right("The GMC batches retrieved do not appear to be valid.")
+        Right("The GMC batches retrieved do not appear to be valid.The GMC batches retrieved for version v4 do not appear to be valid.")
     }
 
     "return a response body if status isn't 200" in new MessageServiceTestCase {
       val response = HttpResponse(Status.NOT_FOUND, Some(validGmcBatchSeqResponseJson))
-      when(messageConnectorMock.getGmcBatches()).thenReturn(Future.successful(response))
+      val responseForV4 = HttpResponse(Status.NOT_FOUND, Some(validGmcBatchSeqResponseJson))
+      when(messageConnectorMock.getGmcBatches("v3")).thenReturn(Future.successful(response))
+      when(messageConnectorMock.getGmcBatches("v4")).thenReturn(Future.successful(responseForV4))
       messageService.getGmcBatches().futureValue mustBe
         Right("""[ {
                 |  "formId" : "SA359",
@@ -60,7 +64,21 @@ class MessageServiceSpec extends PlaySpec with ScalaFutures with IntegrationPati
                 |  "batchId" : "123456789",
                 |  "templateId" : "newMessageAlert_SA359",
                 |  "count" : 15778
+                |} ][ {
+                |  "formId" : "SA359",
+                |  "issueDate" : "2017-03-16",
+                |  "batchId" : "123456789",
+                |  "templateId" : "newMessageAlert_SA359",
+                |  "count" : 15778
                 |} ]""".stripMargin)
+    }
+
+    "return a response body if status isn't 200 for v3 and v4 batch is returned" in new MessageServiceTestCase {
+      val response = HttpResponse(Status.NOT_FOUND, Some(validGmcBatchSeqResponseJson))
+      val responseForV4 = HttpResponse(Status.OK, Some(validGmcBatchSeqResponseJson))
+      when(messageConnectorMock.getGmcBatches("v3")).thenReturn(Future.successful(response))
+      when(messageConnectorMock.getGmcBatches("v4")).thenReturn(Future.successful(responseForV4))
+      messageService.getGmcBatches().futureValue mustBe Left(Seq(gmcBatch.copy(version = Some("v4"))))
     }
   }
 
@@ -128,7 +146,8 @@ class MessageServiceSpec extends PlaySpec with ScalaFutures with IntegrationPati
       "SA359",
       "2017-03-16",
       "newMessageAlert_SA359",
-      Some(15778)
+      Some(15778),
+      None
     )
 
     val validGmcBatchSeqResponseJson = Json.parse("""

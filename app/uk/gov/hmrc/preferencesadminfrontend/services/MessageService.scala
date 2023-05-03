@@ -33,14 +33,14 @@ import uk.gov.hmrc.templates.views.html.penaltyChargeApologies
 class MessageService @Inject()(messageConnector: MessageConnector) {
 
   def getGmcBatches()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[Seq[GmcBatch], String]] =
-    for {
-      v3Batches <- getGmcBatchesV3()
-      v4Batches <- getGmcBatchesV4()
-    } yield
-      v3Batches match {
-        case Left(value)  => Left(value ++ v4Batches.left.getOrElse(Nil))
-        case Right(value) => Right(value)
-      }
+    Future.reduceLeft(List(getGmcBatchesV3(), getGmcBatchesV4()))(partialF)
+
+  private def partialF: (Either[Seq[GmcBatch], String], Either[Seq[GmcBatch], String]) => Either[Seq[GmcBatch], String] = {
+    case (Left(v3Batch), Left(v4Batch))   => Left(v3Batch ++ v4Batch)
+    case (Left(v3Batch), Right(_))        => Left(v3Batch)
+    case (Right(_), Left(v4Batch))        => Left(v4Batch)
+    case (Right(v3Batch), Right(v4Batch)) => Right(v3Batch ++ v4Batch)
+  }
 
   def getGmcBatchesV3()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[Seq[GmcBatch], String]] =
     messageConnector

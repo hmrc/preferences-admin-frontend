@@ -21,7 +21,7 @@ import play.api.data.Forms._
 import play.api.data.validation.{ Constraint, Invalid, Valid }
 import play.api.libs.json.{ Json, OFormat }
 
-case class GmcBatchApproval(batchId: String, formId: String, issueDate: String, templateId: String, reasonText: String)
+case class GmcBatchApproval(batchId: String, formId: String, issueDate: String, templateId: String, reasonText: String, version: Option[String])
 
 object GmcBatchApproval {
 
@@ -43,7 +43,8 @@ object GmcBatchApproval {
       "formId"     -> nonEmptyText,
       "issueDate"  -> nonEmptyText,
       "templateId" -> nonEmptyText,
-      "reasonText" -> text.verifying(reasonTextConstraint)
+      "reasonText" -> text.verifying(reasonTextConstraint),
+      "version"    -> optional(text)
     )(GmcBatchApproval.apply)(GmcBatchApproval.unapply)
   )
 }

@@ -28,9 +28,10 @@ import scala.concurrent.{ ExecutionContext, Future }
 @Singleton
 class MessageConnector @Inject()(httpClient: HttpClient, val servicesConfig: ServicesConfig)(implicit ec: ExecutionContext) {
 
-  private def serviceUrl(version: String): String = if (version matches "v3") servicesConfig.baseUrl("message") else servicesConfig.baseUrl("secure-message")
+  private def serviceUrl(version: Option[String]): String =
+    if (version.contains("v4")) servicesConfig.baseUrl("secure-message") else servicesConfig.baseUrl("message")
 
-  val serviceUrl: String = serviceUrl("v3")
+  val serviceUrl: String = serviceUrl(Some("v3"))
 
   def addRescindments(rescindmentRequest: RescindmentRequest)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[RescindmentUpdateResult] =
     httpClient.POST[RescindmentRequest, RescindmentUpdateResult](s"$serviceUrl/admin/message/add-rescindments", rescindmentRequest)
@@ -54,22 +55,22 @@ class MessageConnector @Inject()(httpClient: HttpClient, val servicesConfig: Ser
     }
 
   def getGmcBatches(version: String)(implicit hc: HeaderCarrier): Future[HttpResponse] =
-    httpClient.GET[HttpResponse](s"${serviceUrl(version)}/admin/message/brake/gmc/batches").recover {
+    httpClient.GET[HttpResponse](s"${serviceUrl(Some(version))}/admin/message/brake/gmc/batches").recover {
       case e: Exception => HttpResponse(BAD_GATEWAY, None, Map(), Some(e.getMessage))
     }
 
   def getRandomMessagePreview(batch: GmcBatch)(implicit hc: HeaderCarrier): Future[HttpResponse] =
-    httpClient.POST[GmcBatch, HttpResponse](s"$serviceUrl/admin/message/brake/random", batch).recover {
+    httpClient.POST[GmcBatch, HttpResponse](s"${serviceUrl(batch.version)}/admin/message/brake/random", batch).recover {
       case e: Exception => HttpResponse(BAD_GATEWAY, None, Map(), Some(e.getMessage))
     }
 
   def approveGmcBatch(batch: GmcBatchApproval)(implicit hc: HeaderCarrier): Future[HttpResponse] =
-    httpClient.POST[GmcBatchApproval, HttpResponse](s"$serviceUrl/admin/message/brake/accept", batch).recover {
+    httpClient.POST[GmcBatchApproval, HttpResponse](s"${serviceUrl(batch.version)}/admin/message/brake/accept", batch).recover {
       case e: Exception => HttpResponse(BAD_GATEWAY, None, Map(), Some(e.getMessage))
     }
 
   def rejectGmcBatch(batch: GmcBatchApproval)(implicit hc: HeaderCarrier): Future[HttpResponse] =
-    httpClient.POST[GmcBatchApproval, HttpResponse](s"$serviceUrl/admin/message/brake/reject", batch).recover {
+    httpClient.POST[GmcBatchApproval, HttpResponse](s"${serviceUrl(batch.version)}/admin/message/brake/reject", batch).recover {
       case e: Exception => HttpResponse(BAD_GATEWAY, None, Map(), Some(e.getMessage))
     }
 
