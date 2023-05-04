@@ -74,7 +74,9 @@ class MessageBrakeControllerSpec extends PlaySpec with GuiceOneAppPerSuite with 
 
   val mockMessagePreview = MessagePreview(
     "subject",
+    Some(""),
     "content",
+    Some(""),
     "123456789",
     "messageType",
     "03/04/1995",

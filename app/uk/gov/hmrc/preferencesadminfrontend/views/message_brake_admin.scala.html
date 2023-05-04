@@ -89,6 +89,8 @@ govukBreadcrumbs: GovukBreadcrumbs)
                     <div class="form-group">
                         <h2>Message Preview</h2>
                         <div class="message-preview">@batchPreview.getContentHtml</div>
+                        <h2>Welsh Message Preview</h2>
+                        <div class="message-preview">@batchPreview.getWelshContentHtml</div>
                         @{form(action = routes.MessageBrakeController.previewMessage) {
                             TemplateHelper.getFormButton("preview","Preview Next",batchList,batchPreview.batchId)
                         }}
@@ -108,6 +110,10 @@ govukBreadcrumbs: GovukBreadcrumbs)
                             <tr class="govuk-table__row">
                                 <td class="govuk-table__cell">Subject</td>
                                 <td class="govuk-table__cell">@{Html(batchPreview.message.subject)}</td>
+                            </tr>
+                            <tr class="govuk-table__row">
+                                <td class="govuk-table__cell">Welsh Subject</td>
+                                <td class="govuk-table__cell">@{Html(batchPreview.message.welshSubject.getOrElse(""))}</td>
                             </tr>
                             <tr class="govuk-table__row">
                                 <td class="govuk-table__cell">Issue Date</td>

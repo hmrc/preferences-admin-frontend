@@ -20,11 +20,24 @@ import com.google.common.io.BaseEncoding
 import play.api.libs.json.{ Json, Reads }
 import play.twirl.api.Html
 
-case class MessagePreview(subject: String, content: String, externalRefId: String, messageType: String, issueDate: String, taxIdentifierName: String)
+case class MessagePreview(
+  subject: String,
+  welshSubject: Option[String],
+  content: String,
+  welshContent: Option[String],
+  externalRefId: String,
+  messageType: String,
+  issueDate: String,
+  taxIdentifierName: String)
 
 case class BatchMessagePreview(message: MessagePreview, batchId: String) {
   def getContentHtml: Html =
     Html(new String(BaseEncoding.base64().decode(message.content)))
+
+  def getWelshContentHtml: Html = {
+    val welshContent = message.welshContent.map(c => new String(BaseEncoding.base64().decode(c))).getOrElse("")
+    Html(welshContent)
+  }
 }
 
 object MessagePreview {
