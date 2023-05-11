@@ -56,7 +56,7 @@ class MessageConnectorSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
     .build()
 
   def serviceUrl: String = app.injector.instanceOf[ServicesConfig].baseUrl("message")
-  def secureMessageServiceUrl: String = app.injector.instanceOf[ServicesConfig].baseUrl("secure-message")
+  def secureMessageServiceUrl: String = app.injector.instanceOf[ServicesConfig].baseUrl("secure-message") + "/secure-messaging"
 
   "Rescindments" should {
 
