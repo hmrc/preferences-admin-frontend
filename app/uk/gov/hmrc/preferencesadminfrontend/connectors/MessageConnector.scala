@@ -29,7 +29,7 @@ import scala.concurrent.{ ExecutionContext, Future }
 class MessageConnector @Inject()(httpClient: HttpClient, val servicesConfig: ServicesConfig)(implicit ec: ExecutionContext) {
 
   private def serviceUrl(version: Option[String]): String =
-    if (version.contains("v4")) servicesConfig.baseUrl("secure-message") else servicesConfig.baseUrl("message")
+    if (version.contains("v4")) s"${servicesConfig.baseUrl("secure-message")}/secure-messaging" else servicesConfig.baseUrl("message")
 
   val serviceUrl: String = serviceUrl(Some("v3"))
 
