@@ -71,6 +71,8 @@ govukBreadcrumbs: GovukBreadcrumbs)
                             <input type="hidden" name="formId" value="@batch.formId"/>
                             <input type="hidden" name="issueDate" value="@batch.issueDate"/>
                             <input type="hidden" name="templateId" value="@batch.templateId"/>
+                            <input type="hidden" name="count" value="@batch.count"/>
+                            <input type="hidden" name="version" value="@batch.version"/>
                             @govukButton(Button(
                                 name = Some("preview"),
                                 content = Text("Preview")
