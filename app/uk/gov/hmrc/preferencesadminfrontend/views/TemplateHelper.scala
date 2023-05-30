@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ object TemplateHelper {
           <input type="hidden" name="formId" value={batch.formId}/>
           <input type="hidden" name="issueDate" value={batch.issueDate}/>
           <input type="hidden" name="templateId" value={batch.templateId}/>
+          <input type="hidden" name="version" value={batch.version.getOrElse("v3")}/>
           <button name={name} data-module="govuk-button" class={classNames}>{value}</button>.mkString)
       case None => Html(<fieldset/>.mkString)
     }

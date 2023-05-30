@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.preferencesadminfrontend.services
 
-import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito._
 import org.scalatest.concurrent.{ IntegrationPatience, ScalaFutures }
@@ -38,21 +37,25 @@ class MessageServiceSpec extends PlaySpec with ScalaFutures with IntegrationPati
 
     "return a valid update result" in new MessageServiceTestCase {
       val response = HttpResponse(Status.OK, Some(validGmcBatchSeqResponseJson))
-      when(messageConnectorMock.getGmcBatches()).thenReturn(Future.successful(response))
-      messageService.getGmcBatches().futureValue mustBe Left(Seq(gmcBatch))
+      when(messageConnectorMock.getGmcBatches("v3")).thenReturn(Future.successful(response))
+      when(messageConnectorMock.getGmcBatches("v4")).thenReturn(Future.successful(response))
+      messageService.getGmcBatches().futureValue mustBe Left(Seq(gmcBatch, gmcBatch.copy(version = Some("v4"))))
     }
 
     "return an error message if status is 200 but there no valid batches returned" in new MessageServiceTestCase {
       val responseJson = Json.parse("""[{"blah": "test"}]""".stripMargin)
       val response = HttpResponse(Status.OK, Some(responseJson))
-      when(messageConnectorMock.getGmcBatches()).thenReturn(Future.successful(response))
+      when(messageConnectorMock.getGmcBatches("v3")).thenReturn(Future.successful(response))
+      when(messageConnectorMock.getGmcBatches("v4")).thenReturn(Future.successful(response))
       messageService.getGmcBatches().futureValue mustBe
-        Right("The GMC batches retrieved do not appear to be valid.")
+        Right("The GMC batches retrieved do not appear to be valid.The GMC batches retrieved for version v4 do not appear to be valid.")
     }
 
     "return a response body if status isn't 200" in new MessageServiceTestCase {
       val response = HttpResponse(Status.NOT_FOUND, Some(validGmcBatchSeqResponseJson))
-      when(messageConnectorMock.getGmcBatches()).thenReturn(Future.successful(response))
+      val responseForV4 = HttpResponse(Status.NOT_FOUND, Some(validGmcBatchSeqResponseJson))
+      when(messageConnectorMock.getGmcBatches("v3")).thenReturn(Future.successful(response))
+      when(messageConnectorMock.getGmcBatches("v4")).thenReturn(Future.successful(responseForV4))
       messageService.getGmcBatches().futureValue mustBe
         Right("""[ {
                 |  "formId" : "SA359",
@@ -60,7 +63,21 @@ class MessageServiceSpec extends PlaySpec with ScalaFutures with IntegrationPati
                 |  "batchId" : "123456789",
                 |  "templateId" : "newMessageAlert_SA359",
                 |  "count" : 15778
+                |} ][ {
+                |  "formId" : "SA359",
+                |  "issueDate" : "2017-03-16",
+                |  "batchId" : "123456789",
+                |  "templateId" : "newMessageAlert_SA359",
+                |  "count" : 15778
                 |} ]""".stripMargin)
+    }
+
+    "return a response body if status isn't 200 for v3 and v4 batch is returned" in new MessageServiceTestCase {
+      val response = HttpResponse(Status.NOT_FOUND, Some(validGmcBatchSeqResponseJson))
+      val responseForV4 = HttpResponse(Status.OK, Some(validGmcBatchSeqResponseJson))
+      when(messageConnectorMock.getGmcBatches("v3")).thenReturn(Future.successful(response))
+      when(messageConnectorMock.getGmcBatches("v4")).thenReturn(Future.successful(responseForV4))
+      messageService.getGmcBatches().futureValue mustBe Left(Seq(gmcBatch.copy(version = Some("v4"))))
     }
   }
 
@@ -73,7 +90,9 @@ class MessageServiceSpec extends PlaySpec with ScalaFutures with IntegrationPati
         BatchMessagePreview(
           MessagePreview(
             "Reminder to file a Self Assessment return",
+            None,
             "PHA+RGVhciBjdXN0b21lciw8L3A+CjxwPkhNUkMgaXMgb2ZmZXJpbmcgYSByYW5nZSBvZiBzdXBwb3J0IGFoZWFkIG9mIHRoZSBjaGFuZ2VzIGR1ZSBmcm9tIEHigIxwcuKAjGlsIDLigIwwMeKAjDkgYWZmZWN0aW5nIFZBVC1yZWdpc3RlcmVkIGJ1c2luZXNzZXMgd2l0aCBhIHRheGFibGUgdHVybm92ZXIgYWJvdmUgwqM4NSwwMDAuPC9wPgo8cD5IZXJl4oCZcyBhIHNlbGVjdGlvbiBmb3IgeW91LjwvcD4KPHA+PGI+TWFraW5nIFRheCBEaWdpdGFsPC9iPjwvcD4KPHA+UHJvdmlkaW5nIGFuIG92ZXJ2aWV3IG9mIE1ha2luZyBUYXggRGlnaXRhbCwgdGhpcyBsaXZlIHdlYmluYXIgaW5jbHVkZXMgZGlnaXRhbCByZWNvcmQga2VlcGluZywgY29tcGF0aWJsZSBzb2Z0d2FyZSwgc2lnbmluZyB1cCBmb3IgTWFraW5nIFRheCBEaWdpdGFsLCB3b3JraW5nIHdpdGggYWdlbnRzIGFuZCBzdWJtaXR0aW5nIFZBVCByZXR1cm5zIGRpcmVjdGx5IGZyb20gdGhlIGJ1c2luZXNzLjwvcD4KPHA+WW91IGNhbiBhc2sgcXVlc3Rpb25zIHVzaW5nIHRoZSBvbi1zY3JlZW4gdGV4dCBib3guPC9wPgo8cD48YSBocmVmPSJodHRwczovL2xpbmtzLmFkdmljZS5obXJjLmdvdi51ay90cmFjaz90eXBlPWNsaWNrJmVuaWQ9WldGelBURW1iWE5wWkQwbVlYVnBaRDBtYldGcGJHbHVaMmxrUFRJd01Ua3dNekF4TGpJME9ESTNOekVtYldWemMyRm5aV2xrUFUxRVFpMVFVa1F0UWxWTUxUSXdNVGt3TXpBeExqSTBPREkzTnpFbVpHRjBZV0poYzJWcFpEMHhNREF4Sm5ObGNtbGhiRDB4TnpBNE9UYzFNQ1psYldGcGJHbGtQWEp2WW10M1lXeHdiMnhsUUdkdFlXbHNMbU52YlNaMWMyVnlhV1E5Y205aWEzZGhiSEJ2YkdWQVoyMWhhV3d1WTI5dEpuUmhjbWRsZEdsa1BTWm1iRDBtWlhoMGNtRTlUWFZzZEdsMllYSnBZWFJsU1dROUppWW0mJiYxMDEmJiZodHRwczovL2F0dGVuZGVlLmdvdG93ZWJpbmFyLmNvbS9ydC8xNDg4NDY5NzYwMzI2MDI1NzI5P3NvdXJjZT1DYW1wYWlnbi1NYXItMmEiPkNob29zZSBhIGRhdGUgYW5kIHRpbWU8L2E+PC9wPgo8cD5UaGVyZSBhcmUgYWxzbyBzaG9ydCB2aWRlb3Mgb24gb3VyIFlvdVR1YmUgY2hhbm5lbCwgaW5jbHVkaW5nICc8YSBocmVmPSJodHRwczovL2xpbmtzLmFkdmljZS5obXJjLmdvdi51ay90cmFjaz90eXBlPWNsaWNrJmVuaWQ9WldGelBURW1iWE5wWkQwbVlYVnBaRDBtYldGcGJHbHVaMmxrUFRJd01Ua3dNekF4TGpJME9ESTNOekVtYldWemMyRm5aV2xrUFUxRVFpMVFVa1F0UWxWTUxUSXdNVGt3TXpBeExqSTBPREkzTnpFbVpHRjBZV0poYzJWcFpEMHhNREF4Sm5ObGNtbGhiRDB4TnpBNE9UYzFNQ1psYldGcGJHbGtQWEp2WW10M1lXeHdiMnhsUUdkdFlXbHNMbU52YlNaMWMyVnlhV1E5Y205aWEzZGhiSEJ2YkdWQVoyMWhhV3d1WTI5dEpuUmhjbWRsZEdsa1BTWm1iRDBtWlhoMGNtRTlUWFZzZEdsMllYSnBZWFJsU1dROUppWW0mJiYxMDImJiZodHRwczovL3d3dy55b3V0dWJlLmNvbS93YXRjaD92PUhTSGJEaldabDN3JmluZGV4PTQmbGlzdD1QTDhFY25oZUR0MXppMWlwazFxZXhyd2RBVTVPNkxTODRhJnV0bV9zb3VyY2U9SE1SQy1EQ1MtTWFyLTJhJnV0bV9jYW1wYWlnbj1EQ1MtQ2FtcGFpZ24mdXRtX21lZGl1bT1lbWFpbCI+SG93IGRvZXMgTWFraW5nIFRheCBEaWdpdGFsIGZvciBWQVQgYWZmZWN0IHlvdT88L2E+JyBhbmQgJzxhIGhyZWY9Imh0dHBzOi8vbGlua3MuYWR2aWNlLmhtcmMuZ292LnVrL3RyYWNrP3R5cGU9Y2xpY2smZW5pZD1aV0Z6UFRFbWJYTnBaRDBtWVhWcFpEMG1iV0ZwYkdsdVoybGtQVEl3TVRrd016QXhMakkwT0RJM056RW1iV1Z6YzJGblpXbGtQVTFFUWkxUVVrUXRRbFZNTFRJd01Ua3dNekF4TGpJME9ESTNOekVtWkdGMFlXSmhjMlZwWkQweE1EQXhKbk5sY21saGJEMHhOekE0T1RjMU1DWmxiV0ZwYkdsa1BYSnZZbXQzWVd4d2IyeGxRR2R0WVdsc0xtTnZiU1oxYzJWeWFXUTljbTlpYTNkaGJIQnZiR1ZBWjIxaGFXd3VZMjl0Sm5SaGNtZGxkR2xrUFNabWJEMG1aWGgwY21FOVRYVnNkR2wyWVhKcFlYUmxTV1E5SmlZbSYmJjEwMyYmJmh0dHBzOi8vd3d3LnlvdXR1YmUuY29tL3dhdGNoP3Y9a09LRDRrSHZsekkmaW5kZXg9MyZsaXN0PVBMOEVjbmhlRHQxemkxaXBrMXFleHJ3ZEFVNU82TFM4NGEmdXRtX3NvdXJjZT1ITVJDLURDUy1NYXItMmEmdXRtX2NhbXBhaWduPURDUy1DYW1wYWlnbiZ1dG1fbWVkaXVtPWVtYWlsIj5Ib3cgdG8gc2lnbiB1cCBmb3IgTWFraW5nIFRheCBEaWdpdGFsIGZvciBWQVQ/PC9hPicg4oCTIGF2YWlsYWJsZSB0byB2aWV3IGFueXRpbWUuPC9wPgo8cD5WaXNpdCBITVJD4oCZcyA8YSBocmVmPSJodHRwczovL2xpbmtzLmFkdmljZS5obXJjLmdvdi51ay90cmFjaz90eXBlPWNsaWNrJmVuaWQ9WldGelBURW1iWE5wWkQwbVlYVnBaRDBtYldGcGJHbHVaMmxrUFRJd01Ua3dNekF4TGpJME9ESTNOekVtYldWemMyRm5aV2xrUFUxRVFpMVFVa1F0UWxWTUxUSXdNVGt3TXpBeExqSTBPREkzTnpFbVpHRjBZV0poYzJWcFpEMHhNREF4Sm5ObGNtbGhiRDB4TnpBNE9UYzFNQ1psYldGcGJHbGtQWEp2WW10M1lXeHdiMnhsUUdkdFlXbHNMbU52YlNaMWMyVnlhV1E5Y205aWEzZGhiSEJ2YkdWQVoyMWhhV3d1WTI5dEpuUmhjbWRsZEdsa1BTWm1iRDBtWlhoMGNtRTlUWFZzZEdsMllYSnBZWFJsU1dROUppWW0mJiYxMDQmJiZodHRwczovL29ubGluZS5obXJjLmdvdi51ay93ZWJjaGF0cHJvZC9jb21tdW5pdHkvZm9ydW1zL3Nob3cvMTAzLnBhZ2UiPk9ubGluZSBDdXN0b21lciBGb3J1bTwvYT4gaWYgeW914oCZdmUgZ290IGEgcXVlc3Rpb24gYWJvdXQgTWFraW5nIFRheCBEaWdpdGFsIOKAkyBzZWUgd2hhdCBvdGhlcnMgYXJlIHRhbGtpbmcgYWJvdXQsIGFzayB5b3VyIG93biBxdWVzdGlvbnMgYW5kIGdldCBhbnN3ZXJzIGZyb20gdGhlIGV4cGVydHMuPC9wPgo8cD5ITVJDIG9ubGluZSBndWlkYW5jZSDigJMgaGVscGluZyB5b3UgZ2V0IGl0IHJpZ2h0LjwvcD4KPHA+QWxpc29uIFdhbHNoPC9wPgo8cD5IZWFkIG9mIERpZ2l0YWwgQ29tbXVuaWNhdGlvbiBTZXJ2aWNlczwvcD4=",
+            None,
             "9834763878934",
             "mailout-batch",
             "05 APR 2019",
@@ -109,7 +128,6 @@ class MessageServiceSpec extends PlaySpec with ScalaFutures with IntegrationPati
 
   "sendAddHocMessage" should {
     "return a message id if successfully created" in new MessageServiceTestCase {
-      val messageId = "messageid"
       val response = HttpResponse(Status.CREATED, Some(Json.obj(("id" -> "messageid"))))
       when(messageConnectorMock.sendMessage(any())(any())).thenReturn(Future.successful(response))
       messageService.sendPenalyChargeApologyMessage("foo@test.com", "1234567890").futureValue mustBe Right(""""messageid"""")
@@ -128,7 +146,8 @@ class MessageServiceSpec extends PlaySpec with ScalaFutures with IntegrationPati
       "SA359",
       "2017-03-16",
       "newMessageAlert_SA359",
-      Some(15778)
+      Some(15778),
+      None
     )
 
     val validGmcBatchSeqResponseJson = Json.parse("""

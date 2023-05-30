@@ -1,5 +1,5 @@
 @*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -71,6 +71,8 @@ govukBreadcrumbs: GovukBreadcrumbs)
                             <input type="hidden" name="formId" value="@batch.formId"/>
                             <input type="hidden" name="issueDate" value="@batch.issueDate"/>
                             <input type="hidden" name="templateId" value="@batch.templateId"/>
+                            <input type="hidden" name="count" value="@batch.count"/>
+                            <input type="hidden" name="version" value="@batch.version"/>
                             @govukButton(Button(
                                 name = Some("preview"),
                                 content = Text("Preview")
@@ -89,6 +91,8 @@ govukBreadcrumbs: GovukBreadcrumbs)
                     <div class="form-group">
                         <h2>Message Preview</h2>
                         <div class="message-preview">@batchPreview.getContentHtml</div>
+                        <h2>Welsh Message Preview</h2>
+                        <div class="message-preview">@batchPreview.getWelshContentHtml</div>
                         @{form(action = routes.MessageBrakeController.previewMessage) {
                             TemplateHelper.getFormButton("preview","Preview Next",batchList,batchPreview.batchId)
                         }}
@@ -108,6 +112,10 @@ govukBreadcrumbs: GovukBreadcrumbs)
                             <tr class="govuk-table__row">
                                 <td class="govuk-table__cell">Subject</td>
                                 <td class="govuk-table__cell">@{Html(batchPreview.message.subject)}</td>
+                            </tr>
+                            <tr class="govuk-table__row">
+                                <td class="govuk-table__cell">Welsh Subject</td>
+                                <td class="govuk-table__cell">@{Html(batchPreview.message.welshSubject.getOrElse(""))}</td>
                             </tr>
                             <tr class="govuk-table__row">
                                 <td class="govuk-table__cell">Issue Date</td>

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,35 +25,11 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import uk.gov.hmrc.http.{ HeaderCarrier, HttpClient, HttpResponse }
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.preferencesadminfrontend.connectors.ChannelPreferencesConnector.StatusUpdate
-import uk.gov.hmrc.preferencesadminfrontend.services.SentStatus
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class ChannelPreferencesConnectorSpec extends PlaySpec with ScalaFutures with EitherValues with GuiceOneAppPerSuite {
-  "updateStatus" must {
-    "return right SentStatus.Sent upon success" in new Scope {
-      when(httpClient.POST[StatusUpdate, HttpResponse](expectedPath, statusUpdate))
-        .thenReturn(Future.successful(httpResponse(OK, "ITSA-GREAT-DAY")))
-
-      channelPreferencesConnector
-        .updateStatus(statusUpdate)(headerCarrier)
-        .futureValue
-        .right
-        .value mustBe ()
-    }
-
-    "return left upstream error message upon a failure response" in new Scope {
-      when(httpClient.POST[StatusUpdate, HttpResponse](expectedPath, statusUpdate))
-        .thenReturn(Future.successful(httpResponse(Bad, "ITSA-BAD-DAY")))
-
-      channelPreferencesConnector
-        .updateStatus(statusUpdate)(headerCarrier)
-        .futureValue
-        .left
-        .value mustBe s"upstream error when sending status update, $Bad ITSA-BAD-DAY"
-    }
-  }
 
   trait Scope {
     val OK = 200
@@ -76,5 +52,29 @@ class ChannelPreferencesConnectorSpec extends PlaySpec with ScalaFutures with Ei
       body = body,
       headers = Map.empty
     )
+  }
+
+  "updateStatus" must {
+    "return right SentStatus.Sent upon success" in new Scope {
+      when(httpClient.POST[StatusUpdate, HttpResponse](expectedPath, statusUpdate))
+        .thenReturn(Future.successful(httpResponse(OK, "ITSA-GREAT-DAY")))
+
+      channelPreferencesConnector
+        .updateStatus(statusUpdate)(headerCarrier)
+        .futureValue
+        .right
+        .value mustBe ()
+    }
+
+    "return left upstream error message upon a failure response" in new Scope {
+      when(httpClient.POST[StatusUpdate, HttpResponse](expectedPath, statusUpdate))
+        .thenReturn(Future.successful(httpResponse(Bad, "ITSA-BAD-DAY")))
+
+      channelPreferencesConnector
+        .updateStatus(statusUpdate)(headerCarrier)
+        .futureValue
+        .left
+        .value mustBe s"upstream error when sending status update, $Bad ITSA-BAD-DAY"
+    }
   }
 }
