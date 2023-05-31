@@ -24,7 +24,6 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-import uk.gov.hmrc.preferencesadminfrontend.services.SentStatus
 import uk.gov.hmrc.preferencesadminfrontend.services.model.{ Email, EntityId, TaxIdentifier }
 import cats.syntax.either._
 
@@ -195,8 +194,6 @@ case class PreferenceDetails(
   genericPaperless: Boolean,
   genericUpdatedAt: Option[DateTime],
   isPaperless: Option[Boolean],
-  taxCreditsPaperless: Boolean,
-  taxCreditsUpdatedAt: Option[DateTime],
   email: Option[Email],
   entityId: Option[EntityId] = None)
 
@@ -221,10 +218,7 @@ object PreferenceDetails {
     (JsPath \ "termsAndConditions" \ "generic").readNullable[JsValue].map(_.fold(false)(m => (m \ "accepted").as[Boolean])) and
       (JsPath \ "termsAndConditions" \ "generic").readNullable[JsValue].map(_.fold(None: Option[DateTime])(m => (m \ "updatedAt").asOpt[DateTime])) and
       (JsPath \ "termsAndConditions" \ "generic").readNullable[JsValue].map(_.fold(None: Option[Boolean])(m => (m \ "paperless").asOpt[Boolean])) and
-      (JsPath \ "termsAndConditions" \ "taxCredits").readNullable[JsValue].map(_.fold(false)(m => (m \ "accepted").as[Boolean])) and
-      (JsPath \ "termsAndConditions" \ "taxCredits").readNullable[JsValue].map(_.fold(None: Option[DateTime])(m => (m \ "updatedAt").asOpt[DateTime])) and
       (JsPath \ "email").readNullable[Email] and
       (JsPath \ "entityId").readNullable[EntityId]
-  )((genericPaperless, genericUpdatedAt, isPaperless, taxCreditsPaperless, taxCreditsUpdatedAt, email, entityId) =>
-    PreferenceDetails(genericPaperless, genericUpdatedAt, isPaperless, taxCreditsPaperless, taxCreditsUpdatedAt, email, entityId))
+  )((genericPaperless, genericUpdatedAt, isPaperless, email, entityId) => PreferenceDetails(genericPaperless, genericUpdatedAt, isPaperless, email, entityId))
 }

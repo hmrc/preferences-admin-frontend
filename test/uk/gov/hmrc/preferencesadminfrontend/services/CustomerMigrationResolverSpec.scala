@@ -182,8 +182,6 @@ class CustomerMigrationResolverSpec extends PlaySpec with ScalaFutures with Eith
       genericPaperless = false,
       genericUpdatedAt = none,
       isPaperless = true.some,
-      taxCreditsPaperless = false,
-      taxCreditsUpdatedAt = none,
       email = none,
       entityId = saEntityId.some
     )
@@ -192,8 +190,6 @@ class CustomerMigrationResolverSpec extends PlaySpec with ScalaFutures with Eith
       genericPaperless = false,
       genericUpdatedAt = none,
       isPaperless = true.some,
-      taxCreditsPaperless = false,
-      taxCreditsUpdatedAt = none,
       email = none,
       entityId = itsaEntityId.some
     )

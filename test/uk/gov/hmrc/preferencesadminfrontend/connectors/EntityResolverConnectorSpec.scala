@@ -125,35 +125,6 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
 
       result mustBe defined
       result.get.genericPaperless mustBe true
-      result.get.taxCreditsPaperless mustBe false
-      result.get.email.get.address mustBe "john.doe@digital.hmrc.gov.uk"
-      result.get.email.get.verified mustBe true
-      result.get.email.get.verifiedOn.get.isEqual(verfiedOn.get.getMillis) mustBe true
-    }
-
-    "return taxCredits paperless preference true and valid email address and verification true if a Nino user is opted in for taxCredits" in new TestCase {
-      val expectedPath = s"$entityResolverserviceUrl/portal/preferences/paye/${nino.value}"
-      val responseJson = preferenceDetailsResponseForTaxCreditsOptedIn(emailVerified = true)
-
-      val result = entityConnectorGetPreferenceDetailsMock(expectedPath, responseJson).getPreferenceDetails(nino).futureValue
-
-      result mustBe defined
-      result.get.genericPaperless mustBe false
-      result.get.taxCreditsPaperless mustBe true
-      result.get.email.get.address mustBe "john.doe@digital.hmrc.gov.uk"
-      result.get.email.get.verified mustBe true
-      result.get.email.get.verifiedOn.get.isEqual(verfiedOn.get.getMillis) mustBe true
-    }
-
-    "return taxCredits paperless preference true and valid email address and verification true if a Nino user is opted in for taxCredits and Generic" in new TestCase {
-      val expectedPath = s"$entityResolverserviceUrl/portal/preferences/paye/${nino.value}"
-      val responseJson = preferenceDetailsResponseForBothOptedIn(emailVerified = true)
-
-      val result = entityConnectorGetPreferenceDetailsMock(expectedPath, responseJson).getPreferenceDetails(nino).futureValue
-
-      result mustBe defined
-      result.get.genericPaperless mustBe true
-      result.get.taxCreditsPaperless mustBe true
       result.get.email.get.address mustBe "john.doe@digital.hmrc.gov.uk"
       result.get.email.get.verified mustBe true
       result.get.email.get.verifiedOn.get.isEqual(verfiedOn.get.getMillis) mustBe true
@@ -167,7 +138,6 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
 
       result mustBe defined
       result.get.genericPaperless mustBe true
-      result.get.taxCreditsPaperless mustBe false
       result.get.email mustBe Some(Email("john.doe@digital.hmrc.gov.uk", false, None, None, false, None))
     }
 
@@ -179,7 +149,6 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
 
       result mustBe defined
       result.get.genericPaperless mustBe false
-      result.get.taxCreditsPaperless mustBe false
       result.get.email mustBe None
     }
 
@@ -191,7 +160,6 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
 
       result mustBe defined
       result.get.genericPaperless mustBe true
-      result.get.taxCreditsPaperless mustBe false
       result.get.email.get.address mustBe "john.doe@digital.hmrc.gov.uk"
       result.get.email.get.verified mustBe true
       result.get.email.get.verifiedOn.get.isEqual(verfiedOn.get.getMillis) mustBe true
@@ -336,59 +304,6 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
                     |    "generic": {
                     |      "accepted": true,
                     |      $genericUpdatedAtStr
-                    |    }
-                    |  },
-                    |  "email": {
-                    |    "email": "john.doe@digital.hmrc.gov.uk",
-                    |    "status": "${if (emailVerified) "verified" else ""}",
-                    |    $verifiedOnDateStr
-                    |    "mailboxFull": false,
-                    |    "hasBounces":false
-                    |  }
-                    |}
-       """.stripMargin)
-    }
-
-    def preferenceDetailsResponseForTaxCreditsOptedIn(emailVerified: Boolean) = {
-      val genericUpdatedAt = 1518652800000L
-      val genericUpdatedAtStr = s""" "updatedAt": $genericUpdatedAt """
-      val verifiedOnDate = 1518652800000L
-      val verifiedOnDateStr = if (emailVerified) s""" "verifiedOn": $verifiedOnDate, """ else ""
-      Json.parse(s"""
-                    |{
-                    |  "digital": true,
-                    |  "termsAndConditions": {
-                    |    "taxCredits": {
-                    |      "accepted": true,
-                    |      $genericUpdatedAtStr
-                    |    }
-                    |  },
-                    |  "email": {
-                    |    "email": "john.doe@digital.hmrc.gov.uk",
-                    |    "status": "${if (emailVerified) "verified" else ""}",
-                    |    $verifiedOnDateStr
-                    |    "mailboxFull": false,
-                    |    "hasBounces":false
-                    |  }
-                    |}
-       """.stripMargin)
-    }
-
-    def preferenceDetailsResponseForBothOptedIn(emailVerified: Boolean) = {
-      val genericUpdatedAt = 1518652800000L
-      val genericUpdatedAtStr = s""" "updatedAt": $genericUpdatedAt """
-      val verifiedOnDate = 1518652800000L
-      val verifiedOnDateStr = if (emailVerified) s""" "verifiedOn": $verifiedOnDate, """ else ""
-      Json.parse(s"""
-                    |{
-                    |  "digital": true,
-                    |  "termsAndConditions": {
-                    |    "generic": {
-                    |      "accepted": true,
-                    |      $genericUpdatedAtStr
-                    |    },
-                    |    "taxCredits": {
-                    |      "accepted": true
                     |    }
                     |  },
                     |  "email": {

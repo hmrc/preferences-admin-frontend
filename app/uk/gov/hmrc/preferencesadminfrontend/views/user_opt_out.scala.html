@@ -66,7 +66,7 @@
         </summary>
 
         <div class="govuk-body">
-            @if(preference.genericPaperless || preference.taxCreditsPaperless) {
+            @if(preference.genericPaperless) {
                 @govukInsetText(
                     InsetText(
                         content = Text("This option allows you to opt out this user from paperless")
@@ -82,7 +82,7 @@
         </div>
 
         <div id="confirm" class="govuk-body">
-            @if(preference.genericPaperless || preference.taxCreditsPaperless) {
+            @if(preference.genericPaperless) {
 
                 @govukWarningText(WarningText(
                     iconFallbackText = "Warning",
