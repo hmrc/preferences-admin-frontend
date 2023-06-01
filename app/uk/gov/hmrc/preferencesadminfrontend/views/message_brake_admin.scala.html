@@ -89,7 +89,7 @@ govukBreadcrumbs: GovukBreadcrumbs)
             case Some(batchPreview) => {
                 <div class="column-full">
                     <div class="form-group">
-                        <h2>Message Preview</h2>
+                        <h2>English Message Preview</h2>
                         <div class="message-preview">@batchPreview.getContentHtml</div>
                         <h2>Welsh Message Preview</h2>
                         <div class="message-preview">@batchPreview.getWelshContentHtml</div>
@@ -110,7 +110,7 @@ govukBreadcrumbs: GovukBreadcrumbs)
                                 <td class="govuk-table__cell">@batchPreview.message.messageType</td>
                             </tr>
                             <tr class="govuk-table__row">
-                                <td class="govuk-table__cell">Subject</td>
+                                <td class="govuk-table__cell">English Subject</td>
                                 <td class="govuk-table__cell">@{Html(batchPreview.message.subject)}</td>
                             </tr>
                             <tr class="govuk-table__row">
