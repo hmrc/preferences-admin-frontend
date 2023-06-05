@@ -15,8 +15,6 @@
  */
 
 import com.google.inject.AbstractModule
-import uk.gov.hmrc.http.HttpClient
-import uk.gov.hmrc.play.bootstrap.http.DefaultHttpClient
 import uk.gov.hmrc.preferencesadminfrontend.config.{ AppConfig, FrontendAppConfig }
 
 class FrontendModule extends AbstractModule {

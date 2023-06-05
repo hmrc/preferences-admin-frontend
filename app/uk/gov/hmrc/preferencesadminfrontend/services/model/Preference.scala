@@ -24,8 +24,6 @@ case class Preference(
   entityId: Option[EntityId],
   genericPaperless: Boolean,
   genericUpdatedAt: Option[DateTime],
-  taxCreditsPaperless: Boolean,
-  taxCreditsUpdatedAt: Option[DateTime],
   email: Option[Email],
   taxIdentifiers: Seq[TaxIdentifier])
 

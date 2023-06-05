@@ -70,12 +70,6 @@
                     )
                 ),
                 SummaryListRow(
-                    key = Key(content = Text(s"Opted ${if(preference.taxCreditsPaperless) "In" else if(preference.taxCreditsUpdatedAt.isEmpty) "In" else "Out"} ${if(preference.taxCreditsPaperless) "to" else if(preference.taxCreditsUpdatedAt.isEmpty) "to" else "of"} paperless for tax credits terms and conditions")),
-                    value = Value(
-                        content = Text(preference.taxCreditsUpdatedAt.fold("Not available")(date => DateTimeFormat.forPattern("d MMMM yyyy hh:mm:ss a").print(date)))
-                    )
-                ),
-                SummaryListRow(
                     key = Key(content = Text("Email address")),
                     value = Value(
                         content = Text(preference.email.fold("Not available")(_.address))

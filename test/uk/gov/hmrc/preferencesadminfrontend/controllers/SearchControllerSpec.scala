@@ -53,7 +53,6 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
   val playConfiguration = app.injector.instanceOf[Configuration]
 
   val genericUpdatedAt = Some(new DateTime(2018, 2, 15, 0, 0, DateTimeZone.UTC))
-  val taxCreditsUpdatedAt = Some(new DateTime(2018, 2, 15, 0, 0, DateTimeZone.UTC))
   val verifiedOn = Some(new DateTime(2018, 2, 15, 0, 0, DateTimeZone.UTC))
 
   "showSearchPage" should {
@@ -80,8 +79,6 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
         entityId = Some(EntityId.generate()),
         genericPaperless = true,
         genericUpdatedAt = genericUpdatedAt,
-        taxCreditsPaperless = true,
-        taxCreditsUpdatedAt = taxCreditsUpdatedAt,
         Some(Email("john.doe@digital.hmrc.gov.uk", verified = true, verifiedOn = verifiedOn, language = Some("cy"), hasBounces = false, None)),
         Seq(TaxIdentifier("email", "john.doe@digital.hmrc.gov.uk"))
       )
@@ -103,8 +100,6 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
         entityId = Some(EntityId.generate()),
         genericPaperless = true,
         genericUpdatedAt = genericUpdatedAt,
-        taxCreditsPaperless = true,
-        taxCreditsUpdatedAt = taxCreditsUpdatedAt,
         Some(Email("test@test.com", verified = true, verifiedOn = verifiedOn, language = None, false, None)),
         Seq(TaxIdentifier("email", "test@test.com"))
       )
@@ -140,8 +135,6 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
         entityId = Some(EntityId.generate()),
         genericPaperless = true,
         genericUpdatedAt = genericUpdatedAt,
-        taxCreditsPaperless = true,
-        taxCreditsUpdatedAt = taxCreditsUpdatedAt,
         Some(Email("john.doe@digital.hmrc.gov.uk", verified = true, verifiedOn = verifiedOn, language = Some("en"), hasBounces = false, None)),
         Seq(TaxIdentifier("nino", "CE067583D"))
       )
@@ -175,8 +168,6 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
         entityId = Some(EntityId.generate()),
         genericPaperless = true,
         genericUpdatedAt = genericUpdatedAt,
-        taxCreditsPaperless = true,
-        taxCreditsUpdatedAt = taxCreditsUpdatedAt,
         Some(Email("john.doe@digital.hmrc.gov.uk", verified = true, verifiedOn = verifiedOn, language = Some("cy"), false, None)),
         Seq(TaxIdentifier("nino", "CE067583D"))
       )
@@ -204,8 +195,6 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
         entityId = Some(EntityId.generate()),
         genericPaperless = true,
         genericUpdatedAt = genericUpdatedAt,
-        taxCreditsPaperless = true,
-        taxCreditsUpdatedAt = taxCreditsUpdatedAt,
         Some(Email("john.doe@digital.hmrc.gov.uk", verified = true, verifiedOn = verifiedOn, language = Some("cy"), hasBounces = false, None)),
         Seq(TaxIdentifier("email", "john.doe@digital.hmrc.gov.uk"))
       )
@@ -237,8 +226,6 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
         entityId = Some(EntityId.generate()),
         genericPaperless = true,
         genericUpdatedAt = genericUpdatedAt,
-        taxCreditsPaperless = true,
-        taxCreditsUpdatedAt = taxCreditsUpdatedAt,
         Some(Email("john.doe@digital.hmrc.gov.uk", verified = true, verifiedOn = verifiedOn, language = Some("cy"), hasBounces = false, None)),
         Seq(TaxIdentifier("email", "john.doe@digital.hmrc.gov.uk"))
       )
@@ -262,8 +249,6 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
         entityId = Some(EntityId.generate()),
         genericPaperless = true,
         genericUpdatedAt = genericUpdatedAt,
-        taxCreditsPaperless = true,
-        taxCreditsUpdatedAt = taxCreditsUpdatedAt,
         Some(Email("john.doe@digital.hmrc.gov.uk", verified = true, verifiedOn = verifiedOn, language = Some("cy"), hasBounces = false, None)),
         Seq(TaxIdentifier("email", "john.doe@digital.hmrc.gov.uk"))
       )

@@ -20,11 +20,11 @@ import cats.data.EitherT
 import cats.implicits.catsSyntaxTuple2Semigroupal
 import cats.syntax.either._
 import cats.syntax.option._
-import play.api.{ Logger, Logging }
+import play.api.Logger
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.preferencesadminfrontend.connectors.{ EnrolmentStoreConnector, EntityResolverConnector, PreferenceDetails }
 import uk.gov.hmrc.preferencesadminfrontend.model.MTDPMigration._
-import uk.gov.hmrc.preferencesadminfrontend.model.{ PrincipalUserId, UserState }
+import uk.gov.hmrc.preferencesadminfrontend.model.UserState
 import uk.gov.hmrc.preferencesadminfrontend.services.model._
 
 import javax.inject.{ Inject, Singleton }

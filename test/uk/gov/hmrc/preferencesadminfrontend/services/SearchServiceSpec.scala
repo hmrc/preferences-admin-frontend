@@ -171,8 +171,6 @@ class SearchServiceSpec extends PlaySpec with ScalaFutures with IntegrationPatie
         entityId = Some(EntityId("383cfb1b-5f57-417b-9380-545f35c29a22")),
         genericPaperless = true,
         genericUpdatedAt = genericUpdatedAt,
-        taxCreditsPaperless = true,
-        taxCreditsUpdatedAt = taxCreditsUpdatedAt,
         email = Some(Email(address = "john.doe@digital.hmrc.gov.uk", verified = true, verifiedOn = verifiedOn, language = None, false, None)),
         taxIdentifiers = Seq(TaxIdentifier("sautr", "123"), TaxIdentifier("nino", "ABC"))
       )
@@ -181,7 +179,7 @@ class SearchServiceSpec extends PlaySpec with ScalaFutures with IntegrationPatie
       event.auditSource mustBe "preferences-admin-frontend"
       event.auditType mustBe "TxSucceeded"
       event.request.detail mustBe Map(
-        "preference"   -> "{\"entityId\":\"383cfb1b-5f57-417b-9380-545f35c29a22\",\"genericPaperless\":true,\"genericUpdatedAt\":1518652800000,\"taxCreditsPaperless\":true,\"taxCreditsUpdatedAt\":1518652800000,\"email\":{\"address\":\"john.doe@digital.hmrc.gov.uk\",\"verified\":true,\"verifiedOn\":1518652800000,\"hasBounces\":false},\"taxIdentifiers\":[{\"name\":\"sautr\",\"value\":\"123\"},{\"name\":\"nino\",\"value\":\"ABC\"}]}",
+        "preference"   -> "{\"entityId\":\"383cfb1b-5f57-417b-9380-545f35c29a22\",\"genericPaperless\":true,\"genericUpdatedAt\":1518652800000,\"email\":{\"address\":\"john.doe@digital.hmrc.gov.uk\",\"verified\":true,\"verifiedOn\":1518652800000,\"hasBounces\":false},\"taxIdentifiers\":[{\"name\":\"sautr\",\"value\":\"123\"},{\"name\":\"nino\",\"value\":\"ABC\"}]}",
         "result"       -> "Found",
         "query"        -> "{\"name\":\"sautr\",\"value\":\"123\"}",
         "DataCallType" -> "request",
@@ -216,9 +214,9 @@ class SearchServiceSpec extends PlaySpec with ScalaFutures with IntegrationPatie
       event.request.detail mustBe Map(
         "optOutReason"       -> "my optOut reason",
         "query"              -> "{\"name\":\"sautr\",\"value\":\"123456789\"}",
-        "originalPreference" -> "{\"genericPaperless\":true,\"genericUpdatedAt\":1518652800000,\"taxCreditsPaperless\":false,\"taxCreditsUpdatedAt\":1518652800000,\"email\":{\"address\":\"john.doe@digital.hmrc.gov.uk\",\"verified\":true,\"verifiedOn\":1518652800000,\"language\":\"cy\",\"hasBounces\":false},\"taxIdentifiers\":[{\"name\":\"sautr\",\"value\":\"123456789\"},{\"name\":\"nino\",\"value\":\"CE067583D\"},{\"name\":\"HMRC-MTD-IT\",\"value\":\"testItsa123\"}]}",
+        "originalPreference" -> "{\"genericPaperless\":true,\"genericUpdatedAt\":1518652800000,\"email\":{\"address\":\"john.doe@digital.hmrc.gov.uk\",\"verified\":true,\"verifiedOn\":1518652800000,\"language\":\"cy\",\"hasBounces\":false},\"taxIdentifiers\":[{\"name\":\"sautr\",\"value\":\"123456789\"},{\"name\":\"nino\",\"value\":\"CE067583D\"},{\"name\":\"HMRC-MTD-IT\",\"value\":\"testItsa123\"}]}",
         "DataCallType"       -> "request",
-        "newPreference"      -> "{\"genericPaperless\":false,\"genericUpdatedAt\":1518652800000,\"taxCreditsPaperless\":false,\"taxCreditsUpdatedAt\":1518652800000,\"taxIdentifiers\":[{\"name\":\"sautr\",\"value\":\"123456789\"},{\"name\":\"nino\",\"value\":\"CE067583D\"},{\"name\":\"HMRC-MTD-IT\",\"value\":\"testItsa123\"}]}",
+        "newPreference"      -> "{\"genericPaperless\":false,\"genericUpdatedAt\":1518652800000,\"taxIdentifiers\":[{\"name\":\"sautr\",\"value\":\"123456789\"},{\"name\":\"nino\",\"value\":\"CE067583D\"},{\"name\":\"HMRC-MTD-IT\",\"value\":\"testItsa123\"}]}",
         "reasonOfFailure"    -> "Done",
         "user"               -> "me"
       )
@@ -233,9 +231,9 @@ class SearchServiceSpec extends PlaySpec with ScalaFutures with IntegrationPatie
       event.request.detail mustBe Map(
         "optOutReason"       -> "my optOut reason",
         "query"              -> "{\"name\":\"sautr\",\"value\":\"123456789\"}",
-        "originalPreference" -> "{\"genericPaperless\":false,\"genericUpdatedAt\":1518652800000,\"taxCreditsPaperless\":false,\"taxCreditsUpdatedAt\":1518652800000,\"taxIdentifiers\":[{\"name\":\"sautr\",\"value\":\"123456789\"},{\"name\":\"nino\",\"value\":\"CE067583D\"},{\"name\":\"HMRC-MTD-IT\",\"value\":\"testItsa123\"}]}",
+        "originalPreference" -> "{\"genericPaperless\":false,\"genericUpdatedAt\":1518652800000,\"taxIdentifiers\":[{\"name\":\"sautr\",\"value\":\"123456789\"},{\"name\":\"nino\",\"value\":\"CE067583D\"},{\"name\":\"HMRC-MTD-IT\",\"value\":\"testItsa123\"}]}",
         "DataCallType"       -> "request",
-        "newPreference"      -> "{\"genericPaperless\":false,\"genericUpdatedAt\":1518652800000,\"taxCreditsPaperless\":false,\"taxCreditsUpdatedAt\":1518652800000,\"taxIdentifiers\":[{\"name\":\"sautr\",\"value\":\"123456789\"},{\"name\":\"nino\",\"value\":\"CE067583D\"},{\"name\":\"HMRC-MTD-IT\",\"value\":\"testItsa123\"}]}",
+        "newPreference"      -> "{\"genericPaperless\":false,\"genericUpdatedAt\":1518652800000,\"taxIdentifiers\":[{\"name\":\"sautr\",\"value\":\"123456789\"},{\"name\":\"nino\",\"value\":\"CE067583D\"},{\"name\":\"HMRC-MTD-IT\",\"value\":\"testItsa123\"}]}",
         "reasonOfFailure"    -> "Preference already opted out",
         "user"               -> "me"
       )
@@ -301,33 +299,32 @@ class SearchServiceSpec extends PlaySpec with ScalaFutures with IntegrationPatie
     val unknownEmailid = TaxIdentifier("email", "test9@test.com")
 
     val genericUpdatedAt = Some(new DateTime(2018, 2, 15, 0, 0, DateTimeZone.UTC))
-    val taxCreditsUpdatedAt = Some(new DateTime(2018, 2, 15, 0, 0, DateTimeZone.UTC))
     val verifiedOn = Some(new DateTime(2018, 2, 15, 0, 0, DateTimeZone.UTC))
 
     val verifiedEmail = Email("john.doe@digital.hmrc.gov.uk", verified = true, verifiedOn = verifiedOn, language = Some("cy"), false, None)
 
-    def preferenceDetails(genericPaperless: Boolean, taxCreditsPaperless: Boolean) = {
-      val email = if (genericPaperless | taxCreditsPaperless) Some(verifiedEmail) else None
-      Some(PreferenceDetails(genericPaperless, genericUpdatedAt, None, taxCreditsPaperless, taxCreditsUpdatedAt, email))
+    def preferenceDetails(genericPaperless: Boolean) = {
+      val email = if (genericPaperless) Some(verifiedEmail) else None
+      Some(PreferenceDetails(genericPaperless, genericUpdatedAt, None, email))
     }
 
-    def preferenceDetails(genericPaperless: Boolean, taxCreditsPaperless: Boolean, entityId: EntityId) = {
-      val email = if (genericPaperless | taxCreditsPaperless) Some(verifiedEmail) else None
-      List(PreferenceDetails(genericPaperless, genericUpdatedAt, None, taxCreditsPaperless, taxCreditsUpdatedAt, email))
+    def preferenceDetails(genericPaperless: Boolean, entityId: EntityId) = {
+      val email = if (genericPaperless) Some(verifiedEmail) else None
+      List(PreferenceDetails(genericPaperless, genericUpdatedAt, None, email))
     }
 
-    def multiplepreferenceDetails(genericPaperless: Boolean, taxCreditsPaperless: Boolean, entityId: EntityId) = {
-      val email = if (genericPaperless | taxCreditsPaperless) Some(verifiedEmail) else None
+    def multiplepreferenceDetails(genericPaperless: Boolean, entityId: EntityId) = {
+      val email = if (genericPaperless) Some(verifiedEmail) else None
       List(
-        PreferenceDetails(genericPaperless, genericUpdatedAt, None, taxCreditsPaperless, taxCreditsUpdatedAt, email),
-        PreferenceDetails(genericPaperless, genericUpdatedAt, None, taxCreditsPaperless, taxCreditsUpdatedAt, email)
+        PreferenceDetails(genericPaperless, genericUpdatedAt, None, email),
+        PreferenceDetails(genericPaperless, genericUpdatedAt, None, email)
       )
     }
 
-    val optedInPreferenceDetails = preferenceDetails(genericPaperless = true, taxCreditsPaperless = false)
-    val optedOutPreferenceDetails = preferenceDetails(genericPaperless = false, taxCreditsPaperless = false)
-    val optedInPreferenceDetailsList = preferenceDetails(genericPaperless = true, taxCreditsPaperless = false, entityId = EntityId(value = "x123"))
-    val optedInPreferenceDetailsList2 = multiplepreferenceDetails(genericPaperless = true, taxCreditsPaperless = false, entityId = EntityId(value = "x123"))
+    val optedInPreferenceDetails = preferenceDetails(genericPaperless = true)
+    val optedOutPreferenceDetails = preferenceDetails(genericPaperless = false)
+    val optedInPreferenceDetailsList = preferenceDetails(genericPaperless = true, entityId = EntityId(value = "x123"))
+    val optedInPreferenceDetailsList2 = multiplepreferenceDetails(genericPaperless = true, entityId = EntityId(value = "x123"))
 
     val taxIdentifiers = Seq(validSaUtr, validNino, validItsa)
 
@@ -335,8 +332,6 @@ class SearchServiceSpec extends PlaySpec with ScalaFutures with IntegrationPatie
       entityId = None,
       genericPaperless = true,
       genericUpdatedAt = genericUpdatedAt,
-      taxCreditsPaperless = false,
-      taxCreditsUpdatedAt = taxCreditsUpdatedAt,
       email = Some(verifiedEmail),
       taxIdentifiers = taxIdentifiers
     )
@@ -345,8 +340,6 @@ class SearchServiceSpec extends PlaySpec with ScalaFutures with IntegrationPatie
         entityId = None,
         genericPaperless = true,
         genericUpdatedAt = genericUpdatedAt,
-        taxCreditsPaperless = false,
-        taxCreditsUpdatedAt = taxCreditsUpdatedAt,
         email = Some(verifiedEmail),
         taxIdentifiers = taxIdentifiers
       ),
@@ -354,8 +347,6 @@ class SearchServiceSpec extends PlaySpec with ScalaFutures with IntegrationPatie
         entityId = None,
         genericPaperless = true,
         genericUpdatedAt = genericUpdatedAt,
-        taxCreditsPaperless = false,
-        taxCreditsUpdatedAt = taxCreditsUpdatedAt,
         email = Some(verifiedEmail),
         taxIdentifiers = taxIdentifiers
       )
@@ -365,8 +356,6 @@ class SearchServiceSpec extends PlaySpec with ScalaFutures with IntegrationPatie
       entityId = None,
       genericPaperless = false,
       genericUpdatedAt = genericUpdatedAt,
-      taxCreditsPaperless = false,
-      taxCreditsUpdatedAt = taxCreditsUpdatedAt,
       email = None,
       taxIdentifiers = taxIdentifiers
     )

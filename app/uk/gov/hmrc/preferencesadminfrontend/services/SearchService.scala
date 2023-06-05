@@ -50,14 +50,7 @@ class SearchService @Inject()(
       preferenceDetails.map { details =>
         val taxIdentifiers = entityResolverConnector.getTaxIdentifiers(details)
         taxIdentifiers.map { taxIds =>
-          Preference(
-            details.entityId,
-            details.genericPaperless,
-            details.genericUpdatedAt,
-            details.taxCreditsPaperless,
-            details.taxCreditsUpdatedAt,
-            details.email,
-            taxIds)
+          Preference(details.entityId, details.genericPaperless, details.genericUpdatedAt, details.email, taxIds)
         }
       }
     }
@@ -77,8 +70,6 @@ class SearchService @Inject()(
             details.entityId,
             details.genericPaperless,
             details.genericUpdatedAt,
-            details.taxCreditsPaperless,
-            details.taxCreditsUpdatedAt,
             details.email,
             taxIdentifiers
         ))
