@@ -61,9 +61,7 @@ class AllowlistController @Inject()(
     AllowlistEntry()
       .bindFromRequest()
       .fold(
-        formWithErrors => {
-          Future.successful(BadRequest(allowlistAddView(formWithErrors)))
-        },
+        formWithErrors => Future.successful(BadRequest(allowlistAddView(formWithErrors))),
         addEntry => {
           messageConnector
             .addFormIdToAllowlist(addEntry)

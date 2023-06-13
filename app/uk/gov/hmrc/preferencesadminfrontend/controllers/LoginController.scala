@@ -46,14 +46,14 @@ class LoginController @Inject()(
   loginView: login)(implicit appConfig: AppConfig, ec: ExecutionContext)
     extends FrontendController(mcc) with I18nSupport with Logging {
 
-  val showLoginPage: Action[AnyContent] = Action.async { implicit request =>
+  def showLoginPage(): Action[AnyContent] = Action.async { implicit request =>
     implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequestAndSession(request, request.session)
 
     val sessionUpdated = request.session + ("ts" -> Instant.now.toEpochMilli.toString)
     Future.successful(Ok(loginView(userForm)).withSession(sessionUpdated))
   }
 
-  val loginAction = Action.async { implicit request =>
+  def loginAction(): Action[AnyContent] = Action.async { implicit request =>
     implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequestAndSession(request, request.session)
 
     userForm.bindFromRequest.fold(

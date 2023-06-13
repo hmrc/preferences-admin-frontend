@@ -32,7 +32,6 @@ import scala.concurrent.{ ExecutionContext, Future }
 @Singleton
 class RescindmentController @Inject()(
   authorisedAction: AuthorisedAction,
-  auditConnector: AuditConnector,
   rescindmentService: RescindmentService,
   mcc: MessagesControllerComponents,
   rescindmentView: rescindment,

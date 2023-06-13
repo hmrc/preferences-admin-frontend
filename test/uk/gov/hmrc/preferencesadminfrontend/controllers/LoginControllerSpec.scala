@@ -41,12 +41,12 @@ class LoginControllerSpec extends PlaySpec with GuiceOneAppPerSuite with SpecBas
 
   "GET /" should {
     "return 200" in new MessageBrakeControllerTestCase {
-      val result = loginController.showLoginPage(FakeRequest("GET", "/").withCSRFToken)
+      val result = loginController.showLoginPage()(FakeRequest("GET", "/").withCSRFToken)
       status(result) mustBe Status.OK
     }
 
     "return HTML" in new MessageBrakeControllerTestCase {
-      val result = loginController.showLoginPage(FakeRequest("GET", "/").withCSRFToken)
+      val result = loginController.showLoginPage()(FakeRequest("GET", "/").withCSRFToken)
       contentType(result) mustBe Some("text/html")
       charset(result) mustBe Some("utf-8")
     }
@@ -54,36 +54,33 @@ class LoginControllerSpec extends PlaySpec with GuiceOneAppPerSuite with SpecBas
 
   "POST to login" should {
     "Redirect to the next page if credentials are correct" in new MessageBrakeControllerTestCase {
-      val result = loginController.loginAction(
-        FakeRequest()
-          .withFormUrlEncodedBody(
-            "username" -> "user",
-            "password" -> "pwd"
-          )
-          .withCSRFToken)
+      val fakeRequest =
+        FakeRequest(routes.LoginController.loginAction())
+          .withFormUrlEncodedBody("username" -> "user", "password" -> "pwd")
+          .withCSRFToken
+      val result = loginController.loginAction()(fakeRequest)
 
-      session(result).data must contain("userId" -> "user")
       status(result) mustBe Status.SEE_OTHER
-      headers(result) must contain("Location" -> "/paperless/admin/home")
+      headers(result) must contain("Location"    -> "/paperless/admin/home")
+      session(result).data must contain("userId" -> "user")
     }
 
     "Return unauthorised if credentials are not correct" in new MessageBrakeControllerTestCase {
-      val result = loginController.loginAction(
-        FakeRequest()
-          .withFormUrlEncodedBody(
-            "username" -> "user",
-            "password" -> "wrongPassword"
-          )
+      val fakeRequest =
+        FakeRequest(routes.LoginController.loginAction())
+          .withFormUrlEncodedBody("username" -> "user", "password" -> "wrongPassword")
           .withCSRFToken
-      )
+      val result = loginController.loginAction()(fakeRequest)
 
       status(result) mustBe Status.UNAUTHORIZED
     }
 
     "Return bad request if credentials are missing" in new MessageBrakeControllerTestCase {
-      val result = loginController.loginAction(
-        FakeRequest().withFormUrlEncodedBody().withCSRFToken
-      )
+      val fakeRequest =
+        FakeRequest(routes.LoginController.loginAction())
+          .withFormUrlEncodedBody()
+          .withCSRFToken
+      val result = loginController.loginAction()(fakeRequest)
 
       status(result) mustBe Status.BAD_REQUEST
     }

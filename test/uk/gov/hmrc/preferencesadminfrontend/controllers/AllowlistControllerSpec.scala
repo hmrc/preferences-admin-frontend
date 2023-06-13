@@ -26,7 +26,7 @@ import play.api.Configuration
 import play.api.http.Status
 import play.api.i18n.MessagesApi
 import play.api.libs.json.Json
-import play.api.mvc.{ AnyContentAsEmpty, AnyContentAsJson }
+import play.api.mvc.AnyContentAsJson
 import play.api.test.CSRFTokenHelper._
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
@@ -50,10 +50,6 @@ class AllowlistControllerSpec extends PlaySpec with GuiceOneAppPerSuite with Spe
   implicit lazy val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
 
   implicit val messagesApi: MessagesApi = app.injector.instanceOf[MessagesApi]
-
-  implicit lazy val fakeRequest: FakeRequest[AnyContentAsEmpty.type] = FakeRequest()
-
-  implicit val hc: HeaderCarrier = mock[HeaderCarrier]
 
   app.injector.instanceOf[Configuration] must not be (null)
 
@@ -123,53 +119,39 @@ class AllowlistControllerSpec extends PlaySpec with GuiceOneAppPerSuite with Spe
   "confirmAdd" should {
 
     "return 303 (Redirect) when a Form ID is successfully added via the message service" in new AllowlistControllerTestCase {
-      private val fakeRequestWithSession = FakeRequest(routes.AllowlistController.showAllowlistPage()).withSession(User.sessionKey -> "user")
-      private val fakeRequestWithBody: FakeRequest[AnyContentAsJson] = fakeRequestWithSession.withJsonBody(
-        Json.parse("""
-                     |{
-                     | "formId" : "SA316 2015",
-                     | "reasonText" : "some reason text"
-                     |}
-          """.stripMargin)
-      )
+      private val fakeRequestWithSession =
+        FakeRequest(routes.AllowlistController.confirmAdd())
+          .withFormUrlEncodedBody("formId" -> "SA316 2015", "reasonText" -> "some reason text")
+          .withSession(User.sessionKey -> "user")
       when(mockMessageConnector.addFormIdToAllowlist(any[AllowlistEntry])(any[HeaderCarrier])).thenReturn(
         Future.successful(
           HttpResponse(Http.Status.CREATED)
         )
       )
-      private val result = allowlistController.confirmAdd()(fakeRequestWithBody.withCSRFToken)
+      private val result = allowlistController.confirmAdd().apply(fakeRequestWithSession.withCSRFToken)
       status(result) mustBe Status.SEE_OTHER
     }
 
     "return 502 (Bad Gateway) when the message service returns any other status" in new AllowlistControllerTestCase {
-      private val fakeRequestWithSession = FakeRequest(routes.AllowlistController.showAllowlistPage()).withSession(User.sessionKey -> "user")
-      private val fakeRequestWithBody: FakeRequest[AnyContentAsJson] = fakeRequestWithSession.withJsonBody(
-        Json.parse("""
-                     |{
-                     | "formId" : "SA316 2015",
-                     | "reasonText" : "some reason text"
-                     |}
-          """.stripMargin)
-      )
+      private val fakeRequestWithSession =
+        FakeRequest(routes.AllowlistController.confirmAdd())
+          .withFormUrlEncodedBody("formId" -> "SA316 2015", "reasonText" -> "some reason text")
+          .withSession(User.sessionKey -> "user")
       when(mockMessageConnector.addFormIdToAllowlist(any[AllowlistEntry])(any[HeaderCarrier])).thenReturn(
         Future.successful(
           HttpResponse(Http.Status.NOT_FOUND, "not found")
         )
       )
-      private val result = allowlistController.confirmAdd()(fakeRequestWithBody.withCSRFToken)
+      private val result = allowlistController.confirmAdd()(fakeRequestWithSession.withCSRFToken)
       status(result) mustBe Status.BAD_GATEWAY
     }
 
     "return 400 (Bad Request) when the Form ID JSON is not valid" in new AllowlistControllerTestCase {
-      private val fakeRequestWithSession = FakeRequest(routes.AllowlistController.showAllowlistPage()).withSession(User.sessionKey -> "user")
-      val fakeRequestWithBody: FakeRequest[AnyContentAsJson] = fakeRequestWithSession.withJsonBody(
-        Json.parse("""
-                     |{
-                     | "blah" : "blah"
-                     |}
-          """.stripMargin)
-      )
-      private val result = allowlistController.confirmAdd()(fakeRequestWithBody.withCSRFToken)
+      private val fakeRequestWithSession =
+        FakeRequest(routes.AllowlistController.confirmAdd())
+          .withFormUrlEncodedBody("reasonText" -> "some reason text")
+          .withSession(User.sessionKey -> "user")
+      private val result = allowlistController.confirmAdd()(fakeRequestWithSession.withCSRFToken)
       status(result) mustBe Status.BAD_REQUEST
     }
   }
@@ -177,53 +159,40 @@ class AllowlistControllerSpec extends PlaySpec with GuiceOneAppPerSuite with Spe
   "confirmDelete" should {
 
     "return 303 (Redirect) when a Form ID is successfully deleted via the message service" in new AllowlistControllerTestCase {
-      private val fakeRequestWithSession = FakeRequest(routes.AllowlistController.showAllowlistPage()).withSession(User.sessionKey -> "user")
-      private val fakeRequestWithBody: FakeRequest[AnyContentAsJson] = fakeRequestWithSession.withJsonBody(
-        Json.parse("""
-                     |{
-                     | "formId" : "SA316 2015",
-                     | "reasonText" : "some reason text"
-                     |}
-          """.stripMargin)
-      )
+      private val fakeRequestWithSession =
+        FakeRequest(routes.AllowlistController.confirmDelete())
+          .withFormUrlEncodedBody("formId" -> "SA316 2015", "reasonText" -> "some reason text")
+          .withSession(User.sessionKey -> "user")
+
       when(mockMessageConnector.deleteFormIdFromAllowlist(any[AllowlistEntry])(any[HeaderCarrier])).thenReturn(
         Future.successful(
           HttpResponse(Http.Status.OK)
         )
       )
-      private val result = allowlistController.confirmDelete()(fakeRequestWithBody.withCSRFToken)
+      private val result = allowlistController.confirmDelete()(fakeRequestWithSession.withCSRFToken)
       status(result) mustBe Status.SEE_OTHER
     }
 
     "return 502 (Bad Gateway) when the message service returns any other status" in new AllowlistControllerTestCase {
-      private val fakeRequestWithSession = FakeRequest(routes.AllowlistController.showAllowlistPage()).withSession(User.sessionKey -> "user")
-      private val fakeRequestWithBody: FakeRequest[AnyContentAsJson] = fakeRequestWithSession.withJsonBody(
-        Json.parse("""
-                     |{
-                     | "formId" : "SA316 2015",
-                     | "reasonText" : "some reason text"
-                     |}
-          """.stripMargin)
-      )
+      private val fakeRequestWithSession =
+        FakeRequest(routes.AllowlistController.confirmDelete())
+          .withFormUrlEncodedBody("formId" -> "SA316 2015", "reasonText" -> "some reason text")
+          .withSession(User.sessionKey -> "user")
       when(mockMessageConnector.deleteFormIdFromAllowlist(any[AllowlistEntry])(any[HeaderCarrier])).thenReturn(
         Future.successful(
           HttpResponse(Http.Status.NOT_FOUND, "not found")
         )
       )
-      private val result = allowlistController.confirmDelete()(fakeRequestWithBody.withCSRFToken)
+      private val result = allowlistController.confirmDelete()(fakeRequestWithSession.withCSRFToken)
       status(result) mustBe Status.BAD_GATEWAY
     }
 
     "return 400 (Bad Request) when the form ID JSON is not valid" in new AllowlistControllerTestCase {
-      private val fakeRequestWithSession = FakeRequest(routes.AllowlistController.showAllowlistPage()).withSession(User.sessionKey -> "user")
-      val fakeRequestWithBody: FakeRequest[AnyContentAsJson] = fakeRequestWithSession.withJsonBody(
-        Json.parse("""
-                     |{
-                     | "blah" : "blah"
-                     |}
-          """.stripMargin)
-      )
-      private val result = allowlistController.confirmDelete()(fakeRequestWithBody.withCSRFToken)
+      private val fakeRequestWithSession =
+        FakeRequest(routes.AllowlistController.confirmDelete())
+          .withFormUrlEncodedBody("reasonText" -> "some reason text")
+          .withSession(User.sessionKey -> "user")
+      private val result = allowlistController.confirmDelete()(fakeRequestWithSession.withCSRFToken)
       status(result) mustBe Status.BAD_REQUEST
     }
   }
