@@ -27,7 +27,7 @@ import play.api.libs.json.Json
 import uk.gov.hmrc.http.{ HeaderCarrier, HttpClient, HttpResponse }
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.preferencesadminfrontend.model.UserState.Activated
-import uk.gov.hmrc.preferencesadminfrontend.model.{ PrincipalUserId, PrincipalUserIds, UserState }
+import uk.gov.hmrc.preferencesadminfrontend.model.{ PrincipalUserIds, UserState }
 import uk.gov.hmrc.preferencesadminfrontend.services.model.TaxIdentifier
 
 import scala.concurrent.ExecutionContext.Implicits.global

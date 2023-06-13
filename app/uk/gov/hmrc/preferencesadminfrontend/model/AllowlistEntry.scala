@@ -19,7 +19,7 @@ package uk.gov.hmrc.preferencesadminfrontend.model
 import play.api.data.{ Form, Forms, Mapping }
 import play.api.data.Forms._
 import play.api.data.validation.{ Constraint, Invalid, Valid, ValidationError }
-import play.api.libs.json.{ Json, OWrites, Reads }
+import play.api.libs.json.{ Json, OWrites }
 
 case class AllowlistEntry(formId: String, reasonText: String)
 

@@ -19,7 +19,6 @@ package uk.gov.hmrc.preferencesadminfrontend.services
 import javax.inject.{ Inject, Singleton }
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.preferencesadminfrontend.connectors.MessageConnector
-import uk.gov.hmrc.preferencesadminfrontend.controllers.model.User
 import uk.gov.hmrc.preferencesadminfrontend.model.{ RescindmentAlertsResult, RescindmentRequest, RescindmentUpdateResult }
 
 import scala.concurrent.{ ExecutionContext, Future }
@@ -27,9 +26,9 @@ import scala.concurrent.{ ExecutionContext, Future }
 @Singleton
 class RescindmentService @Inject()(messageConnector: MessageConnector) {
 
-  def addRescindments(rescindmentRequest: RescindmentRequest)(implicit user: User, hc: HeaderCarrier, ec: ExecutionContext): Future[RescindmentUpdateResult] =
+  def addRescindments(rescindmentRequest: RescindmentRequest)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[RescindmentUpdateResult] =
     messageConnector.addRescindments(rescindmentRequest)
 
-  def sendRescindmentAlerts()(implicit user: User, hc: HeaderCarrier, ec: ExecutionContext): Future[RescindmentAlertsResult] =
+  def sendRescindmentAlerts()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[RescindmentAlertsResult] =
     messageConnector.sendRescindmentAlerts()
 }

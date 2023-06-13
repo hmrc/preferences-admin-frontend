@@ -41,11 +41,11 @@ class MessageController @Inject()(
   mcc: MessagesControllerComponents)(implicit appConfig: AppConfig, ec: ExecutionContext)
     extends FrontendController(mcc) with I18nSupport with Logging {
 
-  def show(): Action[AnyContent] = authorisedAction.async { implicit request => implicit user =>
+  def show(): Action[AnyContent] = authorisedAction.async { implicit request => _ =>
     Future.successful(Ok(migrationEntriesView(MigrationEntries())))
   }
 
-  def check(): Action[AnyContent] = authorisedAction.async { implicit request => implicit user =>
+  def check(): Action[AnyContent] = authorisedAction.async { implicit request => _ =>
     MigrationEntries()
       .bindFromRequest()
       .fold(
@@ -58,7 +58,7 @@ class MessageController @Inject()(
       )
   }
 
-  def sync(): Action[AnyContent] = authorisedAction.async { implicit request => implicit user =>
+  def sync(): Action[AnyContent] = authorisedAction.async { implicit request => _ =>
     SyncEntries()
       .bindFromRequest()
       .fold(
@@ -70,7 +70,7 @@ class MessageController @Inject()(
             case Some(_) =>
               validateIdentities(input.entries)
                 .fold(
-                  _ => returnEntriesLost,
+                  _ => returnEntriesLost(),
                   identifiers =>
                     migratePreferencesService.migrate(identifiers = identifiers, dryRun = false).map { result =>
                       Ok(migrationStatusView(result))
@@ -79,7 +79,7 @@ class MessageController @Inject()(
             case None =>
               validateIdentities(input.entries)
                 .fold(
-                  _ => returnEntriesLost,
+                  _ => returnEntriesLost(),
                   identifiers =>
                     dryRun(identifiers).map { result =>
                       Ok(
@@ -128,12 +128,13 @@ class MessageController @Inject()(
     def parseEntries(lines: List[String]): Either[String, List[Identifier]] = {
       def add(line: String): Either[String, Identifier] =
         line.split(",").toList.map(_.trim) match {
+          case Nil                                      => Left("empty line")
           case first :: second :: Nil if first.isEmpty  => Left(s"ItsaId is missing for $second")
           case first :: second :: Nil if second.isEmpty => Left(s"Utr is missing for $first")
           case first :: second :: Nil                   => Right(Identifier(first, second))
-          case first :: Nil                             => Left(s"whitespace")
+          case _ :: Nil                                 => Left(s"whitespace")
           case _ :: _ :: _ :: Nil                       => Left(s"only itsaId and utr is required")
-          case Nil                                      => Left("empty line")
+          case _ :: _ :: _ :: _                         => Left(s"only itsaId and utr is required")
         }
       def loop(lines: List[String], acc: Either[String, List[Identifier]]): Either[String, List[Identifier]] =
         lines match {

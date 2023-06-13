@@ -22,8 +22,7 @@ import play.api.libs.json.{ Json, OFormat }
 import uk.gov.hmrc.http.{ HeaderCarrier, HttpClient, HttpResponse }
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.preferencesadminfrontend.connectors.ChannelPreferencesConnector.StatusUpdate
-import uk.gov.hmrc.preferencesadminfrontend.services.SentStatus
-
+import uk.gov.hmrc.http.HttpReads.Implicits._
 import javax.inject.{ Inject, Singleton }
 import scala.concurrent.{ ExecutionContext, Future }
 

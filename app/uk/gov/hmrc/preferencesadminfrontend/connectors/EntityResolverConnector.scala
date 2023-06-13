@@ -26,7 +26,7 @@ import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.preferencesadminfrontend.services.model.{ Email, EntityId, TaxIdentifier }
 import cats.syntax.either._
-
+import uk.gov.hmrc.http.HttpReads.Implicits.{ readFromJson, readOptionOfNotFound, readRaw }
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.Try
 
@@ -56,11 +56,11 @@ class EntityResolverConnector @Inject()(httpClient: HttpClient, val servicesConf
           warnNotOptedOut(ex.message)
           Seq.empty
         }
-        case ex @ Upstream4xxResponse(_, Status.NOT_FOUND, _, _) => {
+        case ex @ UpstreamErrorResponse(_, Status.NOT_FOUND, _, _) => {
           warnNotOptedOut(ex.message)
           Seq.empty
         }
-        case ex @ Upstream4xxResponse(_, Status.CONFLICT, _, _) => {
+        case ex @ UpstreamErrorResponse(_, Status.CONFLICT, _, _) => {
           warnNotOptedOut(ex.message)
           Seq.empty
         }
@@ -89,11 +89,11 @@ class EntityResolverConnector @Inject()(httpClient: HttpClient, val servicesConf
           warnNotOptedOut(ex.message)
           Seq.empty
         }
-        case ex @ Upstream4xxResponse(_, Status.NOT_FOUND, _, _) => {
+        case ex @ UpstreamErrorResponse(_, Status.NOT_FOUND, _, _) => {
           warnNotOptedOut(ex.message)
           Seq.empty
         }
-        case ex @ Upstream4xxResponse(_, Status.CONFLICT, _, _) => {
+        case ex @ UpstreamErrorResponse(_, Status.CONFLICT, _, _) => {
           warnNotOptedOut(ex.message)
           Seq.empty
         }
@@ -106,17 +106,16 @@ class EntityResolverConnector @Inject()(httpClient: HttpClient, val servicesConf
 
   def getPreferenceDetails(taxId: TaxIdentifier)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[PreferenceDetails]] = {
     def warnNotOptedOut(message: String) = s"getTaxIdentifiersPreferenceDetails $message"
-
     httpClient.GET[Option[PreferenceDetails]](s"$serviceUrl/portal/preferences/${taxId.regime}/${taxId.value}").recover {
       case ex: BadRequestException => {
         warnNotOptedOut(ex.message)
         None
       }
-      case ex @ Upstream4xxResponse(_, Status.NOT_FOUND, _, _) => {
+      case ex @ UpstreamErrorResponse(_, Status.NOT_FOUND, _, _) => {
         warnNotOptedOut(ex.message)
         None
       }
-      case ex @ Upstream4xxResponse(_, Status.CONFLICT, _, _) => {
+      case ex @ UpstreamErrorResponse(_, Status.CONFLICT, _, _) => {
         warnNotOptedOut(ex.message)
         None
       }
@@ -128,24 +127,23 @@ class EntityResolverConnector @Inject()(httpClient: HttpClient, val servicesConf
   }
 
   def optOut(taxId: TaxIdentifier)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[OptOutResult] = {
-
-    def warnNotOptedOut(status: Int) = logger.warn(s"Unable to manually opt-out ${taxId.name} user with id ${taxId.value}. Status: $status")
+    def warnNotOptedOut(status: Int): Unit = logger.warn(s"Unable to manually opt-out ${taxId.name} user with id ${taxId.value}. Status: $status")
 
     httpClient
-      .POSTEmpty(s"$serviceUrl/entity-resolver-admin/manual-opt-out/${taxId.regime}/${taxId.value}")
+      .POSTEmpty[HttpResponse](s"$serviceUrl/entity-resolver-admin/manual-opt-out/${taxId.regime}/${taxId.value}")
       .map(_ => OptedOut)
       .recover {
-        case ex: NotFoundException =>
+        case _: NotFoundException =>
           warnNotOptedOut(404)
           PreferenceNotFound
-        case ex @ Upstream4xxResponse(_, Status.CONFLICT, _, _) =>
-          warnNotOptedOut(ex.upstreamResponseCode)
+        case ex @ UpstreamErrorResponse(_, Status.CONFLICT, _, _) =>
+          warnNotOptedOut(ex.statusCode)
           AlreadyOptedOut
-        case ex @ Upstream4xxResponse(_, Status.NOT_FOUND, _, _) =>
-          warnNotOptedOut(ex.upstreamResponseCode)
+        case ex @ UpstreamErrorResponse(_, Status.NOT_FOUND, _, _) =>
+          warnNotOptedOut(ex.statusCode)
           PreferenceNotFound
-        case ex @ Upstream4xxResponse(_, Status.PRECONDITION_FAILED, _, _) =>
-          warnNotOptedOut(ex.upstreamResponseCode)
+        case ex @ UpstreamErrorResponse(_, Status.PRECONDITION_FAILED, _, _) =>
+          warnNotOptedOut(ex.statusCode)
           PreferenceNotFound
       }
   }
@@ -164,7 +162,7 @@ class EntityResolverConnector @Inject()(httpClient: HttpClient, val servicesConf
       }
 }
 
-trait OptOutResult
+sealed trait OptOutResult
 
 case object OptedOut extends OptOutResult
 

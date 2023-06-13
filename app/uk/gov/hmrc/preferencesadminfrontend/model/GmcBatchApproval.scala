@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.preferencesadminfrontend.model
 
-import play.api.data.{ Form, Forms, Mapping }
+import play.api.data.Form
 import play.api.data.Forms._
 import play.api.data.validation.{ Constraint, Invalid, Valid }
 import play.api.libs.json.{ Json, OFormat }

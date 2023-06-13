@@ -17,7 +17,6 @@
 package uk.gov.hmrc.preferencesadminfrontend.services
 
 import cats.syntax.either._
-import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
 import org.scalatest.EitherValues
 import org.scalatest.concurrent.ScalaFutures

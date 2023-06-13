@@ -27,7 +27,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.preferencesadminfrontend.connectors.{ EnrolmentStoreConnector, EntityResolverConnector, PreferenceDetails }
 import uk.gov.hmrc.preferencesadminfrontend.model.MTDPMigration.{ ITSAOnlineNoPreference, ITSAOnlinePreference, NoDigitalFootprint, SAOnline, SAandITSA }
 import uk.gov.hmrc.preferencesadminfrontend.model.UserState.Activated
-import uk.gov.hmrc.preferencesadminfrontend.model.{ PrincipalUserId, UserState }
+import uk.gov.hmrc.preferencesadminfrontend.model.UserState
 import uk.gov.hmrc.preferencesadminfrontend.services.model.{ EntityId, TaxIdentifier }
 
 import scala.concurrent.ExecutionContext.Implicits.global

@@ -93,7 +93,7 @@ class MessageBrakeControllerSpec extends PlaySpec with GuiceOneAppPerSuite with 
     "return a 200 when the admin page is successfully populated with Gmc Message Batches" in new MessageBrakeControllerTestCase {
       private val fakeRequestWithSession = FakeRequest(routes.MessageBrakeController.showAdminPage()).withSession(User.sessionKey -> "user")
       when(messageServiceMock.getGmcBatches()(any[HeaderCarrier], any[ExecutionContext])).thenReturn(Future.successful(Left(Seq(gmcBatch))))
-      private val result = messageBrakeController.showAdminPage()(fakeRequestWithSession.withCSRFToken)
+      private val result = messageBrakeController().showAdminPage()(fakeRequestWithSession.withCSRFToken)
       status(result) mustBe Status.OK
     }
 
@@ -227,7 +227,7 @@ class MessageBrakeControllerSpec extends PlaySpec with GuiceOneAppPerSuite with 
 
     val messageServiceMock: MessageService = mock[MessageService]
 
-    def messageBrakeController()(implicit messages: MessagesApi, appConfig: AppConfig): MessageBrakeController =
+    def messageBrakeController()(implicit appConfig: AppConfig): MessageBrakeController =
       new MessageBrakeController(
         authorisedAction,
         messageConnectorMock,

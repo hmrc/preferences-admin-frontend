@@ -21,7 +21,7 @@ import org.mockito.Mockito._
 import org.scalatest.concurrent.{ IntegrationPatience, ScalaFutures }
 import org.scalatestplus.play.PlaySpec
 import play.api.http.Status
-import play.api.libs.json.Json
+import play.api.libs.json.{ JsValue, Json }
 import uk.gov.hmrc.http.{ HeaderCarrier, HttpResponse }
 import uk.gov.hmrc.preferencesadminfrontend.model._
 import uk.gov.hmrc.preferencesadminfrontend.utils.SpecBase
@@ -128,14 +128,14 @@ class MessageServiceSpec extends PlaySpec with ScalaFutures with IntegrationPati
 
   "sendAddHocMessage" should {
     "return a message id if successfully created" in new MessageServiceTestCase {
-      val response = HttpResponse(Status.CREATED, Some(Json.obj(("id" -> "messageid"))))
-      when(messageConnectorMock.sendMessage(any())(any())).thenReturn(Future.successful(response))
+      val response = HttpResponse(Status.CREATED, Json.obj(("id" -> "messageid")), Map.empty)
+      when(messageConnectorMock.sendMessage(any[JsValue])(any[HeaderCarrier])).thenReturn(Future.successful(response))
       messageService.sendPenalyChargeApologyMessage("foo@test.com", "1234567890").futureValue mustBe Right(""""messageid"""")
     }
     "return error on message creation failure" in new MessageServiceTestCase {
       val errorMessage = "error message"
       val response = HttpResponse(Status.BAD_REQUEST, errorMessage)
-      when(messageConnectorMock.sendMessage(any())(any())).thenReturn(Future.successful(response))
+      when(messageConnectorMock.sendMessage(any[JsValue])(any[HeaderCarrier])).thenReturn(Future.successful(response))
       messageService.sendPenalyChargeApologyMessage("foo@test.com", "1234567890").futureValue mustBe (Left((Status.BAD_REQUEST, errorMessage)))
     }
   }

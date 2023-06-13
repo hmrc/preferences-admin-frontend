@@ -28,10 +28,12 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.CSRFTokenHelper._
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditResult
+import uk.gov.hmrc.play.audit.model.DataEvent
 import uk.gov.hmrc.preferencesadminfrontend.utils.SpecBase
 
-import scala.concurrent.Future
+import scala.concurrent.{ ExecutionContext, Future }
 
 class LoginControllerSpec extends PlaySpec with GuiceOneAppPerSuite with SpecBase with ScalaFutures {
 
@@ -97,7 +99,7 @@ class LoginControllerSpec extends PlaySpec with GuiceOneAppPerSuite with SpecBas
   }
 
   class MessageBrakeControllerTestCase extends SpecBase {
-    when(auditConnectorMock.sendEvent(any())(any(), any())).thenReturn(Future.successful(AuditResult.Success))
+    when(auditConnectorMock.sendEvent(any[DataEvent])(any[HeaderCarrier], any[ExecutionContext])).thenReturn(Future.successful(AuditResult.Success))
     val loginController = app.injector.instanceOf[LoginController]
   }
 }

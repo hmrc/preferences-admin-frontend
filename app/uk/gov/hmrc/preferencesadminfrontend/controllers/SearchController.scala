@@ -25,7 +25,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
 import uk.gov.hmrc.preferencesadminfrontend.connectors.{ AlreadyOptedOut, OptedOut, PreferenceNotFound }
-import uk.gov.hmrc.preferencesadminfrontend.controllers.model.{ OptOutReasonWithIdentifier, Search, User }
+import uk.gov.hmrc.preferencesadminfrontend.controllers.model.{ OptOutReasonWithIdentifier, Search }
 import uk.gov.hmrc.preferencesadminfrontend.services._
 import uk.gov.hmrc.preferencesadminfrontend.services.model.TaxIdentifier
 import uk.gov.hmrc.preferencesadminfrontend.views.html.{ confirmed, customer_identification, failed, user_opt_out }
@@ -44,7 +44,7 @@ class SearchController @Inject()(
     extends FrontendController(mcc) with I18nSupport with Logging {
 
   def showSearchPage(): Action[AnyContent] =
-    authorisedAction.async { implicit request => implicit user =>
+    authorisedAction.async { implicit request => _ =>
       Future.successful(
         Ok(
           customerIdentificationView(
@@ -54,44 +54,48 @@ class SearchController @Inject()(
     }
 
   def search(): Action[AnyContent] = authorisedAction.async { implicit request => implicit user =>
-    Search().bindFromRequest.fold(
-      errors => Future.successful(BadRequest(customerIdentificationView(errors))),
-      searchTaxIdentifier => {
-        searchService.searchPreference(searchTaxIdentifier).map {
-          case Nil =>
-            Ok(customerIdentificationView(Search().bindFromRequest.withError("value", "error.preference_not_found")))
-          case preferenceList =>
-            Ok(userOptOutView(OptOutReasonWithIdentifier(), preferenceList))
+    Search()
+      .bindFromRequest()
+      .fold(
+        errors => Future.successful(BadRequest(customerIdentificationView(errors))),
+        searchTaxIdentifier => {
+          searchService.searchPreference(searchTaxIdentifier).map {
+            case Nil =>
+              Ok(customerIdentificationView(Search().bindFromRequest().withError("value", "error.preference_not_found")))
+            case preferenceList =>
+              Ok(userOptOutView(OptOutReasonWithIdentifier(), preferenceList))
+          }
         }
-      }
-    )
+      )
   }
 
   def optOut(): Action[AnyContent] = authorisedAction.async { implicit request => implicit user =>
-    OptOutReasonWithIdentifier().bindFromRequest.fold(
-      errors => {
-        val identifier = TaxIdentifier(errors.data("identifierName"), errors.data("identifierValue"))
-        searchService.getPreference(identifier).map {
-          case Nil =>
-            Ok(customerIdentificationView(Search().bindFromRequest.withError("value", Messages("error.preference_not_found"))))
-          case preferences =>
-            Ok(userOptOutView(errors, preferences))
+    OptOutReasonWithIdentifier()
+      .bindFromRequest()
+      .fold(
+        errors => {
+          val identifier = TaxIdentifier(errors.data("identifierName"), errors.data("identifierValue"))
+          searchService.getPreference(identifier).map {
+            case Nil =>
+              Ok(customerIdentificationView(Search().bindFromRequest().withError("value", Messages("error.preference_not_found"))))
+            case preferences =>
+              Ok(userOptOutView(errors, preferences))
+          }
+        },
+        optOutReason => {
+          val identifier = TaxIdentifier(optOutReason.identifierName, optOutReason.identifierValue)
+          searchService.optOut(identifier, optOutReason.reason).flatMap {
+            case OptedOut => searchConfirmed(identifier)
+            case AlreadyOptedOut =>
+              searchFailed(identifier, AlreadyOptedOut.errorCode)
+            case PreferenceNotFound =>
+              searchFailed(identifier, PreferenceNotFound.errorCode)
+          }
         }
-      },
-      optOutReason => {
-        val identifier = TaxIdentifier(optOutReason.identifierName, optOutReason.identifierValue)
-        searchService.optOut(identifier, optOutReason.reason).flatMap {
-          case OptedOut => searchConfirmed(identifier)
-          case AlreadyOptedOut =>
-            searchFailed(identifier, AlreadyOptedOut.errorCode)
-          case PreferenceNotFound =>
-            searchFailed(identifier, PreferenceNotFound.errorCode)
-        }
-      }
-    )
+      )
   }
 
-  def searchConfirmed(taxIdentifier: TaxIdentifier)(implicit request: Request[AnyContent], user: User, hc: HeaderCarrier): Future[Result] =
+  def searchConfirmed(taxIdentifier: TaxIdentifier)(implicit request: Request[AnyContent], hc: HeaderCarrier): Future[Result] =
     searchService.getPreference(taxIdentifier).map {
       case Nil =>
         Ok(failedView(taxIdentifier, Nil, PreferenceNotFound.errorCode))
@@ -99,7 +103,7 @@ class SearchController @Inject()(
         Ok(confirmedView(preferences))
     }
 
-  def searchFailed(taxIdentifier: TaxIdentifier, failureCode: String)(implicit request: Request[AnyContent], user: User, hc: HeaderCarrier): Future[Result] =
+  def searchFailed(taxIdentifier: TaxIdentifier, failureCode: String)(implicit request: Request[AnyContent], hc: HeaderCarrier): Future[Result] =
     searchService.getPreference(taxIdentifier).map { preference =>
       Ok(failedView(taxIdentifier, preference, failureCode))
     }

@@ -18,18 +18,15 @@ package uk.gov.hmrc.preferencesadminfrontend.connectors
 
 import akka.actor.ActorSystem
 import javax.inject.{ Inject, Singleton }
-import play.api.{ Configuration, Environment }
+import play.api.Configuration
 import uk.gov.hmrc.http._
-import uk.gov.hmrc.play.audit.DefaultAuditChannel
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.preferencesadminfrontend.services.model.TaxIdentifier
-
+import uk.gov.hmrc.http.HttpReads.Implicits._
 import scala.concurrent.{ ExecutionContext, Future }
 
 @Singleton
 class PreferencesConnector @Inject()(
-  frontendAuditConnector: DefaultAuditChannel,
-  environment: Environment,
   val httpClient: HttpClient,
   val runModeConfiguration: Configuration,
   val servicesConfig: ServicesConfig,

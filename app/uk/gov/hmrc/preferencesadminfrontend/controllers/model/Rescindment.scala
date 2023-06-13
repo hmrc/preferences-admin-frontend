@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.preferencesadminfrontend.controllers.model
 
-import org.joda.time.LocalDate
 import play.api.data.Form
 import play.api.data.Forms.{ mapping, nonEmptyText }
 import uk.gov.hmrc.preferencesadminfrontend.model.RescindmentRequest

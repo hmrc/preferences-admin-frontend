@@ -26,7 +26,6 @@ import play.api.Configuration
 import play.api.http.Status
 import play.api.i18n.MessagesApi
 import play.api.libs.json.Json
-import play.api.mvc.AnyContentAsJson
 import play.api.test.CSRFTokenHelper._
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
@@ -47,7 +46,6 @@ class AllowlistControllerSpec extends PlaySpec with GuiceOneAppPerSuite with Spe
   val injector = app.injector
 
   implicit lazy val materializer: Materializer = app.materializer
-  implicit lazy val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
 
   implicit val messagesApi: MessagesApi = app.injector.instanceOf[MessagesApi]
 
@@ -199,7 +197,7 @@ class AllowlistControllerSpec extends PlaySpec with GuiceOneAppPerSuite with Spe
 
   class AllowlistControllerTestCase extends SpecBase {
     implicit val ecc: ExecutionContext = stubbedMCC.executionContext
-
+    implicit val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
     val errorTemplateView: ErrorTemplate = app.injector.instanceOf[ErrorTemplate]
     val authorisedAction: AuthorisedAction = app.injector.instanceOf[AuthorisedAction]
     val allowlistAddView: allowlist_add = app.injector.instanceOf[allowlist_add]
@@ -207,7 +205,7 @@ class AllowlistControllerSpec extends PlaySpec with GuiceOneAppPerSuite with Spe
     val allowlistDeleteView: allowlist_delete = app.injector.instanceOf[allowlist_delete]
     val mockMessageConnector: MessageConnector = mock[MessageConnector]
 
-    def allowlistController()(implicit messages: MessagesApi, appConfig: AppConfig): AllowlistController =
+    val allowlistController: AllowlistController =
       new AllowlistController(
         authorisedAction,
         mockMessageConnector,

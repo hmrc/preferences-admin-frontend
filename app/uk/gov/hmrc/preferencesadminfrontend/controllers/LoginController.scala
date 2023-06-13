@@ -47,8 +47,6 @@ class LoginController @Inject()(
     extends FrontendController(mcc) with I18nSupport with Logging {
 
   def showLoginPage(): Action[AnyContent] = Action.async { implicit request =>
-    implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequestAndSession(request, request.session)
-
     val sessionUpdated = request.session + ("ts" -> Instant.now.toEpochMilli.toString)
     Future.successful(Ok(loginView(userForm)).withSession(sessionUpdated))
   }
@@ -56,20 +54,22 @@ class LoginController @Inject()(
   def loginAction(): Action[AnyContent] = Action.async { implicit request =>
     implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequestAndSession(request, request.session)
 
-    userForm.bindFromRequest.fold(
-      formWithErrors => Future.successful(BadRequest(loginView(formWithErrors))),
-      userData => {
-        if (loginService.isAuthorised(userData)) {
-          auditConnector.sendEvent(createLoginEvent(userData.username, true))
-          val sessionUpdated = request.session + (User.sessionKey -> userData.username) + ("ts" -> Instant.now.toEpochMilli.toString)
-          Future.successful(Redirect(routes.HomeController.showHomePage()).withSession(sessionUpdated))
-        } else {
-          auditConnector.sendEvent(createLoginEvent(userData.username, false))
-          val userFormWithErrors = userForm.fill(userData).withGlobalError("error.credentials.invalid")
-          Future.successful(Unauthorized(loginView(userFormWithErrors)))
+    userForm
+      .bindFromRequest()
+      .fold(
+        formWithErrors => Future.successful(BadRequest(loginView(formWithErrors))),
+        userData => {
+          if (loginService.isAuthorised(userData)) {
+            auditConnector.sendEvent(createLoginEvent(userData.username, true))
+            val sessionUpdated = request.session + (User.sessionKey -> userData.username) + ("ts" -> Instant.now.toEpochMilli.toString)
+            Future.successful(Redirect(routes.HomeController.showHomePage()).withSession(sessionUpdated))
+          } else {
+            auditConnector.sendEvent(createLoginEvent(userData.username, false))
+            val userFormWithErrors = userForm.fill(userData).withGlobalError("error.credentials.invalid")
+            Future.successful(Unauthorized(loginView(userFormWithErrors)))
+          }
         }
-      }
-    )
+      )
   }
 
   val logoutAction = authorisedAction.async { implicit request => user =>

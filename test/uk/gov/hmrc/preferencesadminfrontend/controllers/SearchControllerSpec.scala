@@ -49,7 +49,7 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
   implicit val hc = HeaderCarrier()
   implicit val messagesApi = app.injector.instanceOf[MessagesApi]
   implicit val materializer = app.injector.instanceOf[Materializer]
-  implicit lazy val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
+
   val playConfiguration = app.injector.instanceOf[Configuration]
 
   val genericUpdatedAt = Some(new DateTime(2018, 2, 15, 0, 0, DateTimeZone.UTC))
@@ -82,7 +82,8 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
         Some(Email("john.doe@digital.hmrc.gov.uk", verified = true, verifiedOn = verifiedOn, language = Some("cy"), hasBounces = false, None)),
         Seq(TaxIdentifier("email", "john.doe@digital.hmrc.gov.uk"))
       )
-      when(searchServiceMock.searchPreference(any())(any(), any(), any())).thenReturn(Future.successful(List(preference)))
+      when(searchServiceMock.searchPreference(any[TaxIdentifier])(any[User], any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future.successful(List(preference)))
 
       val postRequest = FakeRequest("POST", "/search/q")
         .withFormUrlEncodedBody(Seq(("name", "nino"), ("value", "CE067583D")): _*)
@@ -103,7 +104,8 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
         Some(Email("test@test.com", verified = true, verifiedOn = verifiedOn, language = None, false, None)),
         Seq(TaxIdentifier("email", "test@test.com"))
       )
-      when(searchServiceMock.searchPreference(any())(any(), any(), any())).thenReturn(Future.successful(List(preference)))
+      when(searchServiceMock.searchPreference(any[TaxIdentifier])(any[User], any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future.successful(List(preference)))
 
       val postRequest = FakeRequest("POST", "/search/q")
         .withFormUrlEncodedBody(Seq(("name", "email"), ("value", "test@test.com")): _*)
@@ -117,7 +119,7 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
     }
 
     "return a not found error message if the preference associated with that email is not found" in new SearchControllerTestCase {
-      when(searchServiceMock.searchPreference(any())(any(), any(), any())).thenReturn(Future.successful(Nil))
+      when(searchServiceMock.searchPreference(any[TaxIdentifier])(any[User], any[HeaderCarrier], any[ExecutionContext])).thenReturn(Future.successful(Nil))
 
       val postRequest = FakeRequest("POST", "/search/q")
         .withFormUrlEncodedBody(Seq(("name", "email"), ("value", "test@test.com")): _*)
@@ -138,7 +140,8 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
         Some(Email("john.doe@digital.hmrc.gov.uk", verified = true, verifiedOn = verifiedOn, language = Some("en"), hasBounces = false, None)),
         Seq(TaxIdentifier("nino", "CE067583D"))
       )
-      when(searchServiceMock.searchPreference(any())(any(), any(), any())).thenReturn(Future.successful(List(preference)))
+      when(searchServiceMock.searchPreference(any[TaxIdentifier])(any[User], any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future.successful(List(preference)))
 
       val postRequest = FakeRequest("POST", "/search/q")
         .withFormUrlEncodedBody(Seq(("name", "nino"), ("value", "CE067583D")): _*)
@@ -152,7 +155,7 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
     }
 
     "return a not found error message if the preference is not found" in new SearchControllerTestCase {
-      when(searchServiceMock.searchPreference(any())(any(), any(), any())).thenReturn(Future.successful(Nil))
+      when(searchServiceMock.searchPreference(any[TaxIdentifier])(any[User], any[HeaderCarrier], any[ExecutionContext])).thenReturn(Future.successful(Nil))
 
       val postRequest = FakeRequest("POST", "/search/q")
         .withFormUrlEncodedBody(Seq(("name", "nino"), ("value", "CE067583D")): _*)
@@ -171,15 +174,18 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
         Some(Email("john.doe@digital.hmrc.gov.uk", verified = true, verifiedOn = verifiedOn, language = Some("cy"), false, None)),
         Seq(TaxIdentifier("nino", "CE067583D"))
       )
-      when(searchServiceMock.searchPreference(any())(any(), any(), any())).thenReturn(Future.successful(List(preference)))
+      when(searchServiceMock.searchPreference(any[TaxIdentifier])(any[User], any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future.successful(List(preference)))
 
       val postRequest = FakeRequest("POST", "/search/q")
         .withFormUrlEncodedBody(Seq(("name", "nino"), ("value", "ce067583d")): _*)
 
       val result = searchController.search()(postRequest.withSession(User.sessionKey -> "user").withCSRFToken)
 
-      verify(searchServiceMock, times(1)).searchPreference(ArgumentMatchers.eq(TaxIdentifier("nino", "CE067583D")))(any(), any(), any())
-      verify(searchServiceMock, times(0)).searchPreference(ArgumentMatchers.eq(TaxIdentifier("nino", "ce067583d")))(any(), any(), any())
+      verify(searchServiceMock, times(1))
+        .searchPreference(ArgumentMatchers.eq(TaxIdentifier("nino", "CE067583D")))(any[User], any[HeaderCarrier], any[ExecutionContext])
+      verify(searchServiceMock, times(0))
+        .searchPreference(ArgumentMatchers.eq(TaxIdentifier("nino", "ce067583d")))(any[User], any[HeaderCarrier], any[ExecutionContext])
       status(result) mustBe Status.OK
       private val document = Jsoup.parse(contentAsString(result))
       document.body().getElementById("confirm").getElementsByTag("form").attr("action") mustBe
@@ -199,10 +205,10 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
         Seq(TaxIdentifier("email", "john.doe@digital.hmrc.gov.uk"))
       )
 
-      when(searchServiceMock.optOut(ArgumentMatchers.eq(TaxIdentifier("nino", "CE067583D")), any())(any(), any(), any()))
+      when(searchServiceMock.optOut(ArgumentMatchers.eq(TaxIdentifier("nino", "CE067583D")), any[String])(any[User], any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.successful(OptedOut))
 
-      when(searchServiceMock.getPreference(ArgumentMatchers.eq(TaxIdentifier("nino", "CE067583D")))(any(), any(), any()))
+      when(searchServiceMock.getPreference(ArgumentMatchers.eq(TaxIdentifier("nino", "CE067583D")))(any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.successful(List(preference)))
 
       private val request = FakeRequest(Helpers.POST, controllers.routes.SearchController.optOut().url)
@@ -229,7 +235,7 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
         Some(Email("john.doe@digital.hmrc.gov.uk", verified = true, verifiedOn = verifiedOn, language = Some("cy"), hasBounces = false, None)),
         Seq(TaxIdentifier("email", "john.doe@digital.hmrc.gov.uk"))
       )
-      when(searchServiceMock.getPreference(ArgumentMatchers.eq(TaxIdentifier("nino", "CE067583D")))(any(), any(), any()))
+      when(searchServiceMock.getPreference(ArgumentMatchers.eq(TaxIdentifier("nino", "CE067583D")))(any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.successful(List(preference)))
 
       val taxIdentifier = TaxIdentifier("nino", "CE067583D")
@@ -252,7 +258,7 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
         Some(Email("john.doe@digital.hmrc.gov.uk", verified = true, verifiedOn = verifiedOn, language = Some("cy"), hasBounces = false, None)),
         Seq(TaxIdentifier("email", "john.doe@digital.hmrc.gov.uk"))
       )
-      when(searchServiceMock.getPreference(ArgumentMatchers.eq(TaxIdentifier("nino", "CE067583D")))(any(), any(), any()))
+      when(searchServiceMock.getPreference(ArgumentMatchers.eq(TaxIdentifier("nino", "CE067583D")))(any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.successful(List(preference)))
 
       val taxIdentifier = TaxIdentifier("nino", "CE067583D")
@@ -270,7 +276,7 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
   class SearchControllerTestCase extends SpecBase {
 
     implicit val ecc: ExecutionContext = stubbedMCC.executionContext
-
+    implicit val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
     val authorisedAction: AuthorisedAction = app.injector.instanceOf[AuthorisedAction]
     val confirmedView: confirmed = app.injector.instanceOf[confirmed]
     val customerIdentificationView: customer_identification = app.injector.instanceOf[customer_identification]
@@ -278,7 +284,7 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
     val userOptOutView: user_opt_out = app.injector.instanceOf[user_opt_out]
     val searchServiceMock: SearchService = mock[SearchService]
 
-    def searchController()(implicit messages: MessagesApi, appConfig: AppConfig): SearchController =
+    val searchController: SearchController =
       new SearchController(
         authorisedAction,
         searchServiceMock,

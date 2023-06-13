@@ -20,7 +20,6 @@ import play.api.data.Form
 import play.api.data.Forms.{ mapping, text }
 import play.api.data.validation.{ Constraint, Invalid, Valid }
 import play.api.libs.json.{ Json, OWrites }
-import uk.gov.hmrc.preferencesadminfrontend.services.Identifier
 
 case class MigrationEntries(entries: String)
 

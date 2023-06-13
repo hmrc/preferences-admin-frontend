@@ -103,8 +103,9 @@ class MessageService @Inject()(messageConnector: MessageConnector) {
       .map(response =>
         response.status match {
           case CREATED =>
-            response.json.validate((__ \ 'id).json.pick) match {
-              case JsSuccess(value, path) => Right(Json.stringify(value))
+            response.json.validate((__ \ "id").json.pick) match {
+              case JsSuccess(value, _) => Right(Json.stringify(value))
+              case JsError(_)          => Left((response.status, response.body))
             }
           case _ => Left((response.status, response.body))
       })

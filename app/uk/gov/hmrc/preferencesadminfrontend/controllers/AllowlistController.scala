@@ -41,23 +41,25 @@ class AllowlistController @Inject()(
   allowlistDeleteView: allowlist_delete)(implicit appConfig: AppConfig, ec: ExecutionContext)
     extends FrontendController(mcc) with I18nSupport with Logging {
 
-  def showAllowlistPage: Action[AnyContent] = authorisedAction.async { implicit request => implicit user =>
-    messageConnector.getAllowlist.map(response =>
-      response.status match {
-        case OK =>
-          Json.parse(response.body).validate[Allowlist].asOpt match {
-            case Some(allowlist) => Ok(allowlistShowView(allowlist))
-            case None            => BadGateway(errorTemplateView("Error", "There was an error:", "The allowlist does not appear to be valid."))
-          }
-        case _ => BadGateway(errorTemplateView("Error", "There was an error:", response.body))
-    })
+  def showAllowlistPage(): Action[AnyContent] = authorisedAction.async { implicit request => _ =>
+    messageConnector
+      .getAllowlist()
+      .map(response =>
+        response.status match {
+          case OK =>
+            Json.parse(response.body).validate[Allowlist].asOpt match {
+              case Some(allowlist) => Ok(allowlistShowView(allowlist))
+              case None            => BadGateway(errorTemplateView("Error", "There was an error:", "The allowlist does not appear to be valid."))
+            }
+          case _ => BadGateway(errorTemplateView("Error", "There was an error:", response.body))
+      })
   }
 
-  def addFormId: Action[AnyContent] = authorisedAction.async { implicit request => implicit user =>
+  def addFormId: Action[AnyContent] = authorisedAction.async { implicit request => _ =>
     Future.successful(Ok(allowlistAddView(AllowlistEntry())))
   }
 
-  def confirmAdd: Action[AnyContent] = authorisedAction.async { implicit request => implicit user =>
+  def confirmAdd: Action[AnyContent] = authorisedAction.async { implicit request => _ =>
     AllowlistEntry()
       .bindFromRequest()
       .fold(
@@ -74,11 +76,11 @@ class AllowlistController @Inject()(
       )
   }
 
-  def deleteFormId(formId: String): Action[AnyContent] = authorisedAction.async { implicit request => implicit user =>
+  def deleteFormId(formId: String): Action[AnyContent] = authorisedAction.async { implicit request => _ =>
     Future.successful(Ok(allowlistDeleteView(AllowlistEntry().fill(AllowlistEntry(formId, "")))))
   }
 
-  def confirmDelete: Action[AnyContent] = authorisedAction.async { implicit request => implicit user =>
+  def confirmDelete: Action[AnyContent] = authorisedAction.async { implicit request => _ =>
     AllowlistEntry()
       .bindFromRequest()
       .fold(

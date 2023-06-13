@@ -28,6 +28,11 @@ lazy val microservice = Project(appName, file("."))
     evictionWarningOptions in update := EvictionWarningOptions.default.withWarnScalaVersionEviction(false)
   )
   .settings(
+    // suppress warnings in generated routes files & html for unused-imports
+    scalacOptions += "-Wconf:src=routes/.*:s",
+    scalacOptions += "-Wconf:src=html/.*:s"
+  )
+  .settings(
     TwirlKeys.templateImports ++= Seq(
       "uk.gov.hmrc.preferencesadminfrontend.config.AppConfig",
       "uk.gov.hmrc.govukfrontend.views.html.components._",
