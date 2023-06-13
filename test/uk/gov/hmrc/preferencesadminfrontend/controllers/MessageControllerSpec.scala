@@ -19,7 +19,6 @@ package uk.gov.hmrc.preferencesadminfrontend.controllers
 import org.apache.commons.lang3.exception.ExceptionContext
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.{ times, verify, when }
-import org.scalamock.matchers.Matchers
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
