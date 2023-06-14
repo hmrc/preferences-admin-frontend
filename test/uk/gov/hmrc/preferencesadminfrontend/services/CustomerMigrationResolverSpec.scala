@@ -51,9 +51,7 @@ class CustomerMigrationResolverSpec extends PlaySpec with ScalaFutures with Eith
 
       customerMigrationResolver
         .resolveCustomerType(identifier)(headerCarrier)
-        .futureValue
-        .right
-        .value mustBe SAOnline(saEntityId, true)
+        .futureValue mustBe Right(SAOnline(saEntityId, true))
     }
 
     "Activated SA enrolment with a preference and an ITSA enrolment with a preference => SAandITSA" in new Scope {
@@ -74,9 +72,7 @@ class CustomerMigrationResolverSpec extends PlaySpec with ScalaFutures with Eith
 
       customerMigrationResolver
         .resolveCustomerType(identifier)(headerCarrier)
-        .futureValue
-        .right
-        .value mustBe SAandITSA
+        .futureValue mustBe Right(SAandITSA)
     }
 
     "Activated SA enrolment with no preference and an ITSA enrolment with a preference => ITSAOnlinePreference" in new Scope {
@@ -97,9 +93,7 @@ class CustomerMigrationResolverSpec extends PlaySpec with ScalaFutures with Eith
 
       customerMigrationResolver
         .resolveCustomerType(identifier)(headerCarrier)
-        .futureValue
-        .right
-        .value mustBe ITSAOnlinePreference(true)
+        .futureValue mustBe Right(ITSAOnlinePreference(true))
     }
 
     "Activated SA enrolment with a preference and an ITSA enrolment with no preference => ITSAOnlineNoPreference" in new Scope {
@@ -120,9 +114,7 @@ class CustomerMigrationResolverSpec extends PlaySpec with ScalaFutures with Eith
 
       customerMigrationResolver
         .resolveCustomerType(identifier)(headerCarrier)
-        .futureValue
-        .right
-        .value mustBe ITSAOnlineNoPreference
+        .futureValue mustBe Right(ITSAOnlineNoPreference)
     }
 
     "Inactive SA enrolment with no preference and an ITSA enrolment with no preference => ITSAOnlineNoPreference" in new Scope {
@@ -140,9 +132,7 @@ class CustomerMigrationResolverSpec extends PlaySpec with ScalaFutures with Eith
 
       customerMigrationResolver
         .resolveCustomerType(identifier)(headerCarrier)
-        .futureValue
-        .right
-        .value mustBe ITSAOnlineNoPreference
+        .futureValue mustBe Right(ITSAOnlineNoPreference)
     }
 
     "Inactive SA enrolment with no preference and no ITSA enrolment => NoDigitalFootprint" in new Scope {
@@ -157,9 +147,7 @@ class CustomerMigrationResolverSpec extends PlaySpec with ScalaFutures with Eith
 
       customerMigrationResolver
         .resolveCustomerType(identifier)(headerCarrier)
-        .futureValue
-        .right
-        .value mustBe NoDigitalFootprint
+        .futureValue mustBe Right(NoDigitalFootprint)
     }
   }
 

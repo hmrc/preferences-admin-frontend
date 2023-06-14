@@ -41,9 +41,7 @@ class CustomerPreferenceMigratorSpec extends PlaySpec with ScalaFutures with Eit
         .thenReturn(Future.successful(().asRight))
       customerPreferenceMigrator
         .migrateCustomer(identifier, saOnline)
-        .futureValue
-        .right
-        .value mustBe ()
+        .futureValue mustBe Right(())
     }
 
     "migrate an ITSAOnlinePreference customer" in new Scope {
@@ -52,9 +50,7 @@ class CustomerPreferenceMigratorSpec extends PlaySpec with ScalaFutures with Eit
 
       customerPreferenceMigrator
         .migrateCustomer(identifier, itsaOnlinePreference)
-        .futureValue
-        .right
-        .value mustBe ()
+        .futureValue mustBe Right(())
     }
   }
 

@@ -25,7 +25,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import uk.gov.hmrc.http.{ HeaderCarrier, HttpClient, HttpResponse }
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.preferencesadminfrontend.connectors.ChannelPreferencesConnector.StatusUpdate
-
+import uk.gov.hmrc.http.HttpReads.Implicits.readRaw
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -61,9 +61,7 @@ class ChannelPreferencesConnectorSpec extends PlaySpec with ScalaFutures with Ei
 
       channelPreferencesConnector
         .updateStatus(statusUpdate)(headerCarrier)
-        .futureValue
-        .right
-        .value mustBe ()
+        .futureValue mustBe Right(())
     }
 
     "return left upstream error message upon a failure response" in new Scope {

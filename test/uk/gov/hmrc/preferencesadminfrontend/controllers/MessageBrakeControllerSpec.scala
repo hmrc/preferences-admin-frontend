@@ -140,7 +140,7 @@ class MessageBrakeControllerSpec extends PlaySpec with GuiceOneAppPerSuite with 
     "return 200 when the approve batch page is posted" in new MessageBrakeControllerTestCase {
       val requestWithFormData = getRequestWithFormData(routes.MessageBrakeController.confirmApproveBatch())
       when(messageConnectorMock.approveGmcBatch(ArgumentMatchers.eq(gmcBatchApproval))(any[HeaderCarrier]))
-        .thenReturn(Future(HttpResponse(Status.OK)))
+        .thenReturn(Future(HttpResponse(Status.OK, "")))
       when(messageServiceMock.getGmcBatches()(any[HeaderCarrier], any[ExecutionContext])).thenReturn(Future.successful(Left(Seq(gmcBatch))))
       private val result = messageBrakeController().confirmApproveBatch()(requestWithFormData.withCSRFToken)
       status(result) mustBe Status.OK
@@ -150,7 +150,7 @@ class MessageBrakeControllerSpec extends PlaySpec with GuiceOneAppPerSuite with 
       val fakeRequestWithSession = FakeRequest(routes.MessageBrakeController.confirmApproveBatch()).withSession(User.sessionKey -> "user")
       val requestWithFormData = fakeRequestWithSession.withFormUrlEncodedBody("blah"                                            -> "blah")
       when(messageConnectorMock.approveGmcBatch(ArgumentMatchers.eq(gmcBatchApproval))(any[HeaderCarrier]))
-        .thenReturn(Future(HttpResponse(Status.BAD_GATEWAY)))
+        .thenReturn(Future(HttpResponse(Status.BAD_GATEWAY, "")))
       when(messageServiceMock.getGmcBatches()(any[HeaderCarrier], any[ExecutionContext])).thenReturn(Future.successful(Left(Seq(gmcBatch))))
       private val result = messageBrakeController().confirmApproveBatch()(requestWithFormData.withCSRFToken)
       status(result) mustBe Status.BAD_REQUEST
@@ -159,7 +159,7 @@ class MessageBrakeControllerSpec extends PlaySpec with GuiceOneAppPerSuite with 
     "return error when confirmApproveBatch() fails" in new MessageBrakeControllerTestCase {
       val requestWithFormData = getRequestWithFormData(routes.MessageBrakeController.confirmApproveBatch())
       when(messageConnectorMock.approveGmcBatch(ArgumentMatchers.eq(gmcBatchApproval))(any[HeaderCarrier]))
-        .thenReturn(Future(HttpResponse(Status.BAD_GATEWAY)))
+        .thenReturn(Future(HttpResponse(Status.BAD_GATEWAY, "")))
       when(messageServiceMock.getGmcBatches()(any[HeaderCarrier], any[ExecutionContext])).thenReturn(Future.successful(Left(Seq(gmcBatch))))
       private val result = messageBrakeController().confirmApproveBatch()(requestWithFormData.withCSRFToken)
       status(result) mustBe Status.BAD_GATEWAY
@@ -168,7 +168,7 @@ class MessageBrakeControllerSpec extends PlaySpec with GuiceOneAppPerSuite with 
     "return error when getGmcBatches() fails" in new MessageBrakeControllerTestCase {
       val requestWithFormData = getRequestWithFormData(routes.MessageBrakeController.confirmApproveBatch())
       when(messageConnectorMock.approveGmcBatch(ArgumentMatchers.eq(gmcBatchApproval))(any[HeaderCarrier]))
-        .thenReturn(Future(HttpResponse(Status.OK)))
+        .thenReturn(Future(HttpResponse(Status.OK, "")))
       when(messageServiceMock.getGmcBatches()(any[HeaderCarrier], any[ExecutionContext])).thenReturn(Future.successful(Right("error")))
       private val result = messageBrakeController().confirmApproveBatch()(requestWithFormData.withCSRFToken)
       status(result) mustBe Status.BAD_GATEWAY
@@ -180,7 +180,7 @@ class MessageBrakeControllerSpec extends PlaySpec with GuiceOneAppPerSuite with 
     "return 200 when the approve batch page is posted" in new MessageBrakeControllerTestCase {
       val requestWithFormData = getRequestWithFormData(routes.MessageBrakeController.confirmRejectBatch())
       when(messageConnectorMock.rejectGmcBatch(ArgumentMatchers.eq(gmcBatchApproval))(any[HeaderCarrier]))
-        .thenReturn(Future(HttpResponse(Status.OK)))
+        .thenReturn(Future(HttpResponse(Status.OK, "")))
       when(messageServiceMock.getGmcBatches()(any[HeaderCarrier], any[ExecutionContext])).thenReturn(Future.successful(Left(Seq(gmcBatch))))
       private val result = messageBrakeController().confirmRejectBatch()(requestWithFormData.withCSRFToken)
       status(result) mustBe Status.OK
@@ -190,7 +190,7 @@ class MessageBrakeControllerSpec extends PlaySpec with GuiceOneAppPerSuite with 
       val fakeRequestWithSession = FakeRequest(routes.MessageBrakeController.confirmRejectBatch()).withSession(User.sessionKey -> "user")
       val requestWithFormData = fakeRequestWithSession.withFormUrlEncodedBody("blah"                                           -> "blah")
       when(messageConnectorMock.approveGmcBatch(ArgumentMatchers.eq(gmcBatchApproval))(any[HeaderCarrier]))
-        .thenReturn(Future(HttpResponse(Status.BAD_GATEWAY)))
+        .thenReturn(Future(HttpResponse(Status.BAD_GATEWAY, "")))
       when(messageServiceMock.getGmcBatches()(any[HeaderCarrier], any[ExecutionContext])).thenReturn(Future.successful(Left(Seq(gmcBatch))))
       private val result = messageBrakeController().confirmRejectBatch()(requestWithFormData.withCSRFToken)
       status(result) mustBe Status.BAD_REQUEST
@@ -199,7 +199,7 @@ class MessageBrakeControllerSpec extends PlaySpec with GuiceOneAppPerSuite with 
     "return error when rejectGmcBatch() fails" in new MessageBrakeControllerTestCase {
       val requestWithFormData = getRequestWithFormData(routes.MessageBrakeController.confirmRejectBatch())
       when(messageConnectorMock.rejectGmcBatch(ArgumentMatchers.eq(gmcBatchApproval))(any[HeaderCarrier]))
-        .thenReturn(Future(HttpResponse(Status.BAD_GATEWAY)))
+        .thenReturn(Future(HttpResponse(Status.BAD_GATEWAY, "")))
       when(messageServiceMock.getGmcBatches()(any[HeaderCarrier], any[ExecutionContext])).thenReturn(Future.successful(Left(Seq(gmcBatch))))
       private val result = messageBrakeController().confirmRejectBatch()(requestWithFormData.withCSRFToken)
       status(result) mustBe Status.BAD_GATEWAY
@@ -208,7 +208,7 @@ class MessageBrakeControllerSpec extends PlaySpec with GuiceOneAppPerSuite with 
     "return error when getGmcBatches() fails" in new MessageBrakeControllerTestCase {
       val requestWithFormData = getRequestWithFormData(routes.MessageBrakeController.confirmRejectBatch())
       when(messageConnectorMock.rejectGmcBatch(ArgumentMatchers.eq(gmcBatchApproval))(any[HeaderCarrier]))
-        .thenReturn(Future(HttpResponse(Status.OK)))
+        .thenReturn(Future(HttpResponse(Status.OK, "")))
       when(messageServiceMock.getGmcBatches()(any[HeaderCarrier], any[ExecutionContext])).thenReturn(Future.successful(Right("error")))
       private val result = messageBrakeController().confirmRejectBatch()(requestWithFormData.withCSRFToken)
       status(result) mustBe Status.BAD_GATEWAY

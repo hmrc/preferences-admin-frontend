@@ -62,7 +62,7 @@ class AllowlistControllerSpec extends PlaySpec with GuiceOneAppPerSuite with Spe
         """.stripMargin)
       when(mockMessageConnector.getAllowlist()(any[HeaderCarrier])).thenReturn(
         Future.successful(
-          HttpResponse(Http.Status.OK, Some(allowlistJson))
+          HttpResponse(Http.Status.OK, allowlistJson, Map.empty)
         )
       )
       private val result = allowlistController.showAllowlistPage()(fakeRequestWithSession.withCSRFToken)
@@ -78,7 +78,7 @@ class AllowlistControllerSpec extends PlaySpec with GuiceOneAppPerSuite with Spe
         """.stripMargin)
       when(mockMessageConnector.getAllowlist()(any[HeaderCarrier])).thenReturn(
         Future.successful(
-          HttpResponse(Http.Status.OK, Some(allowlistJson))
+          HttpResponse(Http.Status.OK, allowlistJson, Map.empty)
         )
       )
       private val result = allowlistController.showAllowlistPage()(fakeRequestWithSession.withCSRFToken)
@@ -94,7 +94,7 @@ class AllowlistControllerSpec extends PlaySpec with GuiceOneAppPerSuite with Spe
         """.stripMargin)
       when(mockMessageConnector.getAllowlist()(any[HeaderCarrier])).thenReturn(
         Future.successful(
-          HttpResponse(Http.Status.OK, Some(allowlistJson))
+          HttpResponse(Http.Status.OK, allowlistJson, Map.empty)
         )
       )
       private val result = allowlistController.showAllowlistPage()(fakeRequestWithSession.withCSRFToken)
@@ -123,7 +123,7 @@ class AllowlistControllerSpec extends PlaySpec with GuiceOneAppPerSuite with Spe
           .withSession(User.sessionKey -> "user")
       when(mockMessageConnector.addFormIdToAllowlist(any[AllowlistEntry])(any[HeaderCarrier])).thenReturn(
         Future.successful(
-          HttpResponse(Http.Status.CREATED)
+          HttpResponse(Http.Status.CREATED, "")
         )
       )
       private val result = allowlistController.confirmAdd().apply(fakeRequestWithSession.withCSRFToken)
@@ -164,7 +164,7 @@ class AllowlistControllerSpec extends PlaySpec with GuiceOneAppPerSuite with Spe
 
       when(mockMessageConnector.deleteFormIdFromAllowlist(any[AllowlistEntry])(any[HeaderCarrier])).thenReturn(
         Future.successful(
-          HttpResponse(Http.Status.OK)
+          HttpResponse(Http.Status.OK, "")
         )
       )
       private val result = allowlistController.confirmDelete()(fakeRequestWithSession.withCSRFToken)

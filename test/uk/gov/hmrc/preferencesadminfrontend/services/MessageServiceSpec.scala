@@ -36,7 +36,7 @@ class MessageServiceSpec extends PlaySpec with ScalaFutures with IntegrationPati
   "getGmcBatches" should {
 
     "return a valid update result" in new MessageServiceTestCase {
-      val response = HttpResponse(Status.OK, Some(validGmcBatchSeqResponseJson))
+      val response = HttpResponse(Status.OK, validGmcBatchSeqResponseJson, Map.empty)
       when(messageConnectorMock.getGmcBatches("v3")).thenReturn(Future.successful(response))
       when(messageConnectorMock.getGmcBatches("v4")).thenReturn(Future.successful(response))
       messageService.getGmcBatches().futureValue mustBe Left(Seq(gmcBatch, gmcBatch.copy(version = Some("v4"))))
@@ -44,7 +44,7 @@ class MessageServiceSpec extends PlaySpec with ScalaFutures with IntegrationPati
 
     "return an error message if status is 200 but there no valid batches returned" in new MessageServiceTestCase {
       val responseJson = Json.parse("""[{"blah": "test"}]""".stripMargin)
-      val response = HttpResponse(Status.OK, Some(responseJson))
+      val response = HttpResponse(Status.OK, responseJson, Map.empty)
       when(messageConnectorMock.getGmcBatches("v3")).thenReturn(Future.successful(response))
       when(messageConnectorMock.getGmcBatches("v4")).thenReturn(Future.successful(response))
       messageService.getGmcBatches().futureValue mustBe
@@ -52,8 +52,8 @@ class MessageServiceSpec extends PlaySpec with ScalaFutures with IntegrationPati
     }
 
     "return a response body if status isn't 200" in new MessageServiceTestCase {
-      val response = HttpResponse(Status.NOT_FOUND, Some(validGmcBatchSeqResponseJson))
-      val responseForV4 = HttpResponse(Status.NOT_FOUND, Some(validGmcBatchSeqResponseJson))
+      val response = HttpResponse(Status.NOT_FOUND, validGmcBatchSeqResponseJson, Map.empty)
+      val responseForV4 = HttpResponse(Status.NOT_FOUND, validGmcBatchSeqResponseJson, Map.empty)
       when(messageConnectorMock.getGmcBatches("v3")).thenReturn(Future.successful(response))
       when(messageConnectorMock.getGmcBatches("v4")).thenReturn(Future.successful(responseForV4))
       messageService.getGmcBatches().futureValue mustBe
@@ -73,8 +73,8 @@ class MessageServiceSpec extends PlaySpec with ScalaFutures with IntegrationPati
     }
 
     "return a response body if status isn't 200 for v3 and v4 batch is returned" in new MessageServiceTestCase {
-      val response = HttpResponse(Status.NOT_FOUND, Some(validGmcBatchSeqResponseJson))
-      val responseForV4 = HttpResponse(Status.OK, Some(validGmcBatchSeqResponseJson))
+      val response = HttpResponse(Status.NOT_FOUND, validGmcBatchSeqResponseJson, Map.empty)
+      val responseForV4 = HttpResponse(Status.OK, validGmcBatchSeqResponseJson, Map.empty)
       when(messageConnectorMock.getGmcBatches("v3")).thenReturn(Future.successful(response))
       when(messageConnectorMock.getGmcBatches("v4")).thenReturn(Future.successful(responseForV4))
       messageService.getGmcBatches().futureValue mustBe Left(Seq(gmcBatch.copy(version = Some("v4"))))
@@ -84,7 +84,7 @@ class MessageServiceSpec extends PlaySpec with ScalaFutures with IntegrationPati
   "getRandomMessagePreview" should {
 
     "return a valid alert result" in new MessageServiceTestCase {
-      val response = HttpResponse(Status.OK, Some(validMessagePreviewResponseJson))
+      val response = HttpResponse(Status.OK, validMessagePreviewResponseJson, Map.empty)
       when(messageConnectorMock.getRandomMessagePreview(gmcBatch)).thenReturn(Future.successful(response))
       messageService.getRandomMessagePreview(gmcBatch).futureValue mustBe Left(
         BatchMessagePreview(
@@ -104,14 +104,14 @@ class MessageServiceSpec extends PlaySpec with ScalaFutures with IntegrationPati
 
     "return an error message if status is 200 but there no valid message preview returned" in new MessageServiceTestCase {
       val responseJson = Json.parse("""[{"blah": "test"}]""".stripMargin)
-      val response = HttpResponse(Status.OK, Some(responseJson))
+      val response = HttpResponse(Status.OK, responseJson, Map.empty)
       when(messageConnectorMock.getRandomMessagePreview(gmcBatch)).thenReturn(Future.successful(response))
       messageService.getRandomMessagePreview(gmcBatch).futureValue mustBe
         Right("The message preview retrieved does not appear to be valid.")
     }
 
     "return a response body if status isn't 200" in new MessageServiceTestCase {
-      val response = HttpResponse(Status.NOT_FOUND, Some(validMessagePreviewResponseJson))
+      val response = HttpResponse(Status.NOT_FOUND, validMessagePreviewResponseJson, Map.empty)
       when(messageConnectorMock.getRandomMessagePreview(gmcBatch)).thenReturn(Future.successful(response))
       messageService.getRandomMessagePreview(gmcBatch).futureValue mustBe
         Right(

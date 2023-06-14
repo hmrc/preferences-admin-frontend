@@ -29,7 +29,7 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.preferencesadminfrontend.model.UserState.Activated
 import uk.gov.hmrc.preferencesadminfrontend.model.{ PrincipalUserIds, UserState }
 import uk.gov.hmrc.preferencesadminfrontend.services.model.TaxIdentifier
-
+import uk.gov.hmrc.http.HttpReads.Implicits.readRaw
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -42,9 +42,7 @@ class EnrolmentStoreConnectorSpec extends PlaySpec with ScalaFutures with Either
 
       enrolmentStoreConnector
         .getUserIds(taxId)(headerCarrier)
-        .futureValue
-        .right
-        .value mustBe List(principalUserId)
+        .futureValue mustBe Right(List(principalUserId))
     }
 
     "return an empty list of principal user ids when NO_CONTENT is returned" in new Scope {
@@ -53,9 +51,7 @@ class EnrolmentStoreConnectorSpec extends PlaySpec with ScalaFutures with Either
 
       enrolmentStoreConnector
         .getUserIds(taxId)(headerCarrier)
-        .futureValue
-        .right
-        .value mustBe List.empty
+        .futureValue mustBe Right(List.empty)
     }
 
     "return an upstream error when neither OK or NO_CONTENT status code is returned" in new Scope {
@@ -77,9 +73,7 @@ class EnrolmentStoreConnectorSpec extends PlaySpec with ScalaFutures with Either
 
       enrolmentStoreConnector
         .getUserState(principalUserId, taxId)(headerCarrier)
-        .futureValue
-        .right
-        .value mustBe userState.some
+        .futureValue mustBe Right(userState.some)
     }
 
     "return right none when a NOT_FOUND status is returned" in new Scope {
@@ -88,9 +82,7 @@ class EnrolmentStoreConnectorSpec extends PlaySpec with ScalaFutures with Either
 
       enrolmentStoreConnector
         .getUserState(principalUserId, taxId)(headerCarrier)
-        .futureValue
-        .right
-        .value mustBe none
+        .futureValue mustBe Right(None)
     }
 
     "return an upstream error when neither OK or NOT_FOUND status code is returned" in new Scope {

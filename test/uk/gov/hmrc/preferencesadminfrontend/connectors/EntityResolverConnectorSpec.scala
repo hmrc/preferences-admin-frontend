@@ -25,7 +25,7 @@ import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.Status
 import play.api.libs.json._
-import uk.gov.hmrc.http.{ BadRequestException, HeaderCarrier, HttpClient, HttpReads, HttpResponse, Upstream4xxResponse }
+import uk.gov.hmrc.http.{ BadRequestException, HeaderCarrier, HttpClient, HttpReads, HttpResponse, UpstreamErrorResponse }
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.preferencesadminfrontend.services.model.{ Email, TaxIdentifier }
 
@@ -97,7 +97,7 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
     "return empty sequence" in new TestCase {
       val expectedPath = s"$entityResolverserviceUrl/entity-resolver/paye/${nino.value}"
 
-      val result = entityConnectorGetMock(expectedPath, new Upstream4xxResponse("", Status.CONFLICT, Status.CONFLICT))
+      val result = entityConnectorGetMock(expectedPath, UpstreamErrorResponse("", Status.CONFLICT, Status.CONFLICT))
         .getTaxIdentifiers(nino)
         .futureValue
 
@@ -167,7 +167,7 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
 
     "return None if taxId does not exist" in new TestCase {
       val expectedPath = s"$entityResolverserviceUrl/portal/preferences/sa/${sautr.value}"
-      val error = new Upstream4xxResponse("", Status.NOT_FOUND, Status.NOT_FOUND)
+      val error = UpstreamErrorResponse("", Status.NOT_FOUND, Status.NOT_FOUND)
       val result = entityConnectorGetMock(expectedPath, error).getPreferenceDetails(sautr).futureValue
 
       result must not be defined
@@ -195,7 +195,7 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
     "return false if CONFLICT" in new TestCase {
       val expectedPath = s"$entityResolverserviceUrl/entity-resolver-admin/manual-opt-out/sa/${sautr.value}"
 
-      val error = new Upstream4xxResponse("", Status.CONFLICT, Status.CONFLICT)
+      val error = UpstreamErrorResponse("", Status.CONFLICT, Status.CONFLICT)
       val result = entityConnectorPostMock(expectedPath, error).optOut(sautr).futureValue
 
       result mustBe AlreadyOptedOut
@@ -204,7 +204,7 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
     "return false if NOT_FOUND" in new TestCase {
       val expectedPath = s"$entityResolverserviceUrl/entity-resolver-admin/manual-opt-out/sa/${sautr.value}"
 
-      val error = new Upstream4xxResponse("", Status.NOT_FOUND, Status.NOT_FOUND)
+      val error = UpstreamErrorResponse("", Status.NOT_FOUND, Status.NOT_FOUND)
       val result = entityConnectorPostMock(expectedPath, error).optOut(sautr).futureValue
 
       result mustBe PreferenceNotFound
@@ -212,7 +212,7 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
 
     "return false if PRECONDITION_FAILED" in new TestCase {
       val expectedPath = s"$entityResolverserviceUrl/entity-resolver-admin/manual-opt-out/sa/${sautr.value}"
-      val error = new Upstream4xxResponse("", Status.PRECONDITION_FAILED, Status.PRECONDITION_FAILED)
+      val error = UpstreamErrorResponse("", Status.PRECONDITION_FAILED, Status.PRECONDITION_FAILED)
       val result = entityConnectorPostMock(expectedPath, error).optOut(sautr).futureValue
 
       result mustBe PreferenceNotFound
