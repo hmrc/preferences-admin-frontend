@@ -28,10 +28,12 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.CSRFTokenHelper._
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditResult
+import uk.gov.hmrc.play.audit.model.DataEvent
 import uk.gov.hmrc.preferencesadminfrontend.utils.SpecBase
 
-import scala.concurrent.Future
+import scala.concurrent.{ ExecutionContext, Future }
 
 class LoginControllerSpec extends PlaySpec with GuiceOneAppPerSuite with SpecBase with ScalaFutures {
 
@@ -41,12 +43,12 @@ class LoginControllerSpec extends PlaySpec with GuiceOneAppPerSuite with SpecBas
 
   "GET /" should {
     "return 200" in new MessageBrakeControllerTestCase {
-      val result = loginController.showLoginPage(FakeRequest("GET", "/").withCSRFToken)
+      val result = loginController.showLoginPage()(FakeRequest("GET", "/").withCSRFToken)
       status(result) mustBe Status.OK
     }
 
     "return HTML" in new MessageBrakeControllerTestCase {
-      val result = loginController.showLoginPage(FakeRequest("GET", "/").withCSRFToken)
+      val result = loginController.showLoginPage()(FakeRequest("GET", "/").withCSRFToken)
       contentType(result) mustBe Some("text/html")
       charset(result) mustBe Some("utf-8")
     }
@@ -54,36 +56,33 @@ class LoginControllerSpec extends PlaySpec with GuiceOneAppPerSuite with SpecBas
 
   "POST to login" should {
     "Redirect to the next page if credentials are correct" in new MessageBrakeControllerTestCase {
-      val result = loginController.loginAction(
-        FakeRequest()
-          .withFormUrlEncodedBody(
-            "username" -> "user",
-            "password" -> "pwd"
-          )
-          .withCSRFToken)
+      val fakeRequest =
+        FakeRequest(routes.LoginController.loginAction())
+          .withFormUrlEncodedBody("username" -> "user", "password" -> "pwd")
+          .withCSRFToken
+      val result = loginController.loginAction()(fakeRequest)
 
-      session(result).data must contain("userId" -> "user")
       status(result) mustBe Status.SEE_OTHER
-      headers(result) must contain("Location" -> "/paperless/admin/home")
+      headers(result) must contain("Location"    -> "/paperless/admin/home")
+      session(result).data must contain("userId" -> "user")
     }
 
     "Return unauthorised if credentials are not correct" in new MessageBrakeControllerTestCase {
-      val result = loginController.loginAction(
-        FakeRequest()
-          .withFormUrlEncodedBody(
-            "username" -> "user",
-            "password" -> "wrongPassword"
-          )
+      val fakeRequest =
+        FakeRequest(routes.LoginController.loginAction())
+          .withFormUrlEncodedBody("username" -> "user", "password" -> "wrongPassword")
           .withCSRFToken
-      )
+      val result = loginController.loginAction()(fakeRequest)
 
       status(result) mustBe Status.UNAUTHORIZED
     }
 
     "Return bad request if credentials are missing" in new MessageBrakeControllerTestCase {
-      val result = loginController.loginAction(
-        FakeRequest().withFormUrlEncodedBody().withCSRFToken
-      )
+      val fakeRequest =
+        FakeRequest(routes.LoginController.loginAction())
+          .withFormUrlEncodedBody()
+          .withCSRFToken
+      val result = loginController.loginAction()(fakeRequest)
 
       status(result) mustBe Status.BAD_REQUEST
     }
@@ -100,7 +99,7 @@ class LoginControllerSpec extends PlaySpec with GuiceOneAppPerSuite with SpecBas
   }
 
   class MessageBrakeControllerTestCase extends SpecBase {
-    when(auditConnectorMock.sendEvent(any())(any(), any())).thenReturn(Future.successful(AuditResult.Success))
+    when(auditConnectorMock.sendEvent(any[DataEvent])(any[HeaderCarrier], any[ExecutionContext])).thenReturn(Future.successful(AuditResult.Success))
     val loginController = app.injector.instanceOf[LoginController]
   }
 }

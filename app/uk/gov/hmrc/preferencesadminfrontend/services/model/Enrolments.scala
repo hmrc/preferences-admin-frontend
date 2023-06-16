@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.preferencesadminfrontend.services.model
 
-import uk.gov.hmrc.preferencesadminfrontend.model.PrincipalUserId
-
 case class Enrolments(
   statefulSAEnrolment: Option[StatefulSAEnrolment],
   itsaEnrolment: Option[String]

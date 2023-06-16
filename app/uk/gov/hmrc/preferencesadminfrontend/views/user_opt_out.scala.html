@@ -85,7 +85,7 @@
             @if(preference.genericPaperless) {
 
                 @govukWarningText(WarningText(
-                    iconFallbackText = "Warning",
+                    iconFallbackText = Some("Warning"),
                     content = Text("Are you sure you wish to opt this user out?")
                 ))
                 @form(action = routes.SearchController.optOut()) {

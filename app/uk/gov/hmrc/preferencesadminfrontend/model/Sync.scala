@@ -17,9 +17,7 @@
 package uk.gov.hmrc.preferencesadminfrontend.model
 
 import play.api.data.Form
-import play.api.data.Forms.{ list, mapping, text }
-import play.api.libs.json.{ Json, OWrites }
-import uk.gov.hmrc.preferencesadminfrontend.services.Identifier
+import play.api.data.Forms.{ mapping, text }
 
 case class Sync(entries: String)
 

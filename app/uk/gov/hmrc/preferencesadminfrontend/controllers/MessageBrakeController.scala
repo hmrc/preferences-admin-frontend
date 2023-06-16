@@ -41,14 +41,14 @@ class MessageBrakeController @Inject()(
   messageBrakeAdminView: message_brake_admin)(implicit appConfig: AppConfig, ec: ExecutionContext)
     extends FrontendController(mcc) with I18nSupport with Logging {
 
-  def showAdminPage: Action[AnyContent] = authorisedAction.async { implicit request => implicit user =>
-    messageService.getGmcBatches.map {
+  def showAdminPage: Action[AnyContent] = authorisedAction.async { implicit request => _ =>
+    messageService.getGmcBatches().map {
       case Left(batches) => Ok(messageBrakeAdminView(batches))
       case Right(error)  => returnError(error)
     }
   }
 
-  def previewMessage: Action[AnyContent] = authorisedAction.async { implicit request => implicit user =>
+  def previewMessage: Action[AnyContent] = authorisedAction.async { implicit request => _ =>
     val batch = GmcBatch().bindFromRequest().get
     for {
       gmcBatches     <- messageService.getGmcBatches()
@@ -65,15 +65,15 @@ class MessageBrakeController @Inject()(
     }
   }
 
-  def showApproveBatchConfirmationPage(): Action[AnyContent] = authorisedAction.async { implicit request => implicit user =>
+  def showApproveBatchConfirmationPage(): Action[AnyContent] = authorisedAction.async { implicit request => _ =>
     Future.successful(Ok(batchApprovalView(GmcBatchApproval().bindFromRequest().discardingErrors)))
   }
 
-  def showRejectBatchConfirmationPage(): Action[AnyContent] = authorisedAction.async { implicit request => implicit user =>
+  def showRejectBatchConfirmationPage(): Action[AnyContent] = authorisedAction.async { implicit request => _ =>
     Future.successful(Ok(batchRejectionView(GmcBatchApproval().bindFromRequest().discardingErrors)))
   }
 
-  def confirmApproveBatch: Action[AnyContent] = authorisedAction.async { implicit request => implicit user =>
+  def confirmApproveBatch: Action[AnyContent] = authorisedAction.async { implicit request => _ =>
     GmcBatchApproval()
       .bindFromRequest()
       .fold(
@@ -98,7 +98,7 @@ class MessageBrakeController @Inject()(
       )
   }
 
-  def confirmRejectBatch: Action[AnyContent] = authorisedAction.async { implicit request => implicit user =>
+  def confirmRejectBatch: Action[AnyContent] = authorisedAction.async { implicit request => _ =>
     GmcBatchApproval()
       .bindFromRequest()
       .fold(

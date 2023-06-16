@@ -11,7 +11,7 @@ GET         /search                                     uk.gov.hmrc.preferencesa
 POST        /search/q                                   uk.gov.hmrc.preferencesadminfrontend.controllers.SearchController.search()
 POST        /search/opt-out                             uk.gov.hmrc.preferencesadminfrontend.controllers.SearchController.optOut()
 GET         /rescindment                                uk.gov.hmrc.preferencesadminfrontend.controllers.RescindmentController.showRescindmentPage()
-GET         /rescindment/q                              uk.gov.hmrc.preferencesadminfrontend.controllers.RescindmentController.rescindmentAction()
+POST        /rescindment/q                              uk.gov.hmrc.preferencesadminfrontend.controllers.RescindmentController.rescindmentAction()
 GET         /rescindment/send                           uk.gov.hmrc.preferencesadminfrontend.controllers.RescindmentController.showRescindmentAlertsPage()
 GET         /rescindment/send/q                         uk.gov.hmrc.preferencesadminfrontend.controllers.RescindmentController.sendRescindmentAlerts()
 GET         /allowlist                                  uk.gov.hmrc.preferencesadminfrontend.controllers.AllowlistController.showAllowlistPage()

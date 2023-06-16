@@ -19,13 +19,13 @@ package uk.gov.hmrc.preferencesadminfrontend.connectors
 import cats.data.EitherT
 import cats.syntax.either._
 import cats.syntax.option._
-import play.api.{ Logger, Logging }
+import play.api.Logger
 import play.api.http.Status._
 import uk.gov.hmrc.http.{ HeaderCarrier, HttpClient, HttpResponse }
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-import uk.gov.hmrc.preferencesadminfrontend.model.{ PrincipalUserId, PrincipalUserIds, UserState }
+import uk.gov.hmrc.preferencesadminfrontend.model.{ PrincipalUserIds, UserState }
 import uk.gov.hmrc.preferencesadminfrontend.services.model.TaxIdentifier
-
+import uk.gov.hmrc.http.HttpReads.Implicits._
 import javax.inject.{ Inject, Singleton }
 import scala.concurrent.{ ExecutionContext, Future }
 

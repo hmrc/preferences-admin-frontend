@@ -17,10 +17,9 @@
 package uk.gov.hmrc.preferencesadminfrontend.controllers
 
 import javax.inject.{ Inject, Singleton }
-import play.api.i18n.{ I18nSupport, MessagesApi }
+import play.api.i18n.I18nSupport
 import play.api.mvc.{ Action, AnyContent, MessagesControllerComponents }
-import play.api.{ Configuration, Logging, Play }
-import uk.gov.hmrc.play.audit.http.connector.AuditConnector
+import play.api.Logging
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
 import uk.gov.hmrc.preferencesadminfrontend.controllers.model.Rescindment
@@ -32,37 +31,38 @@ import scala.concurrent.{ ExecutionContext, Future }
 @Singleton
 class RescindmentController @Inject()(
   authorisedAction: AuthorisedAction,
-  auditConnector: AuditConnector,
   rescindmentService: RescindmentService,
   mcc: MessagesControllerComponents,
   rescindmentView: rescindment,
   rescindmentSendView: rescindment_send)(implicit appConfig: AppConfig, ec: ExecutionContext)
     extends FrontendController(mcc) with I18nSupport with Logging {
 
-  def showRescindmentPage(): Action[AnyContent] = authorisedAction.async { implicit request => implicit user =>
+  def showRescindmentPage(): Action[AnyContent] = authorisedAction.async { implicit request => _ =>
     Future.successful(
       Ok(rescindmentView(Rescindment().discardingErrors))
     )
   }
 
-  def rescindmentAction(): Action[AnyContent] = authorisedAction.async { implicit request => implicit user =>
-    Rescindment().bindFromRequest.fold(
-      errors => Future.successful(BadRequest(rescindmentView(errors))),
-      rescindmentRequest => {
-        rescindmentService
-          .addRescindments(rescindmentRequest)
-          .map(updateResult => Ok(rescindmentSendView(Rescindment().discardingErrors, succeeded = updateResult.succeeded.toString)))
-      }
-    )
+  def rescindmentAction(): Action[AnyContent] = authorisedAction.async { implicit request => _ =>
+    Rescindment()
+      .bindFromRequest()
+      .fold(
+        errors => Future.successful(BadRequest(rescindmentView(errors))),
+        rescindmentRequest => {
+          rescindmentService
+            .addRescindments(rescindmentRequest)
+            .map(updateResult => Ok(rescindmentSendView(Rescindment().discardingErrors, succeeded = updateResult.succeeded.toString)))
+        }
+      )
   }
 
-  def showRescindmentAlertsPage(): Action[AnyContent] = authorisedAction.async { implicit request => implicit user =>
+  def showRescindmentAlertsPage(): Action[AnyContent] = authorisedAction.async { implicit request => _ =>
     Future.successful(
       Ok(rescindmentSendView(Rescindment().discardingErrors))
     )
   }
 
-  def sendRescindmentAlerts(): Action[AnyContent] = authorisedAction.async { implicit request => implicit user =>
+  def sendRescindmentAlerts(): Action[AnyContent] = authorisedAction.async { implicit request => _ =>
     rescindmentService
       .sendRescindmentAlerts()
       .map(

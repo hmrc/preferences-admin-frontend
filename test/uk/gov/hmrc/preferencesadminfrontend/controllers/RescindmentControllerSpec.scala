@@ -28,12 +28,10 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Configuration
 import play.api.http.Status
 import play.api.i18n.MessagesApi
-import play.api.mvc.AnyContentAsFormUrlEncoded
 import play.api.test.CSRFTokenHelper._
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{ contentAsString, defaultAwaitTimeout, headers, status }
 import uk.gov.hmrc.http.{ HeaderCarrier, HttpClient }
-import uk.gov.hmrc.play.audit.http.connector.AuditResult
 import uk.gov.hmrc.play.audit.model.MergedDataEvent
 import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
 import uk.gov.hmrc.preferencesadminfrontend.controllers.model.User
@@ -49,7 +47,6 @@ class RescindmentControllerSpec extends PlaySpec with ScalaFutures with GuiceOne
   implicit val messagesApi = app.injector.instanceOf[MessagesApi]
   implicit val materializer = app.injector.instanceOf[Materializer]
 
-  implicit lazy val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
   val playConfiguration = app.injector.instanceOf[Configuration]
 
   "showRescindmentPage" should {
@@ -84,14 +81,16 @@ class RescindmentControllerSpec extends PlaySpec with ScalaFutures with GuiceOne
 
   "rescindment" should {
     "return ok if session is authorised and form data payload is valid" in new RescindmentTestCase {
-      val fakeRequestWithForm = FakeRequest(routes.RescindmentController.rescindmentAction()).withSession(User.sessionKey -> "user")
-      val requestWithFormData: FakeRequest[AnyContentAsFormUrlEncoded] = fakeRequestWithForm.withFormUrlEncodedBody(
-        "batchId"         -> "1234567",
-        "formId"          -> "SA316",
-        "date"            -> "2017-03-16",
-        "reference"       -> "ref-test",
-        "emailTemplateId" -> "rescindedMessageAlert"
-      )
+      val fakeRequestWithForm = FakeRequest(routes.RescindmentController.rescindmentAction())
+        .withFormUrlEncodedBody(
+          "batchId"         -> "1234567",
+          "formId"          -> "SA316",
+          "date"            -> "2017-03-16",
+          "reference"       -> "ref-test",
+          "emailTemplateId" -> "rescindedMessageAlert"
+        )
+        .withSession(User.sessionKey -> "user")
+        .withCSRFToken
       val rescindmentRequest = RescindmentRequest(
         batchId = "1234567",
         formId = "SA316",
@@ -105,9 +104,9 @@ class RescindmentControllerSpec extends PlaySpec with ScalaFutures with GuiceOne
         alreadyUpdated = 0,
         invalidState = 0
       )
-      when(rescindmentServiceMock.addRescindments(ArgumentMatchers.eq(rescindmentRequest))(any[User](), any[HeaderCarrier](), any[ExecutionContext]()))
+      when(rescindmentServiceMock.addRescindments(ArgumentMatchers.eq(rescindmentRequest))(any[HeaderCarrier](), any[ExecutionContext]()))
         .thenReturn(Future.successful(rescindmentUpdateResult))
-      val result = rescindmentController.rescindmentAction()(requestWithFormData.withCSRFToken)
+      val result = rescindmentController.rescindmentAction()(fakeRequestWithForm)
 
       status(result) mustBe Status.OK
       val document = Jsoup.parse(contentAsString(result))
@@ -139,7 +138,7 @@ class RescindmentControllerSpec extends PlaySpec with ScalaFutures with GuiceOne
         failed = 0,
         hardCopyRequested = 0
       )
-      when(rescindmentServiceMock.sendRescindmentAlerts()(any[User](), any[HeaderCarrier](), any[ExecutionContext]()))
+      when(rescindmentServiceMock.sendRescindmentAlerts()(any[HeaderCarrier](), any[ExecutionContext]()))
         .thenReturn(Future.successful(rescindmentAlertsResult))
       val result = rescindmentController.sendRescindmentAlerts()(fakeRequestWithForm.withCSRFToken)
 
@@ -160,18 +159,16 @@ class RescindmentControllerSpec extends PlaySpec with ScalaFutures with GuiceOne
 
   class RescindmentTestCase extends SpecBase {
     implicit val ecc: ExecutionContext = stubbedMCC.executionContext
-
+    implicit val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
     val httpClient: HttpClient = app.injector.instanceOf[HttpClient]
     val authorisedAction: AuthorisedAction = app.injector.instanceOf[AuthorisedAction]
     val rescindmentView: rescindment = app.injector.instanceOf[rescindment]
     val rescindmentSendView: rescindment_send = app.injector.instanceOf[rescindment_send]
     val rescindmentServiceMock: RescindmentService = mock[RescindmentService]
-    when(auditConnectorMock.sendEvent(any())(any(), any())).thenReturn(Future.successful(AuditResult.Success))
 
-    def rescindmentController()(implicit messages: MessagesApi, appConfig: AppConfig): RescindmentController =
+    val rescindmentController: RescindmentController =
       new RescindmentController(
         authorisedAction,
-        auditConnectorMock,
         rescindmentServiceMock,
         stubbedMCC,
         rescindmentView,

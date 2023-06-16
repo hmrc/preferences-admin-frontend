@@ -18,7 +18,6 @@ package uk.gov.hmrc.preferencesadminfrontend.connectors
 
 import akka.actor.ActorSystem
 import org.mockito.ArgumentMatchers
-import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito.when
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.mockito.MockitoSugar.mock
@@ -28,15 +27,14 @@ import play.api.http.Status
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json._
 import play.api.{ Configuration, Environment }
-import uk.gov.hmrc.http.{ HeaderCarrier, HttpResponse }
+import uk.gov.hmrc.http.{ HeaderCarrier, HttpClient, HttpReads, HttpResponse }
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-import uk.gov.hmrc.http.HttpClient
 import uk.gov.hmrc.play.bootstrap.http.DefaultHttpClient
 import uk.gov.hmrc.preferencesadminfrontend.model._
 
 import java.util.concurrent.TimeoutException
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ ExecutionContext, Future }
 
 class MessageConnectorSpec extends PlaySpec with ScalaFutures with GuiceOneAppPerSuite {
 
@@ -63,7 +61,16 @@ class MessageConnectorSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
     "addRescindments" should {
       "return a valid update result with status 200" in new TestCase {
         val expectedPath = s"$serviceUrl/admin/message/add-rescindments"
-        when(mockHttp.POST[RescindmentRequest, RescindmentUpdateResult](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any(), any()))
+        when(
+          mockHttp.POST[RescindmentRequest, RescindmentUpdateResult](
+            ArgumentMatchers.eq(expectedPath),
+            ArgumentMatchers.any[RescindmentRequest],
+            ArgumentMatchers.any[Seq[(String, String)]])(
+            ArgumentMatchers.any[Writes[RescindmentRequest]],
+            ArgumentMatchers.any[HttpReads[RescindmentUpdateResult]],
+            ArgumentMatchers.any[HeaderCarrier],
+            ArgumentMatchers.any[ExecutionContext]
+          ))
           .thenReturn(Future.successful(Json.fromJson[RescindmentUpdateResult](rescindmentUpdateResultJson).get))
         val result = app.injector.instanceOf[MessageConnector].addRescindments(rescindmentRequest).futureValue
         result mustBe rescindmentUpdateResult
@@ -73,7 +80,11 @@ class MessageConnectorSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
     "sendRescindmentAlerts" should {
       "return a valid alert result with status 200" in new TestCase {
         val expectedPath = s"$serviceUrl/admin/send-rescindment-alerts"
-        when(mockHttp.POSTEmpty[RescindmentAlertsResult](ArgumentMatchers.eq(expectedPath), any())(any(), any(), any()))
+        when(
+          mockHttp.POSTEmpty[RescindmentAlertsResult](ArgumentMatchers.eq(expectedPath), ArgumentMatchers.any[Seq[(String, String)]])(
+            ArgumentMatchers.any[HttpReads[RescindmentAlertsResult]],
+            ArgumentMatchers.any[HeaderCarrier],
+            ArgumentMatchers.any[ExecutionContext]))
           .thenReturn(Future.successful(rescindmentAlertsResult))
         val result = app.injector.instanceOf[MessageConnector].sendRescindmentAlerts().futureValue
         result mustBe rescindmentAlertsResult
@@ -85,15 +96,25 @@ class MessageConnectorSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
     "getAllowlist" should {
       "return a valid sequence of batches with status 200" in new TestCase {
         val expectedPath = (s"$serviceUrl/admin/message/brake/gmc/allowlist")
-        when(mockHttp.GET[HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any()))
-          .thenReturn(Future.successful(HttpResponse(Status.OK, Some(Json.obj()))))
+        when(
+          mockHttp
+            .GET[HttpResponse](ArgumentMatchers.eq(expectedPath), ArgumentMatchers.any[Seq[(String, String)]], ArgumentMatchers.any[Seq[(String, String)]])(
+              ArgumentMatchers.any[HttpReads[HttpResponse]],
+              ArgumentMatchers.any[HeaderCarrier],
+              ArgumentMatchers.any[ExecutionContext]))
+          .thenReturn(Future.successful(HttpResponse(Status.OK, Json.obj(), Map.empty)))
         val result = app.injector.instanceOf[MessageConnector].getAllowlist().futureValue
         result.status mustBe Status.OK
       }
 
       "return a BAD GATEWAY with an error message when an error is thrown" in new TestCase {
         val expectedPath = (s"$serviceUrl/admin/message/brake/gmc/allowlist")
-        when(mockHttp.GET[HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any()))
+        when(
+          mockHttp
+            .GET[HttpResponse](ArgumentMatchers.eq(expectedPath), ArgumentMatchers.any[Seq[(String, String)]], ArgumentMatchers.any[Seq[(String, String)]])(
+              ArgumentMatchers.any[HttpReads[HttpResponse]],
+              ArgumentMatchers.any[HeaderCarrier],
+              ArgumentMatchers.any[ExecutionContext]))
           .thenReturn(Future.failed(new TimeoutException("timeout error")))
 
         val result = app.injector.instanceOf[MessageConnector].getAllowlist().futureValue
@@ -105,8 +126,17 @@ class MessageConnectorSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
     "addFormIdToAllowlist" should {
       "return a valid sequence of batches with status 200" in new TestCase {
         val expectedPath = s"$serviceUrl/admin/message/brake/gmc/allowlist/add"
-        when(mockHttp.POST[AllowlistEntry, HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any(), any()))
-          .thenReturn(Future.successful(HttpResponse(Status.OK, Some(Json.obj()))))
+        when(
+          mockHttp.POST[AllowlistEntry, HttpResponse](
+            ArgumentMatchers.eq(expectedPath),
+            ArgumentMatchers.any[AllowlistEntry],
+            ArgumentMatchers.any[Seq[(String, String)]])(
+            ArgumentMatchers.any[Writes[AllowlistEntry]],
+            ArgumentMatchers.any[HttpReads[HttpResponse]],
+            ArgumentMatchers.any[HeaderCarrier],
+            ArgumentMatchers.any[ExecutionContext]
+          ))
+          .thenReturn(Future.successful(HttpResponse(Status.OK, Json.obj(), Map.empty)))
         val result = app.injector
           .instanceOf[MessageConnector]
           .addFormIdToAllowlist(AllowlistEntry("SA316", "reason"))
@@ -117,7 +147,16 @@ class MessageConnectorSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
       "return a BAD GATEWAY with an error message when an error is thrown" in new TestCase {
         val expectedPath = s"$serviceUrl/admin/message/brake/gmc/allowlist/add"
 
-        when(mockHttp.POST[AllowlistEntry, HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any(), any()))
+        when(
+          mockHttp.POST[AllowlistEntry, HttpResponse](
+            ArgumentMatchers.eq(expectedPath),
+            ArgumentMatchers.any[AllowlistEntry],
+            ArgumentMatchers.any[Seq[(String, String)]])(
+            ArgumentMatchers.any[Writes[AllowlistEntry]],
+            ArgumentMatchers.any[HttpReads[HttpResponse]],
+            ArgumentMatchers.any[HeaderCarrier],
+            ArgumentMatchers.any[ExecutionContext]
+          ))
           .thenReturn(Future.failed(new TimeoutException("timeout error")))
 
         val result = app.injector
@@ -132,8 +171,17 @@ class MessageConnectorSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
     "deleteFormIdFromAllowlist" should {
       "return a valid sequence of batches with status 200" in new TestCase {
         val expectedPath = s"$serviceUrl/admin/message/brake/gmc/allowlist/delete"
-        when(mockHttp.POST[AllowlistEntry, HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any(), any()))
-          .thenReturn(Future.successful(HttpResponse(Status.OK, Some(Json.obj()))))
+        when(
+          mockHttp.POST[AllowlistEntry, HttpResponse](
+            ArgumentMatchers.eq(expectedPath),
+            ArgumentMatchers.any[AllowlistEntry],
+            ArgumentMatchers.any[Seq[(String, String)]])(
+            ArgumentMatchers.any[Writes[AllowlistEntry]],
+            ArgumentMatchers.any[HttpReads[HttpResponse]],
+            ArgumentMatchers.any[HeaderCarrier],
+            ArgumentMatchers.any[ExecutionContext]
+          ))
+          .thenReturn(Future.successful(HttpResponse(Status.OK, Json.obj(), Map.empty)))
 
         val result = app.injector.instanceOf[MessageConnector].deleteFormIdFromAllowlist(AllowlistEntry("SA316", "reason")).futureValue
         result.status mustBe Status.OK
@@ -141,7 +189,16 @@ class MessageConnectorSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
 
       "return a BAD GATEWAY with an error message when an error is thrown" in new TestCase {
         val expectedPath = s"$serviceUrl/admin/message/brake/gmc/allowlist/delete"
-        when(mockHttp.POST[AllowlistEntry, HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any(), any()))
+        when(
+          mockHttp.POST[AllowlistEntry, HttpResponse](
+            ArgumentMatchers.eq(expectedPath),
+            ArgumentMatchers.any[AllowlistEntry],
+            ArgumentMatchers.any[Seq[(String, String)]])(
+            ArgumentMatchers.any[Writes[AllowlistEntry]],
+            ArgumentMatchers.any[HttpReads[HttpResponse]],
+            ArgumentMatchers.any[HeaderCarrier],
+            ArgumentMatchers.any[ExecutionContext]
+          ))
           .thenReturn(Future.failed(new TimeoutException("timeout error")))
         val result = app.injector.instanceOf[MessageConnector].deleteFormIdFromAllowlist(AllowlistEntry("SA316", "reason")).futureValue
         result.status mustBe Status.BAD_GATEWAY
@@ -152,8 +209,13 @@ class MessageConnectorSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
     "getGmcBatches" should {
       "return a valid sequence of batches with status 200" in new TestCase {
         val expectedPath = s"$serviceUrl/admin/message/brake/gmc/batches"
-        when(mockHttp.GET[HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any()))
-          .thenReturn(Future.successful(HttpResponse(Status.OK, Some(getGmcBatchesResultJson))))
+        when(
+          mockHttp
+            .GET[HttpResponse](ArgumentMatchers.eq(expectedPath), ArgumentMatchers.any[Seq[(String, String)]], ArgumentMatchers.any[Seq[(String, String)]])(
+              ArgumentMatchers.any[HttpReads[HttpResponse]],
+              ArgumentMatchers.any[HeaderCarrier],
+              ArgumentMatchers.any[ExecutionContext]))
+          .thenReturn(Future.successful(HttpResponse(Status.OK, getGmcBatchesResultJson, Map.empty)))
 
         val result = app.injector.instanceOf[MessageConnector].getGmcBatches("v3").futureValue
         result.status mustBe Status.OK
@@ -162,7 +224,12 @@ class MessageConnectorSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
 
       "return a BAD GATEWAY with an error message when an error is thrown" in new TestCase {
         val expectedPath = s"$serviceUrl/admin/message/brake/gmc/batches"
-        when(mockHttp.GET[HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any()))
+        when(
+          mockHttp
+            .GET[HttpResponse](ArgumentMatchers.eq(expectedPath), ArgumentMatchers.any[Seq[(String, String)]], ArgumentMatchers.any[Seq[(String, String)]])(
+              ArgumentMatchers.any[HttpReads[HttpResponse]],
+              ArgumentMatchers.any[HeaderCarrier],
+              ArgumentMatchers.any[ExecutionContext]))
           .thenReturn(Future.failed(new TimeoutException("timeout error")))
         val result = app.injector.instanceOf[MessageConnector].getGmcBatches("v3").futureValue
         result.status mustBe Status.BAD_GATEWAY
@@ -174,8 +241,14 @@ class MessageConnectorSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
       "return a valid sequence of batches with status 200" in new TestCase {
         val expectedPath = s"$serviceUrl/admin/message/brake/random"
 
-        when(mockHttp.POST[GmcBatch, HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any(), any()))
-          .thenReturn(Future.successful(HttpResponse(Status.OK, Some(getRandomMessagePreviewResultJson))))
+        when(
+          mockHttp.POST[GmcBatch, HttpResponse](ArgumentMatchers.eq(expectedPath), ArgumentMatchers.any[GmcBatch], ArgumentMatchers.any[Seq[(String, String)]])(
+            ArgumentMatchers.any[Writes[GmcBatch]],
+            ArgumentMatchers.any[HttpReads[HttpResponse]],
+            ArgumentMatchers.any[HeaderCarrier],
+            ArgumentMatchers.any[ExecutionContext]
+          ))
+          .thenReturn(Future.successful(HttpResponse(Status.OK, getRandomMessagePreviewResultJson, Map.empty)))
         val result = app.injector.instanceOf[MessageConnector].getRandomMessagePreview(gmcBatch).futureValue
         result.status mustBe Status.OK
         result.json mustBe getRandomMessagePreviewResultJson
@@ -184,7 +257,13 @@ class MessageConnectorSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
       "return a BAD GATEWAY with an error message when an error is thrown" in new TestCase {
         val expectedPath = s"$serviceUrl/admin/message/brake/random"
 
-        when(mockHttp.POST[GmcBatch, HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any(), any()))
+        when(
+          mockHttp.POST[GmcBatch, HttpResponse](ArgumentMatchers.eq(expectedPath), ArgumentMatchers.any[GmcBatch], ArgumentMatchers.any[Seq[(String, String)]])(
+            ArgumentMatchers.any[Writes[GmcBatch]],
+            ArgumentMatchers.any[HttpReads[HttpResponse]],
+            ArgumentMatchers.any[HeaderCarrier],
+            ArgumentMatchers.any[ExecutionContext]
+          ))
           .thenReturn(Future.failed(new TimeoutException("timeout error")))
 
         val result = app.injector.instanceOf[MessageConnector].getRandomMessagePreview(gmcBatch).futureValue
@@ -197,8 +276,17 @@ class MessageConnectorSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
       "return a valid sequence of batches with status 200" in new TestCase {
         val expectedPath = s"$serviceUrl/admin/message/brake/accept"
 
-        when(mockHttp.POST[GmcBatchApproval, HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any(), any()))
-          .thenReturn(Future.successful(HttpResponse(Status.OK, Some(Json.obj()))))
+        when(
+          mockHttp.POST[GmcBatchApproval, HttpResponse](
+            ArgumentMatchers.eq(expectedPath),
+            ArgumentMatchers.any[GmcBatchApproval],
+            ArgumentMatchers.any[Seq[(String, String)]])(
+            ArgumentMatchers.any[Writes[GmcBatchApproval]],
+            ArgumentMatchers.any[HttpReads[HttpResponse]],
+            ArgumentMatchers.any[HeaderCarrier],
+            ArgumentMatchers.any[ExecutionContext]
+          ))
+          .thenReturn(Future.successful(HttpResponse(Status.OK, Json.obj(), Map.empty)))
 
         val result = app.injector.instanceOf[MessageConnector].approveGmcBatch(gmcBatchApproval).futureValue
         result.status mustBe Status.OK
@@ -206,7 +294,16 @@ class MessageConnectorSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
 
       "return a BAD GATEWAY with an error message when an error is thrown" in new TestCase {
         val expectedPath = s"$serviceUrl/admin/message/brake/accept"
-        when(mockHttp.POST[GmcBatchApproval, HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any(), any()))
+        when(
+          mockHttp.POST[GmcBatchApproval, HttpResponse](
+            ArgumentMatchers.eq(expectedPath),
+            ArgumentMatchers.any[GmcBatchApproval],
+            ArgumentMatchers.any[Seq[(String, String)]])(
+            ArgumentMatchers.any[Writes[GmcBatchApproval]],
+            ArgumentMatchers.any[HttpReads[HttpResponse]],
+            ArgumentMatchers.any[HeaderCarrier],
+            ArgumentMatchers.any[ExecutionContext]
+          ))
           .thenReturn(Future.failed(new TimeoutException("timeout error")))
         val result = app.injector.instanceOf[MessageConnector].approveGmcBatch(gmcBatchApproval).futureValue
         result.status mustBe Status.BAD_GATEWAY
@@ -217,8 +314,17 @@ class MessageConnectorSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
     "rejectGmcBatch" should {
       "return a valid sequence of batches with status 200" in new TestCase {
         val expectedPath = s"$serviceUrl/admin/message/brake/reject"
-        when(mockHttp.POST[GmcBatchApproval, HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any(), any()))
-          .thenReturn(Future.successful(HttpResponse(Status.OK, Some(Json.obj()))))
+        when(
+          mockHttp.POST[GmcBatchApproval, HttpResponse](
+            ArgumentMatchers.eq(expectedPath),
+            ArgumentMatchers.any[GmcBatchApproval],
+            ArgumentMatchers.any[Seq[(String, String)]])(
+            ArgumentMatchers.any[Writes[GmcBatchApproval]],
+            ArgumentMatchers.any[HttpReads[HttpResponse]],
+            ArgumentMatchers.any[HeaderCarrier],
+            ArgumentMatchers.any[ExecutionContext]
+          ))
+          .thenReturn(Future.successful(HttpResponse(Status.OK, Json.obj(), Map.empty)))
 
         val result = app.injector.instanceOf[MessageConnector].rejectGmcBatch(gmcBatchApproval).futureValue
         result.status mustBe Status.OK
@@ -226,7 +332,16 @@ class MessageConnectorSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
 
       "return a BAD GATEWAY with an error message when an error is thrown" in new TestCase {
         val expectedPath = s"$serviceUrl/admin/message/brake/reject"
-        when(mockHttp.POST[GmcBatchApproval, HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any(), any()))
+        when(
+          mockHttp.POST[GmcBatchApproval, HttpResponse](
+            ArgumentMatchers.eq(expectedPath),
+            ArgumentMatchers.any[GmcBatchApproval],
+            ArgumentMatchers.any[Seq[(String, String)]])(
+            ArgumentMatchers.any[Writes[GmcBatchApproval]],
+            ArgumentMatchers.any[HttpReads[HttpResponse]],
+            ArgumentMatchers.any[HeaderCarrier],
+            ArgumentMatchers.any[ExecutionContext]
+          ))
           .thenReturn(Future.failed(new TimeoutException("timeout error")))
         val result = app.injector.instanceOf[MessageConnector].rejectGmcBatch(gmcBatchApproval).futureValue
         result.status mustBe Status.BAD_GATEWAY
@@ -237,8 +352,13 @@ class MessageConnectorSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
     "getGmcBatches - v4 message" should {
       "return a valid sequence of batches with status 200" in new TestCase {
         val expectedPath = s"$secureMessageServiceUrl/admin/message/brake/gmc/batches"
-        when(mockHttp.GET[HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any()))
-          .thenReturn(Future.successful(HttpResponse(Status.OK, Some(getGmcBatchesResultJson))))
+        when(
+          mockHttp
+            .GET[HttpResponse](ArgumentMatchers.eq(expectedPath), ArgumentMatchers.any[Seq[(String, String)]], ArgumentMatchers.any[Seq[(String, String)]])(
+              ArgumentMatchers.any[HttpReads[HttpResponse]],
+              ArgumentMatchers.any[HeaderCarrier],
+              ArgumentMatchers.any[ExecutionContext]))
+          .thenReturn(Future.successful(HttpResponse(Status.OK, getGmcBatchesResultJson, Map.empty)))
 
         val result = app.injector.instanceOf[MessageConnector].getGmcBatches("v4").futureValue
         result.status mustBe Status.OK
@@ -247,7 +367,12 @@ class MessageConnectorSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
 
       "return a BAD GATEWAY with an error message when an error is thrown" in new TestCase {
         val expectedPath = s"$secureMessageServiceUrl/admin/message/brake/gmc/batches"
-        when(mockHttp.GET[HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any()))
+        when(
+          mockHttp
+            .GET[HttpResponse](ArgumentMatchers.eq(expectedPath), ArgumentMatchers.any[Seq[(String, String)]], ArgumentMatchers.any[Seq[(String, String)]])(
+              ArgumentMatchers.any[HttpReads[HttpResponse]],
+              ArgumentMatchers.any[HeaderCarrier],
+              ArgumentMatchers.any[ExecutionContext]))
           .thenReturn(Future.failed(new TimeoutException("timeout error")))
         val result = app.injector.instanceOf[MessageConnector].getGmcBatches("v4").futureValue
         result.status mustBe Status.BAD_GATEWAY
@@ -259,8 +384,14 @@ class MessageConnectorSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
       "return a valid sequence of batches with status 200" in new TestCase {
         val expectedPath = s"$secureMessageServiceUrl/admin/message/brake/random"
 
-        when(mockHttp.POST[GmcBatch, HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any(), any()))
-          .thenReturn(Future.successful(HttpResponse(Status.OK, Some(getRandomMessagePreviewResultJson))))
+        when(
+          mockHttp.POST[GmcBatch, HttpResponse](ArgumentMatchers.eq(expectedPath), ArgumentMatchers.any[GmcBatch], ArgumentMatchers.any[Seq[(String, String)]])(
+            ArgumentMatchers.any[Writes[GmcBatch]],
+            ArgumentMatchers.any[HttpReads[HttpResponse]],
+            ArgumentMatchers.any[HeaderCarrier],
+            ArgumentMatchers.any[ExecutionContext]
+          ))
+          .thenReturn(Future.successful(HttpResponse(Status.OK, getRandomMessagePreviewResultJson, Map.empty)))
         val result = app.injector.instanceOf[MessageConnector].getRandomMessagePreview(gmcBatchV4).futureValue
         result.status mustBe Status.OK
         result.json mustBe getRandomMessagePreviewResultJson
@@ -269,7 +400,13 @@ class MessageConnectorSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
       "return a BAD GATEWAY with an error message when an error is thrown" in new TestCase {
         val expectedPath = s"$secureMessageServiceUrl/admin/message/brake/random"
 
-        when(mockHttp.POST[GmcBatch, HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any(), any()))
+        when(
+          mockHttp.POST[GmcBatch, HttpResponse](ArgumentMatchers.eq(expectedPath), ArgumentMatchers.any[GmcBatch], ArgumentMatchers.any[Seq[(String, String)]])(
+            ArgumentMatchers.any[Writes[GmcBatch]],
+            ArgumentMatchers.any[HttpReads[HttpResponse]],
+            ArgumentMatchers.any[HeaderCarrier],
+            ArgumentMatchers.any[ExecutionContext]
+          ))
           .thenReturn(Future.failed(new TimeoutException("timeout error")))
 
         val result = app.injector.instanceOf[MessageConnector].getRandomMessagePreview(gmcBatchV4).futureValue
@@ -282,8 +419,17 @@ class MessageConnectorSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
       "return a valid sequence of batches with status 200" in new TestCase {
         val expectedPath = s"$secureMessageServiceUrl/admin/message/brake/accept"
 
-        when(mockHttp.POST[GmcBatchApproval, HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any(), any()))
-          .thenReturn(Future.successful(HttpResponse(Status.OK, Some(Json.obj()))))
+        when(
+          mockHttp.POST[GmcBatchApproval, HttpResponse](
+            ArgumentMatchers.eq(expectedPath),
+            ArgumentMatchers.any[GmcBatchApproval],
+            ArgumentMatchers.any[Seq[(String, String)]])(
+            ArgumentMatchers.any[Writes[GmcBatchApproval]],
+            ArgumentMatchers.any[HttpReads[HttpResponse]],
+            ArgumentMatchers.any[HeaderCarrier],
+            ArgumentMatchers.any[ExecutionContext]
+          ))
+          .thenReturn(Future.successful(HttpResponse(Status.OK, Json.obj(), Map.empty)))
 
         val result = app.injector.instanceOf[MessageConnector].approveGmcBatch(gmcBatchApprovalV4).futureValue
         result.status mustBe Status.OK
@@ -291,7 +437,16 @@ class MessageConnectorSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
 
       "return a BAD GATEWAY with an error message when an error is thrown" in new TestCase {
         val expectedPath = s"$secureMessageServiceUrl/admin/message/brake/accept"
-        when(mockHttp.POST[GmcBatchApproval, HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any(), any()))
+        when(
+          mockHttp.POST[GmcBatchApproval, HttpResponse](
+            ArgumentMatchers.eq(expectedPath),
+            ArgumentMatchers.any[GmcBatchApproval],
+            ArgumentMatchers.any[Seq[(String, String)]])(
+            ArgumentMatchers.any[Writes[GmcBatchApproval]],
+            ArgumentMatchers.any[HttpReads[HttpResponse]],
+            ArgumentMatchers.any[HeaderCarrier],
+            ArgumentMatchers.any[ExecutionContext]
+          ))
           .thenReturn(Future.failed(new TimeoutException("timeout error")))
         val result = app.injector.instanceOf[MessageConnector].approveGmcBatch(gmcBatchApprovalV4).futureValue
         result.status mustBe Status.BAD_GATEWAY
@@ -302,8 +457,17 @@ class MessageConnectorSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
     "rejectGmcBatch - v4 message" should {
       "return a valid sequence of batches with status 200" in new TestCase {
         val expectedPath = s"$secureMessageServiceUrl/admin/message/brake/reject"
-        when(mockHttp.POST[GmcBatchApproval, HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any(), any()))
-          .thenReturn(Future.successful(HttpResponse(Status.OK, Some(Json.obj()))))
+        when(
+          mockHttp.POST[GmcBatchApproval, HttpResponse](
+            ArgumentMatchers.eq(expectedPath),
+            ArgumentMatchers.any[GmcBatchApproval],
+            ArgumentMatchers.any[Seq[(String, String)]])(
+            ArgumentMatchers.any[Writes[GmcBatchApproval]],
+            ArgumentMatchers.any[HttpReads[HttpResponse]],
+            ArgumentMatchers.any[HeaderCarrier],
+            ArgumentMatchers.any[ExecutionContext]
+          ))
+          .thenReturn(Future.successful(HttpResponse(Status.OK, Json.obj(), Map.empty)))
 
         val result = app.injector.instanceOf[MessageConnector].rejectGmcBatch(gmcBatchApprovalV4).futureValue
         result.status mustBe Status.OK
@@ -311,7 +475,16 @@ class MessageConnectorSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
 
       "return a BAD GATEWAY with an error message when an error is thrown" in new TestCase {
         val expectedPath = s"$secureMessageServiceUrl/admin/message/brake/reject"
-        when(mockHttp.POST[GmcBatchApproval, HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any(), any()))
+        when(
+          mockHttp.POST[GmcBatchApproval, HttpResponse](
+            ArgumentMatchers.eq(expectedPath),
+            ArgumentMatchers.any[GmcBatchApproval],
+            ArgumentMatchers.any[Seq[(String, String)]])(
+            ArgumentMatchers.any[Writes[GmcBatchApproval]],
+            ArgumentMatchers.any[HttpReads[HttpResponse]],
+            ArgumentMatchers.any[HeaderCarrier],
+            ArgumentMatchers.any[ExecutionContext]
+          ))
           .thenReturn(Future.failed(new TimeoutException("timeout error")))
         val result = app.injector.instanceOf[MessageConnector].rejectGmcBatch(gmcBatchApprovalV4).futureValue
         result.status mustBe Status.BAD_GATEWAY
@@ -323,8 +496,14 @@ class MessageConnectorSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
   "sendMessage" should {
     "return 200 on successful call to message" in new TestCase {
       val expectedPath = s"$serviceUrl/messages"
-      when(mockHttp.POST[JsValue, HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any(), any()))
-        .thenReturn(Future.successful(HttpResponse(Status.OK, Some(Json.obj()))))
+      when(
+        mockHttp.POST[JsValue, HttpResponse](ArgumentMatchers.eq(expectedPath), ArgumentMatchers.any[JsValue], ArgumentMatchers.any[Seq[(String, String)]])(
+          ArgumentMatchers.any[Writes[JsValue]],
+          ArgumentMatchers.any[HttpReads[HttpResponse]],
+          ArgumentMatchers.any[HeaderCarrier],
+          ArgumentMatchers.any[ExecutionContext]
+        ))
+        .thenReturn(Future.successful(HttpResponse(Status.OK, Json.obj(), Map.empty)))
 
       val result = app.injector.instanceOf[MessageConnector].sendMessage(JsString("")).futureValue
       result.status mustBe Status.OK
@@ -332,7 +511,13 @@ class MessageConnectorSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
 
     "return a BAD GATEWAY with an error message when an error is thrown" in new TestCase {
       val expectedPath = s"$serviceUrl/messages"
-      when(mockHttp.POST[JsValue, HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any(), any()))
+      when(
+        mockHttp.POST[JsValue, HttpResponse](ArgumentMatchers.eq(expectedPath), ArgumentMatchers.any[JsValue], ArgumentMatchers.any[Seq[(String, String)]])(
+          ArgumentMatchers.any[Writes[JsValue]],
+          ArgumentMatchers.any[HttpReads[HttpResponse]],
+          ArgumentMatchers.any[HeaderCarrier],
+          ArgumentMatchers.any[ExecutionContext]
+        ))
         .thenReturn(Future.failed(new TimeoutException("timeout error")))
       val result = app.injector.instanceOf[MessageConnector].sendMessage(JsString("")).futureValue
       result.status mustBe Status.BAD_GATEWAY
@@ -459,15 +644,30 @@ class MessageConnectorSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
 
     lazy val mockServicesConfig: ServicesConfig = mock[ServicesConfig]
 
-    def messageConnectorHttpMock(expectedPath: String, jsonBody: JsValue, status: Int): MessageConnector = {
+    def messageConnectorHttpMock(expectedPath: String): MessageConnector = {
       val mockHttp: HttpClient = mock[HttpClient]
-      when(mockHttp.GET[HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any()))
-        .thenReturn(Future.successful(HttpResponse(status, Some(jsonBody))))
-      when(mockHttp.POST[AllowlistEntry, HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any(), any()))
-        .thenReturn(Future.successful(HttpResponse(status, Some(jsonBody))))
-      when(mockHttp.POST[AllowlistEntry, HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any(), any()))
-        .thenReturn(Future.successful(HttpResponse(status, Some(jsonBody))))
-      when(mockHttp.POSTEmpty[RescindmentAlertsResult](ArgumentMatchers.eq(expectedPath))(any(), any(), any()))
+      when(
+        mockHttp.GET[HttpResponse](ArgumentMatchers.eq(expectedPath), ArgumentMatchers.any[Seq[(String, String)]], ArgumentMatchers.any[Seq[(String, String)]])(
+          ArgumentMatchers.any[HttpReads[HttpResponse]],
+          ArgumentMatchers.any[HeaderCarrier],
+          ArgumentMatchers.any[ExecutionContext]))
+        .thenReturn(Future.successful(HttpResponse(Status.OK, Json.obj(), Map.empty)))
+      when(
+        mockHttp.POST[AllowlistEntry, HttpResponse](
+          ArgumentMatchers.eq(expectedPath),
+          ArgumentMatchers.any[AllowlistEntry],
+          ArgumentMatchers.any[Seq[(String, String)]])(
+          ArgumentMatchers.any[Writes[AllowlistEntry]],
+          ArgumentMatchers.any[HttpReads[HttpResponse]],
+          ArgumentMatchers.any[HeaderCarrier],
+          ArgumentMatchers.any[ExecutionContext]
+        ))
+        .thenReturn(Future.successful(HttpResponse(Status.OK, Json.obj(), Map.empty)))
+      when(
+        mockHttp.POSTEmpty[RescindmentAlertsResult](ArgumentMatchers.eq(expectedPath))(
+          ArgumentMatchers.any[HttpReads[RescindmentAlertsResult]],
+          ArgumentMatchers.any[HeaderCarrier],
+          ArgumentMatchers.any[ExecutionContext]))
         .thenReturn(Future.successful(RescindmentAlertsResult(1, 1, 1, 1)))
 
       new MessageConnector(mockHttp, mockServicesConfig)
@@ -475,13 +675,28 @@ class MessageConnectorSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
 
     def messageConnectorHttpMock(expectedPath: String, error: Throwable): MessageConnector = {
       val mockHttp: HttpClient = mock[DefaultHttpClient]
-      when(mockHttp.GET[HttpResponse](ArgumentMatchers.eq(expectedPath), any(), any())(any(), any(), any()))
+      when(
+        mockHttp.GET[HttpResponse](ArgumentMatchers.eq(expectedPath), ArgumentMatchers.any[Seq[(String, String)]], ArgumentMatchers.any[Seq[(String, String)]])(
+          ArgumentMatchers.any[HttpReads[HttpResponse]],
+          ArgumentMatchers.any[HeaderCarrier],
+          ArgumentMatchers.any[ExecutionContext]))
         .thenReturn(Future.failed(error))
-      when(mockHttp.POST[AllowlistEntry, HttpResponse](ArgumentMatchers.eq(expectedPath), any())(any(), any(), any(), any()))
+      when(
+        mockHttp.POST[AllowlistEntry, HttpResponse](
+          ArgumentMatchers.eq(expectedPath),
+          ArgumentMatchers.any[AllowlistEntry],
+          ArgumentMatchers.any[Seq[(String, String)]])(
+          ArgumentMatchers.any[Writes[AllowlistEntry]],
+          ArgumentMatchers.any[HttpReads[HttpResponse]],
+          ArgumentMatchers.any[HeaderCarrier],
+          ArgumentMatchers.any[ExecutionContext]
+        ))
         .thenReturn(Future.failed(error))
-      when(mockHttp.POST[AllowlistEntry, HttpResponse](ArgumentMatchers.eq(expectedPath), any())(any(), any(), any(), any()))
-        .thenReturn(Future.failed(error))
-      when(mockHttp.POSTEmpty[RescindmentAlertsResult](ArgumentMatchers.eq(expectedPath))(any(), any(), any()))
+      when(
+        mockHttp.POSTEmpty[RescindmentAlertsResult](ArgumentMatchers.eq(expectedPath))(
+          ArgumentMatchers.any[HttpReads[RescindmentAlertsResult]],
+          ArgumentMatchers.any[HeaderCarrier],
+          ArgumentMatchers.any[ExecutionContext]))
         .thenReturn(Future.failed(error))
       new MessageConnector(mockHttp, mockServicesConfig)
     }

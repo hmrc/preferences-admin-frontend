@@ -21,7 +21,7 @@ import org.mockito.Mockito._
 import org.scalatest.concurrent.{ IntegrationPatience, ScalaFutures }
 import org.scalatestplus.play.PlaySpec
 import play.api.http.Status
-import play.api.libs.json.Json
+import play.api.libs.json.{ JsValue, Json }
 import uk.gov.hmrc.http.{ HeaderCarrier, HttpResponse }
 import uk.gov.hmrc.preferencesadminfrontend.model._
 import uk.gov.hmrc.preferencesadminfrontend.utils.SpecBase
@@ -36,7 +36,7 @@ class MessageServiceSpec extends PlaySpec with ScalaFutures with IntegrationPati
   "getGmcBatches" should {
 
     "return a valid update result" in new MessageServiceTestCase {
-      val response = HttpResponse(Status.OK, Some(validGmcBatchSeqResponseJson))
+      val response = HttpResponse(Status.OK, validGmcBatchSeqResponseJson, Map.empty)
       when(messageConnectorMock.getGmcBatches("v3")).thenReturn(Future.successful(response))
       when(messageConnectorMock.getGmcBatches("v4")).thenReturn(Future.successful(response))
       messageService.getGmcBatches().futureValue mustBe Left(Seq(gmcBatch, gmcBatch.copy(version = Some("v4"))))
@@ -44,7 +44,7 @@ class MessageServiceSpec extends PlaySpec with ScalaFutures with IntegrationPati
 
     "return an error message if status is 200 but there no valid batches returned" in new MessageServiceTestCase {
       val responseJson = Json.parse("""[{"blah": "test"}]""".stripMargin)
-      val response = HttpResponse(Status.OK, Some(responseJson))
+      val response = HttpResponse(Status.OK, responseJson, Map.empty)
       when(messageConnectorMock.getGmcBatches("v3")).thenReturn(Future.successful(response))
       when(messageConnectorMock.getGmcBatches("v4")).thenReturn(Future.successful(response))
       messageService.getGmcBatches().futureValue mustBe
@@ -52,8 +52,8 @@ class MessageServiceSpec extends PlaySpec with ScalaFutures with IntegrationPati
     }
 
     "return a response body if status isn't 200" in new MessageServiceTestCase {
-      val response = HttpResponse(Status.NOT_FOUND, Some(validGmcBatchSeqResponseJson))
-      val responseForV4 = HttpResponse(Status.NOT_FOUND, Some(validGmcBatchSeqResponseJson))
+      val response = HttpResponse(Status.NOT_FOUND, validGmcBatchSeqResponseJson, Map.empty)
+      val responseForV4 = HttpResponse(Status.NOT_FOUND, validGmcBatchSeqResponseJson, Map.empty)
       when(messageConnectorMock.getGmcBatches("v3")).thenReturn(Future.successful(response))
       when(messageConnectorMock.getGmcBatches("v4")).thenReturn(Future.successful(responseForV4))
       messageService.getGmcBatches().futureValue mustBe
@@ -73,8 +73,8 @@ class MessageServiceSpec extends PlaySpec with ScalaFutures with IntegrationPati
     }
 
     "return a response body if status isn't 200 for v3 and v4 batch is returned" in new MessageServiceTestCase {
-      val response = HttpResponse(Status.NOT_FOUND, Some(validGmcBatchSeqResponseJson))
-      val responseForV4 = HttpResponse(Status.OK, Some(validGmcBatchSeqResponseJson))
+      val response = HttpResponse(Status.NOT_FOUND, validGmcBatchSeqResponseJson, Map.empty)
+      val responseForV4 = HttpResponse(Status.OK, validGmcBatchSeqResponseJson, Map.empty)
       when(messageConnectorMock.getGmcBatches("v3")).thenReturn(Future.successful(response))
       when(messageConnectorMock.getGmcBatches("v4")).thenReturn(Future.successful(responseForV4))
       messageService.getGmcBatches().futureValue mustBe Left(Seq(gmcBatch.copy(version = Some("v4"))))
@@ -84,7 +84,7 @@ class MessageServiceSpec extends PlaySpec with ScalaFutures with IntegrationPati
   "getRandomMessagePreview" should {
 
     "return a valid alert result" in new MessageServiceTestCase {
-      val response = HttpResponse(Status.OK, Some(validMessagePreviewResponseJson))
+      val response = HttpResponse(Status.OK, validMessagePreviewResponseJson, Map.empty)
       when(messageConnectorMock.getRandomMessagePreview(gmcBatch)).thenReturn(Future.successful(response))
       messageService.getRandomMessagePreview(gmcBatch).futureValue mustBe Left(
         BatchMessagePreview(
@@ -104,14 +104,14 @@ class MessageServiceSpec extends PlaySpec with ScalaFutures with IntegrationPati
 
     "return an error message if status is 200 but there no valid message preview returned" in new MessageServiceTestCase {
       val responseJson = Json.parse("""[{"blah": "test"}]""".stripMargin)
-      val response = HttpResponse(Status.OK, Some(responseJson))
+      val response = HttpResponse(Status.OK, responseJson, Map.empty)
       when(messageConnectorMock.getRandomMessagePreview(gmcBatch)).thenReturn(Future.successful(response))
       messageService.getRandomMessagePreview(gmcBatch).futureValue mustBe
         Right("The message preview retrieved does not appear to be valid.")
     }
 
     "return a response body if status isn't 200" in new MessageServiceTestCase {
-      val response = HttpResponse(Status.NOT_FOUND, Some(validMessagePreviewResponseJson))
+      val response = HttpResponse(Status.NOT_FOUND, validMessagePreviewResponseJson, Map.empty)
       when(messageConnectorMock.getRandomMessagePreview(gmcBatch)).thenReturn(Future.successful(response))
       messageService.getRandomMessagePreview(gmcBatch).futureValue mustBe
         Right(
@@ -128,14 +128,14 @@ class MessageServiceSpec extends PlaySpec with ScalaFutures with IntegrationPati
 
   "sendAddHocMessage" should {
     "return a message id if successfully created" in new MessageServiceTestCase {
-      val response = HttpResponse(Status.CREATED, Some(Json.obj(("id" -> "messageid"))))
-      when(messageConnectorMock.sendMessage(any())(any())).thenReturn(Future.successful(response))
+      val response = HttpResponse(Status.CREATED, Json.obj(("id" -> "messageid")), Map.empty)
+      when(messageConnectorMock.sendMessage(any[JsValue])(any[HeaderCarrier])).thenReturn(Future.successful(response))
       messageService.sendPenalyChargeApologyMessage("foo@test.com", "1234567890").futureValue mustBe Right(""""messageid"""")
     }
     "return error on message creation failure" in new MessageServiceTestCase {
       val errorMessage = "error message"
       val response = HttpResponse(Status.BAD_REQUEST, errorMessage)
-      when(messageConnectorMock.sendMessage(any())(any())).thenReturn(Future.successful(response))
+      when(messageConnectorMock.sendMessage(any[JsValue])(any[HeaderCarrier])).thenReturn(Future.successful(response))
       messageService.sendPenalyChargeApologyMessage("foo@test.com", "1234567890").futureValue mustBe (Left((Status.BAD_REQUEST, errorMessage)))
     }
   }

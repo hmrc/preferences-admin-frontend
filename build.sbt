@@ -19,13 +19,17 @@ lazy val microservice = Project(appName, file("."))
   .settings(majorVersion := 1)
   .settings(playSettings: _*)
   .settings(scalaSettings: _*)
-  .settings(publishingSettings: _*)
   .settings(defaultSettings(): _*)
   .settings(
-    scalaVersion := "2.12.12",
+    scalaVersion := "2.13.8",
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
     retrieveManaged := true,
     evictionWarningOptions in update := EvictionWarningOptions.default.withWarnScalaVersionEviction(false)
+  )
+  .settings(
+    // suppress warnings in generated routes files & html for unused-imports
+    scalacOptions += "-Wconf:src=routes/.*:s",
+    scalacOptions += "-Wconf:src=html/.*:s"
   )
   .settings(
     TwirlKeys.templateImports ++= Seq(

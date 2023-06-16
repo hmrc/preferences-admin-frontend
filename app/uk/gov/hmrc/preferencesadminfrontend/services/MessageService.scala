@@ -16,9 +16,7 @@
 
 package uk.gov.hmrc.preferencesadminfrontend.services
 
-import java.util.UUID
-
-import org.apache.commons.codec.binary.Base64
+import java.util.{ Base64, UUID }
 import javax.inject.Inject
 import play.api.http.Status._
 import play.api.libs.json.{ JsError, JsObject, JsSuccess, Json, __ }
@@ -85,7 +83,7 @@ class MessageService @Inject()(messageConnector: MessageConnector) {
   type ResponseBody = String
   type MessageId = String
 
-  val messageContent = Base64.encodeBase64String(penaltyChargeApologies().toString().getBytes("UTF-8"))
+  val messageContent = Base64.getEncoder.encode(penaltyChargeApologies().toString().getBytes("UTF-8"))
 
   def sendPenalyChargeApologyMessage(email: String, sautr: String)(
     implicit hc: HeaderCarrier,
@@ -105,8 +103,9 @@ class MessageService @Inject()(messageConnector: MessageConnector) {
       .map(response =>
         response.status match {
           case CREATED =>
-            response.json.validate((__ \ 'id).json.pick) match {
-              case JsSuccess(value, path) => Right(Json.stringify(value))
+            response.json.validate((__ \ "id").json.pick) match {
+              case JsSuccess(value, _) => Right(Json.stringify(value))
+              case JsError(_)          => Left((response.status, response.body))
             }
           case _ => Left((response.status, response.body))
       })

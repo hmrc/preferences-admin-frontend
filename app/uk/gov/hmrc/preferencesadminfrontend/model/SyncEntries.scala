@@ -18,7 +18,6 @@ package uk.gov.hmrc.preferencesadminfrontend.model
 
 import play.api.data.Form
 import play.api.data.Forms.{ boolean, mapping, text }
-import play.api.data.validation.{ Constraint, Invalid, Valid }
 import play.api.libs.json.{ Json, OWrites }
 
 case class SyncEntries(entries: String, accepted: Boolean)

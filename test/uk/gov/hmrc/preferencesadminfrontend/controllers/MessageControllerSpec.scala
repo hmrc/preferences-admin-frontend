@@ -16,33 +16,23 @@
 
 package uk.gov.hmrc.preferencesadminfrontend.controllers
 
-import org.apache.commons.lang3.exception.ExceptionContext
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.{ times, verify, when }
-import org.scalamock.matchers.Matchers
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.mvc.MessagesControllerComponents
-import play.api.test.CSRFTokenHelper.CSRFRequest
 import play.api.test.FakeRequest
 import play.api.test.Helpers.status
 import play.api.test.Helpers._
-import uk.gov.hmrc.http.{ HeaderCarrier, RequestChain }
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
 import uk.gov.hmrc.preferencesadminfrontend.controllers.model.User
-import uk.gov.hmrc.preferencesadminfrontend.model.{ MigrationEntries, PrincipalUserIds }
 import uk.gov.hmrc.preferencesadminfrontend.services.{ Identifier, MigratePreferencesService, MigrationResult }
 import uk.gov.hmrc.preferencesadminfrontend.views.html.{ migration_entries, migration_status, migration_summary }
 import org.mockito.ArgumentMatchers._
-import play.api.libs.json.{ JsValue, Json }
-import play.api.libs.json.Reads.path
-import sttp.model.HeaderNames.Host
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import javax.inject.Inject
+import play.api.libs.json.Json
 import scala.concurrent.{ ExecutionContext, Future }
-import scala.math.BigInt.long2bigInt
 
 class MessageControllerSpec extends PlaySpec with GuiceOneAppPerSuite {
   val controller = app.injector.instanceOf[MessageController]
@@ -95,7 +85,7 @@ class MessageControllerSpec extends PlaySpec with GuiceOneAppPerSuite {
 
       val result = controller.check()(fakeRequestWithSession)
       status(result) mustBe (200)
-      verify(migratePreferenceServiceMock, times(1)).migrate(any(), any())(any(), any())
+      verify(migratePreferenceServiceMock, times(1)).migrate(any[List[Identifier]], any[Boolean])(any[HeaderCarrier], any[ExecutionContext])
     }
   }
 
@@ -118,7 +108,7 @@ class MessageControllerSpec extends PlaySpec with GuiceOneAppPerSuite {
 
       val result = controller.sync()(fakeRequest)
       status(result) mustBe (200)
-      verify(migratePreferenceServiceMock, times(1)).migrate(any(), any())(any(), any())
+      verify(migratePreferenceServiceMock, times(1)).migrate(any[List[Identifier]], any[Boolean])(any[HeaderCarrier], any[ExecutionContext])
     }
     "do dryRun false when sync is confirmed" in new TestClass {
       val identifiers = Json.toJson(List(Identifier("1", "2"))).toString()
@@ -140,7 +130,7 @@ class MessageControllerSpec extends PlaySpec with GuiceOneAppPerSuite {
 
       val result = controller.sync()(fakeRequest)
       status(result) mustBe (200)
-      verify(migratePreferenceServiceMock, times(1)).migrate(any(), any())(any(), any())
+      verify(migratePreferenceServiceMock, times(1)).migrate(any[List[Identifier]], any[Boolean])(any[HeaderCarrier], any[ExecutionContext])
     }
   }
 

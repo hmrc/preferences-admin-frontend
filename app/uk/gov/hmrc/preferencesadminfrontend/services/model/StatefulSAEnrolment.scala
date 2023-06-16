@@ -17,7 +17,7 @@
 package uk.gov.hmrc.preferencesadminfrontend.services.model
 
 import uk.gov.hmrc.preferencesadminfrontend.model.UserState.Activated
-import uk.gov.hmrc.preferencesadminfrontend.model.{ PrincipalUserId, UserState }
+import uk.gov.hmrc.preferencesadminfrontend.model.UserState
 
 sealed trait StatefulSAEnrolment
 

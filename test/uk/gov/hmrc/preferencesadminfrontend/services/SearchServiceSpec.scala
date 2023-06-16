@@ -24,12 +24,13 @@ import org.scalatestplus.play.PlaySpec
 import play.api.Configuration
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditResult
+import uk.gov.hmrc.play.audit.model.DataEvent
 import uk.gov.hmrc.preferencesadminfrontend.connectors._
 import uk.gov.hmrc.preferencesadminfrontend.services.model.{ Email, EntityId, Preference, TaxIdentifier }
 import uk.gov.hmrc.preferencesadminfrontend.utils.SpecBase
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ ExecutionContext, Future }
 
 class SearchServiceSpec extends PlaySpec with ScalaFutures with IntegrationPatience {
 
@@ -44,7 +45,7 @@ class SearchServiceSpec extends PlaySpec with ScalaFutures with IntegrationPatie
       searchService.searchPreference(validNino).futureValue mustBe List(optedInPreference)
 
       val expectedAuditEvent = searchService.createSearchEvent("me", validNino, Some(optedInPreference))
-      verify(auditConnectorMock).sendMergedEvent(argThat(isSimilar(expectedAuditEvent)))(any(), any())
+      verify(auditConnectorMock).sendMergedEvent(argThat(isSimilar(expectedAuditEvent)))(any[HeaderCarrier], any[ExecutionContext])
     }
 
     "return preference for itsa user when it exists" in new SearchServiceTestCase {
@@ -54,7 +55,7 @@ class SearchServiceSpec extends PlaySpec with ScalaFutures with IntegrationPatie
       searchService.searchPreference(validItsa).futureValue mustBe List(optedInPreference)
 
       val expectedAuditEvent = searchService.createSearchEvent("me", validItsa, Some(optedInPreference))
-      verify(auditConnectorMock).sendMergedEvent(argThat(isSimilar(expectedAuditEvent)))(any(), any())
+      verify(auditConnectorMock).sendMergedEvent(argThat(isSimilar(expectedAuditEvent)))(any[HeaderCarrier], any[ExecutionContext])
     }
 
     "return preference for utr user when it exists" in new SearchServiceTestCase {
@@ -64,7 +65,7 @@ class SearchServiceSpec extends PlaySpec with ScalaFutures with IntegrationPatie
       searchService.searchPreference(validSaUtr).futureValue mustBe List(optedInPreference)
 
       val expectedAuditEvent = searchService.createSearchEvent("me", validSaUtr, Some(optedInPreference))
-      verify(auditConnectorMock).sendMergedEvent(argThat(isSimilar(expectedAuditEvent)))(any(), any())
+      verify(auditConnectorMock).sendMergedEvent(argThat(isSimilar(expectedAuditEvent)))(any[HeaderCarrier], any[ExecutionContext])
     }
 
     "return preference for utr user who has opted out" in new SearchServiceTestCase {
@@ -74,7 +75,7 @@ class SearchServiceSpec extends PlaySpec with ScalaFutures with IntegrationPatie
       searchService.searchPreference(validSaUtr).futureValue mustBe List(optedOutPreference)
 
       val expectedAuditEvent = searchService.createSearchEvent("me", validSaUtr, Some(optedOutPreference))
-      verify(auditConnectorMock).sendMergedEvent(argThat(isSimilar(expectedAuditEvent)))(any(), any())
+      verify(auditConnectorMock).sendMergedEvent(argThat(isSimilar(expectedAuditEvent)))(any[HeaderCarrier], any[ExecutionContext])
     }
 
     "return None if the saUtr identifier does not exist" in new SearchServiceTestCase {
@@ -86,7 +87,7 @@ class SearchServiceSpec extends PlaySpec with ScalaFutures with IntegrationPatie
       searchService.searchPreference(validSaUtr).futureValue mustBe Nil
 
       val expectedAuditEvent = searchService.createSearchEvent("me", validSaUtr, None)
-      verify(auditConnectorMock).sendMergedEvent(argThat(isSimilar(expectedAuditEvent)))(any(), any())
+      verify(auditConnectorMock).sendMergedEvent(argThat(isSimilar(expectedAuditEvent)))(any[HeaderCarrier], any[ExecutionContext])
     }
 
     "return preference for email address user when it exists" in new SearchServiceTestCase {
@@ -129,25 +130,25 @@ class SearchServiceSpec extends PlaySpec with ScalaFutures with IntegrationPatie
         .thenReturn(Future.successful(optedInPreferenceDetails), Future.successful(optedOutPreferenceDetails))
       when(entityResolverConnectorMock.getTaxIdentifiers(validSaUtr)).thenReturn(Future.successful(taxIdentifiers))
       when(entityResolverConnectorMock.optOut(validSaUtr)).thenReturn(Future.successful(OptedOut))
-      when(auditConnectorMock.sendEvent(any())(any(), any())).thenReturn(Future.successful(AuditResult.Success))
+      when(auditConnectorMock.sendEvent(any[DataEvent])(any[HeaderCarrier], any[ExecutionContext])).thenReturn(Future.successful(AuditResult.Success))
 
       searchService.optOut(validSaUtr, "my optOut reason").futureValue mustBe OptedOut
 
       val expectedAuditEvent =
         searchService.createOptOutEvent("me", validSaUtr, Some(optedInPreference), Some(optedOutPreference), OptedOut, "my optOut reason")
-      verify(auditConnectorMock).sendMergedEvent(argThat(isSimilar(expectedAuditEvent)))(any(), any())
+      verify(auditConnectorMock).sendMergedEvent(argThat(isSimilar(expectedAuditEvent)))(any[HeaderCarrier], any[ExecutionContext])
     }
 
     "create an audit event when the user is not opted out as it is not found" in new SearchServiceTestCase {
       when(entityResolverConnectorMock.getPreferenceDetails(validSaUtr)).thenReturn(Future.successful(None), Future.successful(None))
       when(entityResolverConnectorMock.getTaxIdentifiers(validSaUtr)).thenReturn(Future.successful(Seq.empty))
       when(entityResolverConnectorMock.optOut(validSaUtr)).thenReturn(Future.successful(PreferenceNotFound))
-      when(auditConnectorMock.sendEvent(any())(any(), any())).thenReturn(Future.successful(AuditResult.Success))
+      when(auditConnectorMock.sendEvent(any[DataEvent])(any[HeaderCarrier], any[ExecutionContext])).thenReturn(Future.successful(AuditResult.Success))
 
       searchService.optOut(validSaUtr, "my optOut reason").futureValue mustBe PreferenceNotFound
 
       val expectedAuditEvent = searchService.createOptOutEvent("me", validSaUtr, None, None, PreferenceNotFound, "my optOut reason")
-      verify(auditConnectorMock).sendMergedEvent(argThat(isSimilar(expectedAuditEvent)))(any(), any())
+      verify(auditConnectorMock).sendMergedEvent(argThat(isSimilar(expectedAuditEvent)))(any[HeaderCarrier], any[ExecutionContext])
     }
 
     "create an audit event when the user is already opted out" in new SearchServiceTestCase {
@@ -155,13 +156,13 @@ class SearchServiceSpec extends PlaySpec with ScalaFutures with IntegrationPatie
         .thenReturn(Future.successful(optedOutPreferenceDetails), Future.successful(optedOutPreferenceDetails))
       when(entityResolverConnectorMock.getTaxIdentifiers(validSaUtr)).thenReturn(Future.successful(taxIdentifiers))
       when(entityResolverConnectorMock.optOut(validSaUtr)).thenReturn(Future.successful(AlreadyOptedOut))
-      when(auditConnectorMock.sendEvent(any())(any(), any())).thenReturn(Future.successful(AuditResult.Success))
+      when(auditConnectorMock.sendEvent(any[DataEvent])(any[HeaderCarrier], any[ExecutionContext])).thenReturn(Future.successful(AuditResult.Success))
 
       searchService.optOut(validSaUtr, "my optOut reason").futureValue mustBe AlreadyOptedOut
 
       val expectedAuditEvent =
         searchService.createOptOutEvent("me", validSaUtr, Some(optedOutPreference), Some(optedOutPreference), AlreadyOptedOut, "my optOut reason")
-      verify(auditConnectorMock).sendMergedEvent(argThat(isSimilar(expectedAuditEvent)))(any(), any())
+      verify(auditConnectorMock).sendMergedEvent(argThat(isSimilar(expectedAuditEvent)))(any[HeaderCarrier], any[ExecutionContext])
     }
   }
 
@@ -308,12 +309,12 @@ class SearchServiceSpec extends PlaySpec with ScalaFutures with IntegrationPatie
       Some(PreferenceDetails(genericPaperless, genericUpdatedAt, None, email))
     }
 
-    def preferenceDetails(genericPaperless: Boolean, entityId: EntityId) = {
+    def preferenceDetailsList(genericPaperless: Boolean) = {
       val email = if (genericPaperless) Some(verifiedEmail) else None
       List(PreferenceDetails(genericPaperless, genericUpdatedAt, None, email))
     }
 
-    def multiplepreferenceDetails(genericPaperless: Boolean, entityId: EntityId) = {
+    def multiplepreferenceDetails(genericPaperless: Boolean) = {
       val email = if (genericPaperless) Some(verifiedEmail) else None
       List(
         PreferenceDetails(genericPaperless, genericUpdatedAt, None, email),
@@ -323,8 +324,8 @@ class SearchServiceSpec extends PlaySpec with ScalaFutures with IntegrationPatie
 
     val optedInPreferenceDetails = preferenceDetails(genericPaperless = true)
     val optedOutPreferenceDetails = preferenceDetails(genericPaperless = false)
-    val optedInPreferenceDetailsList = preferenceDetails(genericPaperless = true, entityId = EntityId(value = "x123"))
-    val optedInPreferenceDetailsList2 = multiplepreferenceDetails(genericPaperless = true, entityId = EntityId(value = "x123"))
+    val optedInPreferenceDetailsList = preferenceDetailsList(genericPaperless = true)
+    val optedInPreferenceDetailsList2 = multiplepreferenceDetails(genericPaperless = true)
 
     val taxIdentifiers = Seq(validSaUtr, validNino, validItsa)
 

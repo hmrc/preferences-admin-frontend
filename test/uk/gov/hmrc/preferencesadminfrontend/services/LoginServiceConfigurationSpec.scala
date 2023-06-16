@@ -20,7 +20,7 @@ import com.google.common.base.Charsets
 import com.google.common.io.BaseEncoding
 import com.typesafe.config.ConfigException.Missing
 import org.scalatestplus.play.PlaySpec
-import play.api.{ Configuration, Environment, Mode }
+import play.api.{ Configuration, Environment }
 import uk.gov.hmrc.preferencesadminfrontend.controllers.model.User
 
 class LoginServiceConfigurationSpec extends PlaySpec {
