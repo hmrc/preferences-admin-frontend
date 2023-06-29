@@ -34,7 +34,7 @@ import scala.util.Try
 class EntityResolverConnector @Inject()(httpClient: HttpClient, val servicesConfig: ServicesConfig) {
 
   val logger = Logger(getClass)
-  implicit val ef = Entity.formats
+  implicit val ef: Format[Entity] = Entity.formats
 
   def serviceUrl = servicesConfig.baseUrl("entity-resolver")
 
@@ -208,7 +208,7 @@ object PreferenceDetails {
         case _ => JsError(s"Expected value to be a date, was actually $json")
       }
   }
-  implicit val dateFormatDefault = new Format[DateTime] {
+  implicit val dateFormatDefault: Format[DateTime] = new Format[DateTime] {
     override def reads(json: JsValue): JsResult[DateTime] = JodaReads.DefaultJodaDateTimeReads.reads(json)
     override def writes(o: DateTime): JsValue = JodaWrites.JodaDateTimeNumberWrites.writes(o)
   }

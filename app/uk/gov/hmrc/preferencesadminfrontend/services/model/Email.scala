@@ -23,7 +23,7 @@ import play.api.libs.json._
 case class Email(address: String, verified: Boolean, verifiedOn: Option[DateTime], language: Option[String], hasBounces: Boolean, pendingEmail: Option[String])
 
 object Email {
-  implicit val dateFormatDefault = new Format[DateTime] {
+  implicit val dateFormatDefault: Format[DateTime] = new Format[DateTime] {
     override def reads(json: JsValue): JsResult[DateTime] = JodaReads.DefaultJodaDateTimeReads.reads(json)
     override def writes(o: DateTime): JsValue = JodaWrites.JodaDateTimeNumberWrites.writes(o)
   }
