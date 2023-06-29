@@ -1,31 +1,33 @@
-import com.lucidchart.sbt.scalafmt.ScalafmtCorePlugin.autoImport._
 import sbt.Keys._
 import sbt._
 import uk.gov.hmrc._
 import DefaultBuildSettings._
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin
 import uk.gov.hmrc.versioning.SbtGitVersioning.autoImport.majorVersion
-import uk.gov.hmrc.DefaultBuildSettings.oneForkedJvmPerTest
 
 val appName: String = "preferences-admin-frontend"
 
-lazy val playSettings: Seq[Setting[_]] = Seq.empty
 lazy val microservice = Project(appName, file("."))
   .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin)
   .settings(majorVersion := 1)
-  .settings(playSettings: _*)
   .settings(scalaSettings: _*)
   .settings(defaultSettings(): _*)
   .settings(
     scalaVersion := "2.13.8",
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
+    Test / parallelExecution := false,
+    Test / fork := false,
     retrieveManaged := true,
-    evictionWarningOptions in update := EvictionWarningOptions.default.withWarnScalaVersionEviction(false)
-  )
-  .settings(
-    // suppress warnings in generated routes files & html for unused-imports
-    scalacOptions += "-Wconf:src=routes/.*:s",
-    scalacOptions += "-Wconf:src=html/.*:s"
+    update / evictionWarningOptions := EvictionWarningOptions.default.withWarnScalaVersionEviction(false),
+    routesGenerator := InjectedRoutesGenerator,
+    scalacOptions ++= List(
+      "-feature",
+      "-language:postfixOps",
+      "-language:reflectiveCalls",
+      "-Xlint:-missing-interpolator",
+      "-Wconf:src=routes/.*:s",
+      "-Wconf:src=html/.*:s"
+    )
   )
   .settings(
     TwirlKeys.templateImports ++= Seq(
@@ -35,10 +37,10 @@ lazy val microservice = Project(appName, file("."))
       "controllers.routes._"
     )
   )
+  .configs(IntegrationTest)
+  .settings(inConfig(IntegrationTest)(Defaults.itSettings): _*)
   .settings(
-    scalafmtTestOnCompile in ThisBuild := true
+    DefaultBuildSettings.integrationTestSettings()
   )
-  .settings(resolvers ++= Seq(
-    Resolver.jcenterRepo
-  ))
+  .settings(resolvers ++= Seq(Resolver.jcenterRepo))
   .settings(ScoverageSettings())
