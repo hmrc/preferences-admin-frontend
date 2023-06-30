@@ -17,12 +17,15 @@
 package uk.gov.hmrc.preferencesadminfrontend.connectors
 
 import akka.actor.ActorSystem
+
 import javax.inject.{ Inject, Singleton }
 import play.api.Configuration
+import play.api.libs.json.Format
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.preferencesadminfrontend.services.model.TaxIdentifier
 import uk.gov.hmrc.http.HttpReads.Implicits._
+
 import scala.concurrent.{ ExecutionContext, Future }
 
 @Singleton
@@ -32,7 +35,7 @@ class PreferencesConnector @Inject()(
   val servicesConfig: ServicesConfig,
   val actorSystem: ActorSystem) {
 
-  implicit val ef = Entity.formats
+  implicit val ef: Format[Entity] = Entity.formats
 
   def serviceUrl = servicesConfig.baseUrl("preferences")
 

@@ -16,10 +16,10 @@
 
 package uk.gov.hmrc.preferencesadminfrontend.model
 
-import play.api.libs.json.{ JsArray, Json }
+import play.api.libs.json.{ JsArray, Json, OFormat }
 
 case class Allowlist(formIdList: JsArray)
 
 object Allowlist {
-  implicit val format = Json.format[Allowlist]
+  implicit val format: OFormat[Allowlist] = Json.format[Allowlist]
 }

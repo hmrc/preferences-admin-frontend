@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.preferencesadminfrontend.services.model
 
-import play.api.libs.json.Json
+import play.api.libs.json.{ Json, OFormat }
 
 case class TaxIdentifier(name: String, value: String) {
   val regime = name match {
@@ -30,5 +30,5 @@ case class TaxIdentifier(name: String, value: String) {
 }
 
 object TaxIdentifier {
-  implicit val format = Json.format[TaxIdentifier]
+  implicit val format: OFormat[TaxIdentifier] = Json.format[TaxIdentifier]
 }

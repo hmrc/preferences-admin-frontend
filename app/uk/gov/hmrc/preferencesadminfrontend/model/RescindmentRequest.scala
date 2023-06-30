@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.preferencesadminfrontend.model
 
-import play.api.libs.json.Json
+import play.api.libs.json.{ Json, OWrites }
 import uk.gov.hmrc.http.controllers.RestFormats
 
 case class RescindmentRequest(batchId: String, formId: String, date: String, reference: String, emailTemplateId: String)
 
 object RescindmentRequest extends RestFormats {
-  implicit val writes = Json.writes[RescindmentRequest]
+  implicit val writes: OWrites[RescindmentRequest] = Json.writes[RescindmentRequest]
 }
