@@ -31,3 +31,7 @@ GET         /migration                              uk.gov.hmrc.preferencesadmin
 POST        /migration                               uk.gov.hmrc.preferencesadminfrontend.controllers.MessageController.check()
 
 POST        /migrate                               uk.gov.hmrc.preferencesadminfrontend.controllers.MessageController.sync()
+
+
+# Debug email
+GET         /event/:transId                         uk.gov.hmrc.preferencesadminfrontend.controllers.EmailController.findEvent(transId: String)
