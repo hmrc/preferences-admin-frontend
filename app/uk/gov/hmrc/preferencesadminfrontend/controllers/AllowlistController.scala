@@ -65,13 +65,15 @@ class AllowlistController @Inject()(
       .fold(
         formWithErrors => Future.successful(BadRequest(allowlistAddView(formWithErrors))),
         addEntry => {
-          messageConnector
-            .addFormIdToAllowlist(addEntry)
-            .map(response =>
-              response.status match {
-                case CREATED => Redirect(routes.AllowlistController.showAllowlistPage())
-                case _       => BadGateway(errorTemplateView("Error", "There was an error:", response.body))
-            })
+          if (appConfig.validFormIds.contains(addEntry.formId.toUpperCase))
+            messageConnector
+              .addFormIdToAllowlist(addEntry)
+              .map(response =>
+                response.status match {
+                  case CREATED => Redirect(routes.AllowlistController.showAllowlistPage())
+                  case _       => BadGateway(errorTemplateView("Error", "There was an error:", response.body))
+              })
+          else Future.successful(BadRequest(errorTemplateView("Error", "Invalid formId added", addEntry.formId)))
         }
       )
   }
