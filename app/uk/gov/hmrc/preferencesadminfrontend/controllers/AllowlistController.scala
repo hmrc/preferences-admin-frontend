@@ -73,7 +73,9 @@ class AllowlistController @Inject()(
                   case CREATED => Redirect(routes.AllowlistController.showAllowlistPage())
                   case _       => BadGateway(errorTemplateView("Error", "There was an error:", response.body))
               })
-          else Future.successful(BadRequest(errorTemplateView("Error", "Invalid formId added", addEntry.formId)))
+          else
+            Future.successful(
+              BadRequest(errorTemplateView("Error", "Invalid Form ID", s"This Form ID ${addEntry.formId} is not added in the message break allow list.")))
         }
       )
   }
