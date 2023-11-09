@@ -45,7 +45,7 @@ class SearchService @Inject()(
 
   def getPreferences(taxId: TaxIdentifier)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[List[Preference]] = {
     val preferences = for {
-      preferenceDetails <- preferencesConnector.getPreferenceDetails(taxId)
+      preferenceDetails <- preferencesConnector.getPreferenceDetails(taxId.value)
     } yield {
       preferenceDetails.map { details =>
         val taxIdentifiers = entityResolverConnector.getTaxIdentifiers(details)
