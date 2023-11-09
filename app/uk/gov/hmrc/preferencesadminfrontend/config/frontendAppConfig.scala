@@ -26,6 +26,7 @@ trait AppConfig {
   val reportAProblemPartialUrl: String
   val reportAProblemNonJSUrl: String
   val featureFlag: String
+  val validFormIds: Seq[String]
 }
 
 class FrontendAppConfig @Inject()(val configuration: Configuration, val environment: Environment, val serviceConfig: ServicesConfig) extends AppConfig {
@@ -40,4 +41,6 @@ class FrontendAppConfig @Inject()(val configuration: Configuration, val environm
   override lazy val analyticsHost = loadConfig(s"google-analytics.host")
   override lazy val reportAProblemPartialUrl = s"$contactHost/contact/problem_reports_ajax?service=$contactFormServiceIdentifier"
   override lazy val reportAProblemNonJSUrl = s"$contactHost/contact/problem_reports_nonjs?service=$contactFormServiceIdentifier"
+
+  override val validFormIds: Seq[String] = configuration.getOptional[Seq[String]]("formIds").getOrElse(Seq.empty)
 }

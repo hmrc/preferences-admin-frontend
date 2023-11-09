@@ -152,6 +152,15 @@ class AllowlistControllerSpec extends PlaySpec with GuiceOneAppPerSuite with Spe
       private val result = allowlistController.confirmAdd()(fakeRequestWithSession.withCSRFToken)
       status(result) mustBe Status.BAD_REQUEST
     }
+
+    "return 400 (Bad Request) when invalid Form ID is added" in new AllowlistControllerTestCase {
+      private val fakeRequestWithSession =
+        FakeRequest(routes.AllowlistController.confirmAdd())
+          .withFormUrlEncodedBody("formId" -> "P8000", "reasonText" -> "some reason text")
+          .withSession(User.sessionKey -> "user")
+      private val result = allowlistController.confirmAdd()(fakeRequestWithSession.withCSRFToken)
+      status(result) mustBe Status.BAD_REQUEST
+    }
   }
 
   "confirmDelete" should {
