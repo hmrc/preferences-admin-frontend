@@ -91,21 +91,21 @@ class SearchServiceSpec extends PlaySpec with ScalaFutures with IntegrationPatie
     }
 
     "return preference for email address user when it exists" in new SearchServiceTestCase {
-      when(preferencesConnectorMock.getPreferenceDetails(validEmailid)).thenReturn(Future.successful(optedInPreferenceDetailsList))
+      when(preferencesConnectorMock.getPreferenceDetails(validEmailid.value)).thenReturn(Future.successful(optedInPreferenceDetailsList))
       when(entityResolverConnectorMock.getTaxIdentifiers(optedInPreferenceDetailsList.head)).thenReturn(Future.successful(taxIdentifiers))
 
       searchService.searchPreference(validEmailid).futureValue mustBe List(optedInPreference)
     }
 
     "return None if that nino does not exist" in new SearchServiceTestCase {
-      when(preferencesConnectorMock.getPreferenceDetails(unknownEmailid)).thenReturn(Future.successful(Nil))
+      when(preferencesConnectorMock.getPreferenceDetails(unknownEmailid.value)).thenReturn(Future.successful(Nil))
       when(entityResolverConnectorMock.getTaxIdentifiers(optedInPreferenceDetailsList.head)).thenReturn(Future.successful(taxIdentifiers))
 
       searchService.searchPreference(unknownEmailid).futureValue mustBe Nil
     }
 
     "return multiple preferences for email address user when it exists" in new SearchServiceTestCase {
-      when(preferencesConnectorMock.getPreferenceDetails(validEmailid)).thenReturn(Future.successful(optedInPreferenceDetailsList2))
+      when(preferencesConnectorMock.getPreferenceDetails(validEmailid.value)).thenReturn(Future.successful(optedInPreferenceDetailsList2))
       when(entityResolverConnectorMock.getTaxIdentifiers(optedInPreferenceDetailsList.head)).thenReturn(Future.successful(taxIdentifiers))
 
       searchService.searchPreference(validEmailid).futureValue mustBe optedInPreferenceList

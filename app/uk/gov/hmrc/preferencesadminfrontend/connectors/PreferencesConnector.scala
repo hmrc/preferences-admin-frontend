@@ -23,8 +23,8 @@ import play.api.Configuration
 import play.api.libs.json.Format
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-import uk.gov.hmrc.preferencesadminfrontend.services.model.TaxIdentifier
 import uk.gov.hmrc.http.HttpReads.Implicits._
+import uk.gov.hmrc.preferencesadminfrontend.controllers.model.EmailRequest
 
 import scala.concurrent.{ ExecutionContext, Future }
 
@@ -37,10 +37,10 @@ class PreferencesConnector @Inject()(
 
   implicit val ef: Format[Entity] = Entity.formats
 
-  def serviceUrl = servicesConfig.baseUrl("preferences")
+  def serviceUrl: String = servicesConfig.baseUrl("preferences")
 
-  def getPreferenceDetails(taxId: TaxIdentifier)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[List[PreferenceDetails]] =
-    httpClient.GET[List[PreferenceDetails]](s"$serviceUrl/preferences/email/${taxId.value}").recover {
+  def getPreferenceDetails(email: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[List[PreferenceDetails]] =
+    httpClient.POST[EmailRequest, List[PreferenceDetails]](s"$serviceUrl/preferences/find-by-email", EmailRequest(email)).recover {
       case _: BadRequestException => Nil
     }
 }
