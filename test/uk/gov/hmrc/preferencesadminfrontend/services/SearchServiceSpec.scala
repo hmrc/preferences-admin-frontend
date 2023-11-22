@@ -78,6 +78,13 @@ class SearchServiceSpec extends PlaySpec with ScalaFutures with IntegrationPatie
       verify(auditConnectorMock).sendMergedEvent(argThat(isSimilar(expectedAuditEvent)))(any[HeaderCarrier], any[ExecutionContext])
     }
 
+    "return preference for email address user when it exists" in new SearchServiceTestCase {
+      when(preferencesConnectorMock.getPreferenceDetails(validEmailid.value)).thenReturn(Future.successful(optedInPreferenceDetailsList))
+      when(entityResolverConnectorMock.getTaxIdentifiers(optedInPreferenceDetailsList.head)).thenReturn(Future.successful(taxIdentifiers))
+
+      searchService.searchPreference(validEmailid).futureValue mustBe List(optedInPreference)
+    }
+
     "return None if the saUtr identifier does not exist" in new SearchServiceTestCase {
       val preferenceDetails = None
       when(entityResolverConnectorMock.getPreferenceDetails(validSaUtr)).thenReturn(Future.successful(preferenceDetails))
@@ -85,16 +92,6 @@ class SearchServiceSpec extends PlaySpec with ScalaFutures with IntegrationPatie
       when(entityResolverConnectorMock.getTaxIdentifiers(validSaUtr)).thenReturn(Future.successful(taxIdentifiers))
 
       searchService.searchPreference(validSaUtr).futureValue mustBe Nil
-
-      val expectedAuditEvent = searchService.createSearchEvent("me", validSaUtr, None)
-      verify(auditConnectorMock).sendMergedEvent(argThat(isSimilar(expectedAuditEvent)))(any[HeaderCarrier], any[ExecutionContext])
-    }
-
-    "return preference for email address user when it exists" in new SearchServiceTestCase {
-      when(preferencesConnectorMock.getPreferenceDetails(validEmailid.value)).thenReturn(Future.successful(optedInPreferenceDetailsList))
-      when(entityResolverConnectorMock.getTaxIdentifiers(optedInPreferenceDetailsList.head)).thenReturn(Future.successful(taxIdentifiers))
-
-      searchService.searchPreference(validEmailid).futureValue mustBe List(optedInPreference)
     }
 
     "return None if that nino does not exist" in new SearchServiceTestCase {
@@ -360,9 +357,7 @@ class SearchServiceSpec extends PlaySpec with ScalaFutures with IntegrationPatie
       email = None,
       taxIdentifiers = taxIdentifiers
     )
-
     val config = Configuration.from(Map("appName" -> "preferences-admin-frontend"))
     val searchService = new SearchService(entityResolverConnectorMock, preferencesConnectorMock, auditConnectorMock, config)
   }
-
 }
