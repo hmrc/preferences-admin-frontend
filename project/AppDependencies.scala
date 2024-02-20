@@ -3,11 +3,11 @@ import sbt._
 
 object AppDependencies {
 
-  val bootstrapVersion = "7.15.0"
+  val bootstrapVersion = "8.4.0"
   val compile = Seq(
     ws,
     "uk.gov.hmrc"       %% "bootstrap-frontend-play-28" % bootstrapVersion,
-    "uk.gov.hmrc"       %% "play-frontend-hmrc"         % "7.10.0-play-28",
+    "uk.gov.hmrc"       %% "play-frontend-hmrc-play-28" % "8.5.0",
     "uk.gov.hmrc"       %% "auth-client"                % "6.1.0-play-28",
     "uk.gov.hmrc"       %% "play-partials"              % "8.4.0-play-28",
     "com.typesafe.play" %% "play-json-joda"             % "2.8.2",
