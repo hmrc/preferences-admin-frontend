@@ -28,7 +28,7 @@ object AllowlistEntry {
   val reasonTextConstraint: Constraint[String] = Constraint("constraints.reasonText")({ reasonText =>
     if (reasonText.isEmpty) {
       Invalid("A reason is required")
-    } else if (reasonText.matches("[a-zA-Z0-9\\s\\-\\.,]+")) {
+    } else if (reasonText.matches("/^[-@.\\/#&+\\w\\s]*$/")) {
       Valid
     } else {
       Invalid("Invalid characters entered")

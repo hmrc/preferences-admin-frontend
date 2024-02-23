@@ -119,7 +119,7 @@ class AllowlistControllerSpec extends PlaySpec with GuiceOneAppPerSuite with Spe
     "return 303 (Redirect) when a Form ID is successfully added via the message service" in new AllowlistControllerTestCase {
       private val fakeRequestWithSession =
         FakeRequest(routes.AllowlistController.confirmAdd())
-          .withFormUrlEncodedBody("formId" -> "SA316 2015", "reasonText" -> "some reason text")
+          .withFormUrlEncodedBody("formId" -> "SA316 2015", "reasonText" -> "some reason text with special characters #'&+")
           .withSession(User.sessionKey -> "user")
       when(mockMessageConnector.addFormIdToAllowlist(any[AllowlistEntry])(any[HeaderCarrier])).thenReturn(
         Future.successful(
