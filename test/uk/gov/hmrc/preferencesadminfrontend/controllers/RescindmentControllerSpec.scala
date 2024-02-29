@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.preferencesadminfrontend.controllers
 
-import akka.stream.Materializer
+import org.apache.pekko.stream.Materializer
 import org.jsoup.Jsoup
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when

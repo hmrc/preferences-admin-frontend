@@ -17,7 +17,7 @@
 @import uk.gov.hmrc.govukfrontend.views.html.components._
 @import uk.gov.hmrc.govukfrontend.views.html.components.implicits._
 @import uk.gov.hmrc.preferencesadminfrontend.controllers.routes
-@import org.joda.time.format.DateTimeFormat
+@import java.time.format.DateTimeFormatter
 
 @(govukSummaryList: GovukSummaryList, preferences: List[uk.gov.hmrc.preferencesadminfrontend.services.model.Preference])
 
@@ -66,7 +66,7 @@
                 SummaryListRow(
                     key = Key(content = Text(s"Opted ${if(preference.genericPaperless) "In" else if(preference.genericUpdatedAt.isEmpty) "In" else "Out"} ${if(preference.genericPaperless) "to" else if(preference.genericUpdatedAt.isEmpty) "to" else "of"} paperless for generic terms and conditions")),
                     value = Value(
-                        content = Text(preference.genericUpdatedAt.fold("Not available")(date => DateTimeFormat.forPattern("d MMMM yyyy hh:mm:ss a").print(date)))
+                        content = Text(preference.genericUpdatedAt.fold("Not available")(date => DateTimeFormatter.ofPattern("d MMMM yyyy hh:mm:ss a").format(date)))
                     )
                 ),
                 SummaryListRow(
@@ -80,7 +80,7 @@
                     value = Value(
                         content = Text(
                             preference.email.fold("Not available")(email =>
-                                email.verifiedOn.fold("Not available")(date => DateTimeFormat.forPattern("d MMMM yyyy hh:mm:ss a").print(date)))
+                                email.verifiedOn.fold("Not available")(date => DateTimeFormatter.ofPattern("d MMMM yyyy hh:mm:ss a").format(date)))
                             )
                         )
                     )

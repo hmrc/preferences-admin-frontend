@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.preferencesadminfrontend.config.filters
 
-import akka.stream.Materializer
+import org.apache.pekko.stream.Materializer
 import play.api.Configuration
 
 import javax.inject.{ Inject, Singleton }

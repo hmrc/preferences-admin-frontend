@@ -38,10 +38,5 @@ lazy val microservice = Project(appName, file("."))
       "controllers.routes._"
     )
   )
-  .configs(IntegrationTest)
-  .settings(inConfig(IntegrationTest)(Defaults.itSettings): _*)
-  .settings(
-    DefaultBuildSettings.integrationTestSettings()
-  )
   .settings(resolvers ++= Seq(Resolver.jcenterRepo))
   .settings(ScoverageSettings())

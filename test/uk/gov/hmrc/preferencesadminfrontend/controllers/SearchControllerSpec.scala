@@ -16,8 +16,7 @@
 
 package uk.gov.hmrc.preferencesadminfrontend.controllers
 
-import akka.stream.Materializer
-import org.joda.time.{ DateTime, DateTimeZone }
+import org.apache.pekko.stream.Materializer
 import org.jsoup.Jsoup
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.{ times, verify, when }
@@ -43,6 +42,7 @@ import uk.gov.hmrc.preferencesadminfrontend.services.model.{ Email, EntityId, Pr
 import uk.gov.hmrc.preferencesadminfrontend.utils.SpecBase
 import uk.gov.hmrc.preferencesadminfrontend.views.html.{ confirmed, customer_identification, failed, user_opt_out }
 
+import java.time.{ ZoneOffset, ZonedDateTime }
 import scala.concurrent.{ ExecutionContext, Future }
 
 class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPerSuite {
@@ -52,8 +52,8 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
 
   val playConfiguration = app.injector.instanceOf[Configuration]
 
-  val genericUpdatedAt = Some(new DateTime(2018, 2, 15, 0, 0, DateTimeZone.UTC))
-  val verifiedOn = Some(new DateTime(2018, 2, 15, 0, 0, DateTimeZone.UTC))
+  val genericUpdatedAt = Some(ZonedDateTime.of(2018, 2, 15, 0, 0, 0, 0, ZoneOffset.UTC))
+  val verifiedOn = genericUpdatedAt
 
   "showSearchPage" should {
 
