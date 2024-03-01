@@ -31,7 +31,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 trait SpecBase {
 
-  implicit val user = User("me", "mySecretPassword")
+  implicit val user: User = User("me", "mySecretPassword")
   val messagesActionBuilder: MessagesActionBuilder = new DefaultMessagesActionBuilderImpl(stubBodyParser[AnyContent](), stubMessagesApi())
   val cc: ControllerComponents = stubControllerComponents()
 

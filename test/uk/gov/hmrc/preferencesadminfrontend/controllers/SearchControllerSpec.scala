@@ -28,6 +28,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Configuration
 import play.api.http.Status
 import play.api.i18n.MessagesApi
+import play.api.mvc.AnyContentAsEmpty
 import play.api.test.CSRFTokenHelper._
 import play.api.test.Helpers.{ headers, _ }
 import play.api.test.{ FakeRequest, Helpers }
@@ -46,9 +47,9 @@ import java.time.{ ZoneOffset, ZonedDateTime }
 import scala.concurrent.{ ExecutionContext, Future }
 
 class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPerSuite {
-  implicit val hc = HeaderCarrier()
-  implicit val messagesApi = app.injector.instanceOf[MessagesApi]
-  implicit val materializer = app.injector.instanceOf[Materializer]
+  implicit val hc: HeaderCarrier = HeaderCarrier()
+  implicit val messagesApi: MessagesApi = app.injector.instanceOf[MessagesApi]
+  implicit val materializer: Materializer = app.injector.instanceOf[Materializer]
 
   val playConfiguration = app.injector.instanceOf[Configuration]
 
@@ -239,7 +240,7 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
         .thenReturn(Future.successful(List(preference)))
 
       val taxIdentifier = TaxIdentifier("nino", "CE067583D")
-      implicit val request = FakeRequest(Helpers.GET, "/").withSession(User.sessionKey -> "user")
+      implicit val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(Helpers.GET, "/").withSession(User.sessionKey -> "user")
 
       val result = searchController.searchConfirmed(taxIdentifier)
 
@@ -262,7 +263,7 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
         .thenReturn(Future.successful(List(preference)))
 
       val taxIdentifier = TaxIdentifier("nino", "CE067583D")
-      implicit val request = FakeRequest(Helpers.GET, "/").withSession(User.sessionKey -> "user")
+      implicit val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(Helpers.GET, "/").withSession(User.sessionKey -> "user")
 
       val result = searchController.searchFailed(taxIdentifier, AlreadyOptedOut.errorCode)
 

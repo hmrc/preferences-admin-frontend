@@ -28,7 +28,7 @@ import scala.concurrent.Future
 
 class RescindmentServiceSpec extends PlaySpec with ScalaFutures with IntegrationPatience {
 
-  implicit val hc = HeaderCarrier()
+  implicit val hc: HeaderCarrier = HeaderCarrier()
 
   "addRescindments" should {
     "return a valid update result" in new RescindmentServiceTestCase {

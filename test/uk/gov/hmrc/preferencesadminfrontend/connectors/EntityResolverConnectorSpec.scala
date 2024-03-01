@@ -229,7 +229,7 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
 
     lazy val mockResponse = mock[Option[Entity]]
     val emptyJson = Json.obj()
-    implicit val ef = Entity.formats
+    implicit val ef: Format[Entity] = Entity.formats
 
     lazy val servicesConfig = app.injector.instanceOf[ServicesConfig]
     def entityConnectorGetEntityMock(expectedPath: String, jsonBody: JsValue): EntityResolverConnector = {

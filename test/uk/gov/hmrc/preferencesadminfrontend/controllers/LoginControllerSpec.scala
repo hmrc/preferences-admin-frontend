@@ -22,6 +22,7 @@ import org.mockito.Mockito._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import play.api.Application
 import play.api.http._
 import play.api.i18n.MessagesApi
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -38,8 +39,8 @@ import scala.concurrent.{ ExecutionContext, Future }
 class LoginControllerSpec extends PlaySpec with GuiceOneAppPerSuite with SpecBase with ScalaFutures {
 
   implicit lazy val materializer: Materializer = app.materializer
-  override implicit lazy val app = GuiceApplicationBuilder().build()
-  implicit val messagesApi = app.injector.instanceOf[MessagesApi]
+  override implicit lazy val app: Application = GuiceApplicationBuilder().build()
+  implicit val messagesApi: MessagesApi = app.injector.instanceOf[MessagesApi]
 
   "GET /" should {
     "return 200" in new MessageBrakeControllerTestCase {

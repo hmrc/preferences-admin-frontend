@@ -34,7 +34,7 @@ import scala.concurrent.{ ExecutionContext, Future }
 
 class SearchServiceSpec extends PlaySpec with ScalaFutures with IntegrationPatience {
 
-  implicit val hc = HeaderCarrier()
+  implicit val hc: HeaderCarrier = HeaderCarrier()
 
   "getPreferences" should {
 

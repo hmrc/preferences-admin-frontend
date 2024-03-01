@@ -146,7 +146,7 @@ class MessageControllerSpec extends PlaySpec with GuiceOneAppPerSuite {
 
     val migratePreferenceServiceMock = mock[MigratePreferencesService]
     val messagesControllerComponents = app.injector.instanceOf[MessagesControllerComponents]
-    implicit val appConfig = app.injector.instanceOf[AppConfig]
+    implicit val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
     implicit val executionContext: ExecutionContext = app.injector.instanceOf[ExecutionContext]
   }
 }

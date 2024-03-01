@@ -31,7 +31,7 @@ import scala.concurrent.Future
 
 class MessageServiceSpec extends PlaySpec with ScalaFutures with IntegrationPatience {
 
-  implicit val hc = HeaderCarrier()
+  implicit val hc: HeaderCarrier = HeaderCarrier()
 
   "getGmcBatches" should {
 

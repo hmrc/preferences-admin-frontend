@@ -52,8 +52,6 @@ class MessageBrakeControllerSpec extends PlaySpec with GuiceOneAppPerSuite with 
 
   implicit val hc: HeaderCarrier = mock[HeaderCarrier]
 
-  implicit val ec = ExecutionContext.global
-
   val gmcBatch = GmcBatch(
     "123456789",
     "SA359",
