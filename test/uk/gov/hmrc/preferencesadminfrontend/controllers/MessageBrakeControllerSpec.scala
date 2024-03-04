@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.preferencesadminfrontend.controllers
 
-import akka.stream.Materializer
+import org.apache.pekko.stream.Materializer
 import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito.when
@@ -51,8 +51,6 @@ class MessageBrakeControllerSpec extends PlaySpec with GuiceOneAppPerSuite with 
   implicit lazy val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
 
   implicit val hc: HeaderCarrier = mock[HeaderCarrier]
-
-  implicit val ec = ExecutionContext.global
 
   val gmcBatch = GmcBatch(
     "123456789",

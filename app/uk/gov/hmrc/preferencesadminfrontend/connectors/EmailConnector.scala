@@ -26,7 +26,7 @@ import scala.concurrent.{ ExecutionContext, Future }
 class EmailConnector @Inject()(httpClient: HttpClient, val servicesConfig: ServicesConfig)(implicit ec: ExecutionContext) {
   val serviceUrl = servicesConfig.baseUrl("email")
 
-  implicit val headerCarrier = new HeaderCarrier()
+  implicit val headerCarrier: HeaderCarrier = new HeaderCarrier()
   def findEvent(transId: String): Future[HttpResponse] =
     httpClient.GET[HttpResponse](s"$serviceUrl/event/$transId")
 

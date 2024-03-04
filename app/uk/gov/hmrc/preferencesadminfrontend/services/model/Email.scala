@@ -16,23 +16,30 @@
 
 package uk.gov.hmrc.preferencesadminfrontend.services.model
 
-import org.joda.time.DateTime
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
-case class Email(address: String, verified: Boolean, verifiedOn: Option[DateTime], language: Option[String], hasBounces: Boolean, pendingEmail: Option[String])
+import java.time.ZonedDateTime
+
+case class Email(
+  address: String,
+  verified: Boolean,
+  verifiedOn: Option[ZonedDateTime],
+  language: Option[String],
+  hasBounces: Boolean,
+  pendingEmail: Option[String])
 
 object Email {
-  implicit val dateFormatDefault: Format[DateTime] = new Format[DateTime] {
-    override def reads(json: JsValue): JsResult[DateTime] = JodaReads.DefaultJodaDateTimeReads.reads(json)
-    override def writes(o: DateTime): JsValue = JodaWrites.JodaDateTimeNumberWrites.writes(o)
+  implicit val dateFormatDefault: Format[ZonedDateTime] = new Format[ZonedDateTime] {
+    override def reads(json: JsValue): JsResult[ZonedDateTime] = Reads.DefaultZonedDateTimeReads.reads(json)
+    override def writes(o: ZonedDateTime): JsValue = Writes.ZonedDateTimeEpochMilliWrites.writes(o)
   }
   implicit val writes: Writes[Email] = Json.writes[Email]
 
   implicit val reads: Reads[Email] = (
     (JsPath \ "email").read[String] and
       (JsPath \ "status").read[String] and
-      (JsPath \ "verifiedOn").readNullable[DateTime] and
+      (JsPath \ "verifiedOn").readNullable[ZonedDateTime] and
       (JsPath \ "language").readNullable[String] and
       (JsPath \ "hasBounces").read[Boolean] and
       (JsPath \ "pendingEmail").readNullable[String]

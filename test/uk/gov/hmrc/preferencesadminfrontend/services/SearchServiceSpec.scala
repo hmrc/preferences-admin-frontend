@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.preferencesadminfrontend.services
 
-import org.joda.time.{ DateTime, DateTimeZone }
 import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito._
 import org.scalatest.concurrent.{ IntegrationPatience, ScalaFutures }
@@ -29,12 +28,13 @@ import uk.gov.hmrc.preferencesadminfrontend.connectors._
 import uk.gov.hmrc.preferencesadminfrontend.services.model.{ Email, EntityId, Preference, TaxIdentifier }
 import uk.gov.hmrc.preferencesadminfrontend.utils.SpecBase
 
+import java.time.{ ZoneOffset, ZonedDateTime }
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ ExecutionContext, Future }
 
 class SearchServiceSpec extends PlaySpec with ScalaFutures with IntegrationPatience {
 
-  implicit val hc = HeaderCarrier()
+  implicit val hc: HeaderCarrier = HeaderCarrier()
 
   "getPreferences" should {
 
@@ -296,8 +296,8 @@ class SearchServiceSpec extends PlaySpec with ScalaFutures with IntegrationPatie
     val validEmailid = TaxIdentifier("email", "test@test.com")
     val unknownEmailid = TaxIdentifier("email", "test9@test.com")
 
-    val genericUpdatedAt = Some(new DateTime(2018, 2, 15, 0, 0, DateTimeZone.UTC))
-    val verifiedOn = Some(new DateTime(2018, 2, 15, 0, 0, DateTimeZone.UTC))
+    val genericUpdatedAt = Some(ZonedDateTime.of(2018, 2, 15, 0, 0, 0, 0, ZoneOffset.UTC))
+    val verifiedOn = genericUpdatedAt
 
     val verifiedEmail = Email("john.doe@digital.hmrc.gov.uk", verified = true, verifiedOn = verifiedOn, language = Some("cy"), false, None)
 

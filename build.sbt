@@ -14,7 +14,7 @@ lazy val microservice = Project(appName, file("."))
   .settings(scalaSettings: _*)
   .settings(defaultSettings(): _*)
   .settings(
-    scalaVersion := "2.13.8",
+    scalaVersion := "2.13.12",
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
     Test / parallelExecution := false,
     Test / fork := false,
@@ -38,10 +38,6 @@ lazy val microservice = Project(appName, file("."))
       "controllers.routes._"
     )
   )
-  .configs(IntegrationTest)
-  .settings(inConfig(IntegrationTest)(Defaults.itSettings): _*)
-  .settings(
-    DefaultBuildSettings.integrationTestSettings()
-  )
   .settings(resolvers ++= Seq(Resolver.jcenterRepo))
   .settings(ScoverageSettings())
+  .settings(tpolecatExcludeOptions += ScalacOptions.warnNonUnitStatement)

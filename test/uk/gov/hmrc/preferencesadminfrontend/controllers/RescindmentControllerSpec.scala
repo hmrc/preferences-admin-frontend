@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.preferencesadminfrontend.controllers
 
-import akka.stream.Materializer
+import org.apache.pekko.stream.Materializer
 import org.jsoup.Jsoup
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
@@ -43,9 +43,9 @@ import uk.gov.hmrc.preferencesadminfrontend.views.html.{ rescindment, rescindmen
 import scala.concurrent.{ ExecutionContext, Future }
 
 class RescindmentControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPerSuite {
-  implicit val hc = HeaderCarrier()
-  implicit val messagesApi = app.injector.instanceOf[MessagesApi]
-  implicit val materializer = app.injector.instanceOf[Materializer]
+  implicit val hc: HeaderCarrier = HeaderCarrier()
+  implicit val messagesApi: MessagesApi = app.injector.instanceOf[MessagesApi]
+  implicit val materializer: Materializer = app.injector.instanceOf[Materializer]
 
   val playConfiguration = app.injector.instanceOf[Configuration]
 

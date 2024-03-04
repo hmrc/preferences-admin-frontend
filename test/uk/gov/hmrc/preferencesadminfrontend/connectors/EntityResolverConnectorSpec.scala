@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.preferencesadminfrontend.connectors
 
-import org.joda.time.{ DateTime, DateTimeZone }
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.when
 import org.scalatest.concurrent.ScalaFutures
@@ -29,6 +28,7 @@ import uk.gov.hmrc.http.{ BadRequestException, HeaderCarrier, HttpClient, HttpRe
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.preferencesadminfrontend.services.model.{ Email, TaxIdentifier }
 
+import java.time.{ ZoneOffset, ZonedDateTime }
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.Random
@@ -115,7 +115,7 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
   }
 
   "getPreferenceDetails" must {
-    val verfiedOn = Some(new DateTime(2018, 2, 15, 0, 0, DateTimeZone.UTC))
+    val verfiedOn = Some(ZonedDateTime.of(2018, 2, 15, 0, 0, 0, 0, ZoneOffset.UTC))
 
     "return generic paperless preference true and valid email address and verification true if user is opted in for saUtr" in new TestCase {
       val expectedPath = s"$entityResolverserviceUrl/portal/preferences/sa/${sautr.value}"
@@ -127,7 +127,7 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
       result.get.genericPaperless mustBe true
       result.get.email.get.address mustBe "john.doe@digital.hmrc.gov.uk"
       result.get.email.get.verified mustBe true
-      result.get.email.get.verifiedOn.get.isEqual(verfiedOn.get.getMillis) mustBe true
+      result.get.email.get.verifiedOn.get.isEqual(verfiedOn.get) mustBe true
     }
 
     "return generic paperless preference true and valid email address and verification false if user is opted in for saUtr" in new TestCase {
@@ -162,7 +162,7 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
       result.get.genericPaperless mustBe true
       result.get.email.get.address mustBe "john.doe@digital.hmrc.gov.uk"
       result.get.email.get.verified mustBe true
-      result.get.email.get.verifiedOn.get.isEqual(verfiedOn.get.getMillis) mustBe true
+      result.get.email.get.verifiedOn.get.isEqual(verfiedOn.get) mustBe true
     }
 
     "return None if taxId does not exist" in new TestCase {
@@ -229,7 +229,7 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
 
     lazy val mockResponse = mock[Option[Entity]]
     val emptyJson = Json.obj()
-    implicit val ef = Entity.formats
+    implicit val ef: Format[Entity] = Entity.formats
 
     lazy val servicesConfig = app.injector.instanceOf[ServicesConfig]
     def entityConnectorGetEntityMock(expectedPath: String, jsonBody: JsValue): EntityResolverConnector = {

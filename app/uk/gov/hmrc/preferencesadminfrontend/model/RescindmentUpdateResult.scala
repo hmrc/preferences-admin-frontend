@@ -17,10 +17,9 @@
 package uk.gov.hmrc.preferencesadminfrontend.model
 
 import play.api.libs.json.{ Json, OFormat }
-import uk.gov.hmrc.http.controllers.RestFormats
 
 case class RescindmentUpdateResult(tried: Int, succeeded: Int, alreadyUpdated: Int, invalidState: Int)
 
-object RescindmentUpdateResult extends RestFormats {
+object RescindmentUpdateResult {
   implicit val format: OFormat[RescindmentUpdateResult] = Json.format[RescindmentUpdateResult]
 }

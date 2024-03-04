@@ -17,7 +17,7 @@
 package uk.gov.hmrc.preferencesadminfrontend.connectors
 
 import javax.inject.{ Inject, Singleton }
-import org.joda.time.{ DateTime, DateTimeZone }
+import java.time.{ Instant, ZonedDateTime }
 import play.api.Logger
 import play.api.http.Status
 import play.api.libs.functional.syntax._
@@ -27,6 +27,7 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.preferencesadminfrontend.services.model.{ Email, EntityId, TaxIdentifier }
 import cats.syntax.either._
 import uk.gov.hmrc.http.HttpReads.Implicits.{ readFromJson, readOptionOfNotFound, readRaw }
+
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.Try
 
@@ -190,31 +191,33 @@ object Entity {
 
 case class PreferenceDetails(
   genericPaperless: Boolean,
-  genericUpdatedAt: Option[DateTime],
+  genericUpdatedAt: Option[ZonedDateTime],
   isPaperless: Option[Boolean],
   email: Option[Email],
   entityId: Option[EntityId] = None)
 
 object PreferenceDetails {
-  implicit val localDateRead: Reads[Option[DateTime]] = new Reads[Option[DateTime]] {
-    override def reads(json: JsValue): JsResult[Option[DateTime]] =
+  implicit val localDateRead: Reads[Option[ZonedDateTime]] = new Reads[Option[ZonedDateTime]] {
+    override def reads(json: JsValue): JsResult[Option[ZonedDateTime]] =
       json match {
         case JsNumber(dateTime) =>
           Try {
-            JsSuccess(Some(new DateTime(dateTime.longValue, DateTimeZone.UTC)))
+            JsSuccess(Some(ZonedDateTime.from(Instant.ofEpochMilli(dateTime.longValue))))
           }.getOrElse {
             JsError(s"$dateTime is not a valid date")
           }
         case _ => JsError(s"Expected value to be a date, was actually $json")
       }
   }
-  implicit val dateFormatDefault: Format[DateTime] = new Format[DateTime] {
-    override def reads(json: JsValue): JsResult[DateTime] = JodaReads.DefaultJodaDateTimeReads.reads(json)
-    override def writes(o: DateTime): JsValue = JodaWrites.JodaDateTimeNumberWrites.writes(o)
+  implicit val dateFormatDefault: Format[ZonedDateTime] = new Format[ZonedDateTime] {
+    override def reads(json: JsValue): JsResult[ZonedDateTime] = Reads.DefaultZonedDateTimeReads.reads(json)
+    override def writes(o: ZonedDateTime): JsValue = Writes.ZonedDateTimeEpochMilliWrites.writes(o)
   }
   implicit val reads: Reads[PreferenceDetails] = (
     (JsPath \ "termsAndConditions" \ "generic").readNullable[JsValue].map(_.fold(false)(m => (m \ "accepted").as[Boolean])) and
-      (JsPath \ "termsAndConditions" \ "generic").readNullable[JsValue].map(_.fold(None: Option[DateTime])(m => (m \ "updatedAt").asOpt[DateTime])) and
+      (JsPath \ "termsAndConditions" \ "generic")
+        .readNullable[JsValue]
+        .map(_.fold(None: Option[ZonedDateTime])(m => (m \ "updatedAt").asOpt[ZonedDateTime])) and
       (JsPath \ "termsAndConditions" \ "generic").readNullable[JsValue].map(_.fold(None: Option[Boolean])(m => (m \ "paperless").asOpt[Boolean])) and
       (JsPath \ "email").readNullable[Email] and
       (JsPath \ "entityId").readNullable[EntityId]

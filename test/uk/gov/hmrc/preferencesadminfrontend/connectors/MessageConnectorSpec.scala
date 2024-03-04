@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.preferencesadminfrontend.connectors
 
-import akka.actor.ActorSystem
+import org.apache.pekko.actor.ActorSystem
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.when
 import org.scalatest.concurrent.ScalaFutures
