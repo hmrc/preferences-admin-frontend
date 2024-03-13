@@ -42,5 +42,5 @@ class FrontendAppConfig @Inject()(val configuration: Configuration, val environm
   override lazy val reportAProblemPartialUrl = s"$contactHost/contact/problem_reports_ajax?service=$contactFormServiceIdentifier"
   override lazy val reportAProblemNonJSUrl = s"$contactHost/contact/problem_reports_nonjs?service=$contactFormServiceIdentifier"
 
-  override val validFormIds: Seq[String] = configuration.getOptional[Seq[String]]("formIds").getOrElse(Seq.empty).map(_.toUpperCase)
+  override val validFormIds: Seq[String] = configuration.getOptional[Seq[String]]("formIds").getOrElse(FormIds.configList).map(_.toUpperCase)
 }
