@@ -1,7 +1,7 @@
-$govuk-assets-path: "/paperless/admin/hmrc-frontend/assets/govuk/";
+$govuk-assets-path: "/paperless/admin/govuk-frontend/dist/govuk/assets/";
 $hmrc-assets-path: "/paperless/admin/hmrc-frontend/assets/";
 
-@import "lib/govuk-frontend/govuk/all";
+@import "lib/govuk-frontend/dist/govuk/all";
 @import "lib/hmrc-frontend/hmrc/all";
 
 $govuk-global-styles: true;
