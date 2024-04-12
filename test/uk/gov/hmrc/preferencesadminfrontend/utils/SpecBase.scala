@@ -32,7 +32,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 trait SpecBase {
 
   implicit val user: User = User("me", "mySecretPassword")
-  val messagesActionBuilder: MessagesActionBuilder = new DefaultMessagesActionBuilderImpl(stubBodyParser[AnyContent](), stubMessagesApi())
+  val messagesActionBuilder: MessagesActionBuilder =
+    new DefaultMessagesActionBuilderImpl(stubBodyParser[AnyContent](), stubMessagesApi())
   val cc: ControllerComponents = stubControllerComponents()
 
   implicit val stubbedMCC: MessagesControllerComponents = DefaultMessagesControllerComponents(
@@ -40,8 +41,11 @@ trait SpecBase {
     DefaultActionBuilder(stubBodyParser[AnyContent]()),
     cc.parsers,
     stubMessagesApi(
-      messages = Map("en" ->
-        Map("error.preference_not_found" -> "No paperless preference found for that identifier."))),
+      messages = Map(
+        "en" ->
+          Map("error.preference_not_found" -> "No paperless preference found for that identifier.")
+      )
+    ),
     stubLangs(Seq(Lang("en"))),
     cc.fileMimeTypes,
     ExecutionContext.global

@@ -27,7 +27,8 @@ case class Email(
   verifiedOn: Option[ZonedDateTime],
   language: Option[String],
   hasBounces: Boolean,
-  pendingEmail: Option[String])
+  pendingEmail: Option[String]
+)
 
 object Email {
   implicit val dateFormatDefault: Format[ZonedDateTime] = new Format[ZonedDateTime] {
@@ -43,8 +44,8 @@ object Email {
       (JsPath \ "language").readNullable[String] and
       (JsPath \ "hasBounces").read[Boolean] and
       (JsPath \ "pendingEmail").readNullable[String]
-  )((address, status, verifiedOn, language, hasBounces, pendingEmail) => {
-    val verified = (status == "verified")
+  ) { (address, status, verifiedOn, language, hasBounces, pendingEmail) =>
+    val verified = status == "verified"
     Email(address, verified, verifiedOn, language, hasBounces, pendingEmail)
-  })
+  }
 }

@@ -30,7 +30,9 @@ import javax.inject.{ Inject, Singleton }
 import scala.concurrent.{ ExecutionContext, Future }
 
 @Singleton
-class EnrolmentStoreConnector @Inject()(httpClient: HttpClient, val servicesConfig: ServicesConfig)(implicit ec: ExecutionContext) {
+class EnrolmentStoreConnector @Inject() (httpClient: HttpClient, val servicesConfig: ServicesConfig)(implicit
+  ec: ExecutionContext
+) {
 
   val logger = Logger(getClass)
   def serviceUrl: String = servicesConfig.baseUrl("enrolment-store")
@@ -38,40 +40,45 @@ class EnrolmentStoreConnector @Inject()(httpClient: HttpClient, val servicesConf
   def getUserIds(taxIdentifier: TaxIdentifier)(implicit hc: HeaderCarrier): Future[Either[String, List[String]]] =
     (for {
       id <- EitherT.fromEither[Future](resolveId(taxIdentifier))
-      response <- EitherT(
-                   httpClient
-                     .GET[HttpResponse](s"$serviceUrl/enrolment-store-proxy/enrolment-store/enrolments/$id/users?type=principal")
-                     .map(handleGetUserIdsResponse))
+      response <-
+        EitherT(
+          httpClient
+            .GET[HttpResponse](s"$serviceUrl/enrolment-store-proxy/enrolment-store/enrolments/$id/users?type=principal")
+            .map(handleGetUserIdsResponse)
+        )
 
     } yield response).value
 
-  def getUserState(principalUserId: String, saUtr: TaxIdentifier)(implicit hc: HeaderCarrier): Future[Either[String, Option[UserState]]] =
+  def getUserState(principalUserId: String, saUtr: TaxIdentifier)(implicit
+    hc: HeaderCarrier
+  ): Future[Either[String, Option[UserState]]] =
     (for {
       id <- EitherT.fromEither[Future](resolveId(saUtr))
       response <- EitherT(
-                   httpClient
-                     .GET[HttpResponse](s"$serviceUrl/enrolment-store-proxy/enrolment-store/users/$principalUserId/enrolments/$id")
-                     .map(handleCheckEnrolmentsResponse))
+                    httpClient
+                      .GET[HttpResponse](
+                        s"$serviceUrl/enrolment-store-proxy/enrolment-store/users/$principalUserId/enrolments/$id"
+                      )
+                      .map(handleCheckEnrolmentsResponse)
+                  )
     } yield response).value
 
   private def handleGetUserIdsResponse(httpResponse: HttpResponse): Either[String, List[String]] =
     httpResponse.status match {
       case OK         => httpResponse.json.as[PrincipalUserIds].principalUserIds.asRight
       case NO_CONTENT => List.empty[String].asRight
-      case other => {
+      case other =>
         logger.warn(s"handleGetUserIdsResponseError ${httpResponse.body}")
         s"upstream error when getting principals, $other ${httpResponse.body}".asLeft
-      }
     }
 
   private def handleCheckEnrolmentsResponse(httpResponse: HttpResponse): Either[String, Option[UserState]] =
     httpResponse.status match {
       case OK        => httpResponse.json.as[UserState].some.asRight
       case NOT_FOUND => none.asRight
-      case other => {
+      case other =>
         logger.warn(s"handleCheckEnrolmentsResponseError ${httpResponse.body}")
         s"upstream error when checking enrolment state, $other ${httpResponse.body}".asLeft
-      }
     }
 
   def resolveId(taxIdentifier: TaxIdentifier): Either[String, String] =

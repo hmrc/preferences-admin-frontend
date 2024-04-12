@@ -21,11 +21,18 @@ import play.api.data.Forms._
 import play.api.data.validation.{ Constraint, Invalid, Valid }
 import play.api.libs.json.{ Json, OFormat }
 
-case class GmcBatchApproval(batchId: String, formId: String, issueDate: String, templateId: String, reasonText: String, version: Option[String])
+case class GmcBatchApproval(
+  batchId: String,
+  formId: String,
+  issueDate: String,
+  templateId: String,
+  reasonText: String,
+  version: Option[String]
+)
 
 object GmcBatchApproval {
 
-  val reasonTextConstraint: Constraint[String] = Constraint("constraints.reasonText")({ reasonText =>
+  val reasonTextConstraint: Constraint[String] = Constraint("constraints.reasonText") { reasonText =>
     if (reasonText.isEmpty) {
       Invalid("A reason is required")
     } else if (reasonText.matches("[a-zA-Z0-9\\s\\-\\.,]+")) {
@@ -33,7 +40,7 @@ object GmcBatchApproval {
     } else {
       Invalid("Invalid characters entered")
     }
-  })
+  }
 
   implicit val format: OFormat[GmcBatchApproval] = Json.format[GmcBatchApproval]
 

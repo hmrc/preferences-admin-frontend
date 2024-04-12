@@ -29,9 +29,14 @@ trait AppConfig {
   val validFormIds: Seq[String]
 }
 
-class FrontendAppConfig @Inject()(val configuration: Configuration, val environment: Environment, val serviceConfig: ServicesConfig) extends AppConfig {
+class FrontendAppConfig @Inject() (
+  val configuration: Configuration,
+  val environment: Environment,
+  val serviceConfig: ServicesConfig
+) extends AppConfig {
 
-  private def loadConfig(key: String) = configuration.getOptional[String](key).getOrElse(throw new Exception(s"Missing configuration key: $key"))
+  private def loadConfig(key: String) =
+    configuration.getOptional[String](key).getOrElse(throw new Exception(s"Missing configuration key: $key"))
 
   private val contactHost = configuration.getOptional[String](s"contact-frontend.host").getOrElse("")
   private val contactFormServiceIdentifier = "MyService"
@@ -39,8 +44,11 @@ class FrontendAppConfig @Inject()(val configuration: Configuration, val environm
   override val featureFlag: String = loadConfig("featureFlag.migration")
   override lazy val analyticsToken = loadConfig(s"google-analytics.token")
   override lazy val analyticsHost = loadConfig(s"google-analytics.host")
-  override lazy val reportAProblemPartialUrl = s"$contactHost/contact/problem_reports_ajax?service=$contactFormServiceIdentifier"
-  override lazy val reportAProblemNonJSUrl = s"$contactHost/contact/problem_reports_nonjs?service=$contactFormServiceIdentifier"
+  override lazy val reportAProblemPartialUrl =
+    s"$contactHost/contact/problem_reports_ajax?service=$contactFormServiceIdentifier"
+  override lazy val reportAProblemNonJSUrl =
+    s"$contactHost/contact/problem_reports_nonjs?service=$contactFormServiceIdentifier"
 
-  override val validFormIds: Seq[String] = configuration.getOptional[Seq[String]]("formIds").getOrElse(FormIds.configList).map(_.toUpperCase)
+  override val validFormIds: Seq[String] =
+    configuration.getOptional[Seq[String]]("formIds").getOrElse(FormIds.configList).map(_.toUpperCase)
 }

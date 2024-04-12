@@ -31,7 +31,10 @@ object Identifier {
   implicit val identifierFormat: OFormat[Identifier] = Json.format[Identifier]
 }
 
-class MigratePreferencesService @Inject()(customerMigrationResolver: CustomerMigrationResolver, customerPreferenceMigrator: CustomerPreferenceMigrator) {
+class MigratePreferencesService @Inject() (
+  customerMigrationResolver: CustomerMigrationResolver,
+  customerPreferenceMigrator: CustomerPreferenceMigrator
+) {
   val logger = Logger(getClass)
   def migrate(
     identifiers: List[Identifier],
@@ -42,11 +45,9 @@ class MigratePreferencesService @Inject()(customerMigrationResolver: CustomerMig
       customerMigrationResolver
         .resolveCustomerType(identifier)
         .flatMap(migrate(_, identifier, dryRun))
-        .recover {
-          case exception: Exception => {
-            logger.warn(s"migrateFunctionOutput ${exception.getMessage}")
-            MigrationResult(exception, identifier)
-          }
+        .recover { case exception: Exception =>
+          logger.warn(s"migrateFunctionOutput ${exception.getMessage}")
+          MigrationResult(exception, identifier)
         }
     }
 
@@ -65,14 +66,14 @@ class MigratePreferencesService @Inject()(customerMigrationResolver: CustomerMig
     }
 
     result match {
-      case Right(m: MigratingCustomer)    => migrateCustomer(identifier, m, dryRun).map(MigrationResult(_, identifier, m))
+      case Right(m: MigratingCustomer) => migrateCustomer(identifier, m, dryRun).map(MigrationResult(_, identifier, m))
       case Right(n: NonMigratingCustomer) => Future.successful(MigrationResult(n, identifier))
-      case Left(error)                    => Future.successful(MigrationResult(identifier, SentStatus.Failed, DisplayType.Red, error))
+      case Left(error) => Future.successful(MigrationResult(identifier, SentStatus.Failed, DisplayType.Red, error))
     }
   }
 
-  private def migrateCustomer(identifier: Identifier, migratingCustomer: MigratingCustomer, dryRun: Boolean)(
-    implicit headerCarrier: HeaderCarrier,
+  private def migrateCustomer(identifier: Identifier, migratingCustomer: MigratingCustomer, dryRun: Boolean)(implicit
+    headerCarrier: HeaderCarrier,
     executionContext: ExecutionContext
   ): Future[Either[String, Unit]] =
     if (dryRun) {
@@ -95,7 +96,11 @@ object MigrationResult {
       reason = s"No preference to migrate for ${nonMigratingCustomer.getClass.getSimpleName} customer"
     )
 
-  def apply(result: Either[String, Unit], identifier: Identifier, migratingCustomer: MigratingCustomer): MigrationResult =
+  def apply(
+    result: Either[String, Unit],
+    identifier: Identifier,
+    migratingCustomer: MigratingCustomer
+  ): MigrationResult =
     new MigrationResult(
       identifier = identifier,
       status = result.map(_ => status(migratingCustomer)).getOrElse(SentStatus.Failed),

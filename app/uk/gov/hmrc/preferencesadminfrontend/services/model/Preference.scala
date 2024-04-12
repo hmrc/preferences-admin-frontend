@@ -25,7 +25,8 @@ case class Preference(
   genericPaperless: Boolean,
   genericUpdatedAt: Option[ZonedDateTime],
   email: Option[Email],
-  taxIdentifiers: Seq[TaxIdentifier])
+  taxIdentifiers: Seq[TaxIdentifier]
+)
 
 object Preference {
   implicit val dateFormatDefault: Format[ZonedDateTime] = new Format[ZonedDateTime] {

@@ -23,7 +23,9 @@ import javax.inject.{ Inject, Singleton }
 import scala.concurrent.{ ExecutionContext, Future }
 
 @Singleton
-class EmailConnector @Inject()(httpClient: HttpClient, val servicesConfig: ServicesConfig)(implicit ec: ExecutionContext) {
+class EmailConnector @Inject() (httpClient: HttpClient, val servicesConfig: ServicesConfig)(implicit
+  ec: ExecutionContext
+) {
   val serviceUrl = servicesConfig.baseUrl("email")
 
   implicit val headerCarrier: HeaderCarrier = new HeaderCarrier()

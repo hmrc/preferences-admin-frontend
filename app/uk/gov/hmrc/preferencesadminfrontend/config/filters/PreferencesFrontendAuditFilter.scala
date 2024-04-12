@@ -26,14 +26,22 @@ import uk.gov.hmrc.play.bootstrap.frontend.filters.{ DefaultFrontendAuditFilter,
 
 import scala.concurrent.ExecutionContext
 @Singleton
-class PreferencesFrontendAuditFilter @Inject()(
+class PreferencesFrontendAuditFilter @Inject() (
   override val config: Configuration,
   controllerConfigs: ControllerConfigs,
   override val auditConnector: AuditConnector,
   httpAuditEvent: HttpAuditEvent,
   requestHeaderAuditing: RequestHeaderAuditing,
-  override val mat: Materializer)(implicit ec: ExecutionContext)
-    extends DefaultFrontendAuditFilter(config, controllerConfigs, auditConnector, httpAuditEvent, requestHeaderAuditing, mat) {
+  override val mat: Materializer
+)(implicit ec: ExecutionContext)
+    extends DefaultFrontendAuditFilter(
+      config,
+      controllerConfigs,
+      auditConnector,
+      httpAuditEvent,
+      requestHeaderAuditing,
+      mat
+    ) {
 
   override val maskedFormFields: Seq[String] = Seq("password")
 

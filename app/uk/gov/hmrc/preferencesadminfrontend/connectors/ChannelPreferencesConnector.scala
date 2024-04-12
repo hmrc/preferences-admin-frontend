@@ -35,7 +35,9 @@ object ChannelPreferencesConnector {
 }
 
 @Singleton
-class ChannelPreferencesConnector @Inject()(httpClient: HttpClient, val servicesConfig: ServicesConfig)(implicit ec: ExecutionContext) {
+class ChannelPreferencesConnector @Inject() (httpClient: HttpClient, val servicesConfig: ServicesConfig)(implicit
+  ec: ExecutionContext
+) {
   def serviceUrl: String = servicesConfig.baseUrl("channel-preferences")
 
   def updateStatus(statusUpdate: StatusUpdate)(implicit hc: HeaderCarrier): Future[Either[String, Unit]] =
@@ -44,7 +46,7 @@ class ChannelPreferencesConnector @Inject()(httpClient: HttpClient, val services
       .map { httpResponse =>
         httpResponse.status match {
           case status if Status.isSuccessful(status) => ().asRight
-          case other                                 => s"upstream error when sending status update, $other ${httpResponse.body}".asLeft
+          case other => s"upstream error when sending status update, $other ${httpResponse.body}".asLeft
         }
       }
 }

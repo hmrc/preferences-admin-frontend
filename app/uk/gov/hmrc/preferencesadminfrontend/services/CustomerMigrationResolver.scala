@@ -31,7 +31,7 @@ import javax.inject.{ Inject, Singleton }
 import scala.concurrent.{ ExecutionContext, Future }
 
 @Singleton
-class CustomerMigrationResolver @Inject()(
+class CustomerMigrationResolver @Inject() (
   enrolmentStoreConnector: EnrolmentStoreConnector,
   entityResolverConnector: EntityResolverConnector
 )(implicit executionContext: ExecutionContext) {
@@ -40,7 +40,9 @@ class CustomerMigrationResolver @Inject()(
     getEnrolments(identifier)
       .flatMap(resolve(_, identifier))
       .value
-  private def getEnrolments(identifier: Identifier)(implicit headerCarrier: HeaderCarrier): EitherT[Future, String, Enrolments] = {
+  private def getEnrolments(
+    identifier: Identifier
+  )(implicit headerCarrier: HeaderCarrier): EitherT[Future, String, Enrolments] = {
     val saUtrTaxId = TaxIdentifier("sautr", identifier.utr)
     val itsaTaxId = TaxIdentifier("itsa", identifier.itsaId)
     for {
@@ -49,20 +51,22 @@ class CustomerMigrationResolver @Inject()(
       saStatus      <- EitherT(getSaStatus(saPrincipal, identifier))
       itsaEnrolment <- EitherT(enrolmentStoreConnector.getUserIds(itsaTaxId))
       itsaPrinciple <- EitherT.fromEither[Future](validatePrincipal(itsaEnrolment))
-    } yield {
-      Enrolments(
-        (saPrincipal, saStatus).mapN(StatefulSAEnrolment.apply),
-        itsaPrinciple
-      )
-    }
+    } yield Enrolments(
+      (saPrincipal, saStatus).mapN(StatefulSAEnrolment.apply),
+      itsaPrinciple
+    )
   }
 
-  private def resolve(enrolments: Enrolments, identifier: Identifier)(implicit headerCarrier: HeaderCarrier): EitherT[Future, String, CustomerType] = {
+  private def resolve(enrolments: Enrolments, identifier: Identifier)(implicit
+    headerCarrier: HeaderCarrier
+  ): EitherT[Future, String, CustomerType] = {
     val resolution = enrolments match {
       case Enrolments(Some(ActivatedSAEnrolment(_)), Some(_)) => checkITSAAndSA(identifier).map(_.asRight)
-      case Enrolments(Some(ActivatedSAEnrolment(_)), None)    => checkSAPreference(identifier).map(_.getOrElse(NoDigitalFootprint).asRight)
-      case Enrolments(_, Some(_))                             => checkITSAPreference(identifier).map(_.getOrElse(ITSAOnlineNoPreference).asRight[String])
-      case Enrolments(_, None)                                => Future.successful(NoDigitalFootprint.asRight)
+      case Enrolments(Some(ActivatedSAEnrolment(_)), None) =>
+        checkSAPreference(identifier).map(_.getOrElse(NoDigitalFootprint).asRight)
+      case Enrolments(_, Some(_)) =>
+        checkITSAPreference(identifier).map(_.getOrElse(ITSAOnlineNoPreference).asRight[String])
+      case Enrolments(_, None) => Future.successful(NoDigitalFootprint.asRight)
     }
     EitherT(resolution)
   }
@@ -71,26 +75,28 @@ class CustomerMigrationResolver @Inject()(
     for {
       saPreference: Option[CustomerType] <- checkSAPreference(identifier)
       itsaPreference                     <- checkITSAPreference(identifier)
-    } yield
-      (saPreference, itsaPreference) match {
-        case (Some(_), Some(_)) => {
-          SAandITSA
-        }
-        case (None, Some(itsaOnline)) => {
-          itsaOnline
-        }
-        case _ => {
-          ITSAOnlineNoPreference
-        }
-      }
+    } yield (saPreference, itsaPreference) match {
+      case (Some(_), Some(_)) =>
+        SAandITSA
+      case (None, Some(itsaOnline)) =>
+        itsaOnline
+      case _ =>
+        ITSAOnlineNoPreference
+    }
 
-  private def getSAPreference(identifier: Identifier)(implicit headerCarrier: HeaderCarrier): Future[Option[PreferenceDetails]] =
+  private def getSAPreference(identifier: Identifier)(implicit
+    headerCarrier: HeaderCarrier
+  ): Future[Option[PreferenceDetails]] =
     entityResolverConnector.getPreferenceDetails(TaxIdentifier("sautr", identifier.utr))
 
-  private def checkSAPreference(identifier: Identifier)(implicit headerCarrier: HeaderCarrier): Future[Option[CustomerType]] =
+  private def checkSAPreference(identifier: Identifier)(implicit
+    headerCarrier: HeaderCarrier
+  ): Future[Option[CustomerType]] =
     getSAPreference(identifier).map(_.flatMap(maybeSAPreference))
 
-  private def checkITSAPreference(identifier: Identifier)(implicit headerCarrier: HeaderCarrier): Future[Option[CustomerType]] =
+  private def checkITSAPreference(identifier: Identifier)(implicit
+    headerCarrier: HeaderCarrier
+  ): Future[Option[CustomerType]] =
     getITSAPreference(identifier).map(_.flatMap(maybeITSAPreference))
 
   def maybeITSAPreference(preferenceDetails: PreferenceDetails): Option[ITSAOnlinePreference] =
@@ -102,20 +108,20 @@ class CustomerMigrationResolver @Inject()(
       isPaperless <- preferenceDetails.isPaperless
     } yield SAOnline(entityId, isPaperless)
 
-  private def getITSAPreference(identifier: Identifier)(implicit headerCarrier: HeaderCarrier): Future[Option[PreferenceDetails]] =
+  private def getITSAPreference(identifier: Identifier)(implicit
+    headerCarrier: HeaderCarrier
+  ): Future[Option[PreferenceDetails]] =
     entityResolverConnector.getPreferenceDetails(TaxIdentifier("itsa", identifier.itsaId))
 
   private def validatePrincipal(principals: List[String]): Either[String, Option[String]] =
     principals match {
       case one :: Nil => one.some.asRight
-      case Nil => {
+      case Nil =>
         logger.warn("validatePrincipalEmpty")
         none.asRight
-      }
-      case more => {
+      case more =>
         logger.warn(s"validatePrincipalNonEmpty${more.size}")
         s"Too many principal identifiers, ${more.size}.".asLeft
-      }
     }
 
   private def getSaStatus(

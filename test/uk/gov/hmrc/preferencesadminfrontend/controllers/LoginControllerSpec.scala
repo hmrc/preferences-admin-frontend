@@ -64,7 +64,7 @@ class LoginControllerSpec extends PlaySpec with GuiceOneAppPerSuite with SpecBas
       val result = loginController.loginAction()(fakeRequest)
 
       status(result) mustBe Status.SEE_OTHER
-      headers(result) must contain("Location"    -> "/paperless/admin/home")
+      headers(result) must contain("Location" -> "/paperless/admin/home")
       session(result).data must contain("userId" -> "user")
     }
 
@@ -100,7 +100,8 @@ class LoginControllerSpec extends PlaySpec with GuiceOneAppPerSuite with SpecBas
   }
 
   class MessageBrakeControllerTestCase extends SpecBase {
-    when(auditConnectorMock.sendEvent(any[DataEvent])(any[HeaderCarrier], any[ExecutionContext])).thenReturn(Future.successful(AuditResult.Success))
+    when(auditConnectorMock.sendEvent(any[DataEvent])(any[HeaderCarrier], any[ExecutionContext]))
+      .thenReturn(Future.successful(AuditResult.Success))
     val loginController = app.injector.instanceOf[LoginController]
   }
 }

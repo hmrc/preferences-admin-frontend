@@ -33,14 +33,15 @@ import uk.gov.hmrc.preferencesadminfrontend.views.html.{ confirmed, customer_ide
 import scala.concurrent.{ ExecutionContext, Future }
 
 @Singleton
-class SearchController @Inject()(
+class SearchController @Inject() (
   authorisedAction: AuthorisedAction,
   searchService: SearchService,
   mcc: MessagesControllerComponents,
   confirmedView: confirmed,
   customerIdentificationView: customer_identification,
   failedView: failed,
-  userOptOutView: user_opt_out)(implicit appConfig: AppConfig, ec: ExecutionContext)
+  userOptOutView: user_opt_out
+)(implicit appConfig: AppConfig, ec: ExecutionContext)
     extends FrontendController(mcc) with I18nSupport with Logging {
 
   def showSearchPage(): Action[AnyContent] =
@@ -50,7 +51,10 @@ class SearchController @Inject()(
           customerIdentificationView(
             Search()
               .bind(Map("name" -> "", "value" -> ""))
-              .discardingErrors)))
+              .discardingErrors
+          )
+        )
+      )
     }
 
   def search(): Action[AnyContent] = authorisedAction.async { implicit request => implicit user =>
@@ -58,14 +62,15 @@ class SearchController @Inject()(
       .bindFromRequest()
       .fold(
         errors => Future.successful(BadRequest(customerIdentificationView(errors))),
-        searchTaxIdentifier => {
+        searchTaxIdentifier =>
           searchService.searchPreference(searchTaxIdentifier).map {
             case Nil =>
-              Ok(customerIdentificationView(Search().bindFromRequest().withError("value", "error.preference_not_found")))
+              Ok(
+                customerIdentificationView(Search().bindFromRequest().withError("value", "error.preference_not_found"))
+              )
             case preferenceList =>
               Ok(userOptOutView(OptOutReasonWithIdentifier(), preferenceList))
           }
-        }
       )
   }
 
@@ -77,7 +82,11 @@ class SearchController @Inject()(
           val identifier = TaxIdentifier(errors.data("identifierName"), errors.data("identifierValue"))
           searchService.getPreference(identifier).map {
             case Nil =>
-              Ok(customerIdentificationView(Search().bindFromRequest().withError("value", Messages("error.preference_not_found"))))
+              Ok(
+                customerIdentificationView(
+                  Search().bindFromRequest().withError("value", Messages("error.preference_not_found"))
+                )
+              )
             case preferences =>
               Ok(userOptOutView(errors, preferences))
           }
@@ -95,7 +104,9 @@ class SearchController @Inject()(
       )
   }
 
-  def searchConfirmed(taxIdentifier: TaxIdentifier)(implicit request: Request[AnyContent], hc: HeaderCarrier): Future[Result] =
+  def searchConfirmed(
+    taxIdentifier: TaxIdentifier
+  )(implicit request: Request[AnyContent], hc: HeaderCarrier): Future[Result] =
     searchService.getPreference(taxIdentifier).map {
       case Nil =>
         Ok(failedView(taxIdentifier, Nil, PreferenceNotFound.errorCode))
@@ -103,7 +114,10 @@ class SearchController @Inject()(
         Ok(confirmedView(preferences))
     }
 
-  def searchFailed(taxIdentifier: TaxIdentifier, failureCode: String)(implicit request: Request[AnyContent], hc: HeaderCarrier): Future[Result] =
+  def searchFailed(taxIdentifier: TaxIdentifier, failureCode: String)(implicit
+    request: Request[AnyContent],
+    hc: HeaderCarrier
+  ): Future[Result] =
     searchService.getPreference(taxIdentifier).map { preference =>
       Ok(failedView(taxIdentifier, preference, failureCode))
     }

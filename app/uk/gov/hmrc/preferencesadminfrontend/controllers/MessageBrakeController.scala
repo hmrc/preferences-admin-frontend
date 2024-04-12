@@ -30,7 +30,7 @@ import uk.gov.hmrc.preferencesadminfrontend.views.html.{ ErrorTemplate, batch_ap
 
 import scala.concurrent.{ ExecutionContext, Future }
 
-class MessageBrakeController @Inject()(
+class MessageBrakeController @Inject() (
   authorisedAction: AuthorisedAction,
   messageConnector: MessageConnector,
   messageService: MessageService,
@@ -38,7 +38,8 @@ class MessageBrakeController @Inject()(
   errorTemplateView: ErrorTemplate,
   batchApprovalView: batch_approval,
   batchRejectionView: batch_rejection,
-  messageBrakeAdminView: message_brake_admin)(implicit appConfig: AppConfig, ec: ExecutionContext)
+  messageBrakeAdminView: message_brake_admin
+)(implicit appConfig: AppConfig, ec: ExecutionContext)
     extends FrontendController(mcc) with I18nSupport with Logging {
 
   def showAdminPage: Action[AnyContent] = authorisedAction.async { implicit request => _ =>
@@ -53,15 +54,13 @@ class MessageBrakeController @Inject()(
     for {
       gmcBatches     <- messageService.getGmcBatches()
       messagePreview <- messageService.getRandomMessagePreview(batch)
-    } yield {
-      gmcBatches match {
-        case Left(batches) =>
-          messagePreview match {
-            case Left(preview) => Ok(messageBrakeAdminView(batches, Some(preview)))
-            case Right(error)  => returnError(error)
-          }
-        case Right(error) => returnError(error)
-      }
+    } yield gmcBatches match {
+      case Left(batches) =>
+        messagePreview match {
+          case Left(preview) => Ok(messageBrakeAdminView(batches, Some(preview)))
+          case Right(error)  => returnError(error)
+        }
+      case Right(error) => returnError(error)
     }
   }
 
@@ -77,24 +76,19 @@ class MessageBrakeController @Inject()(
     GmcBatchApproval()
       .bindFromRequest()
       .fold(
-        formWithErrors => {
-          Future.successful(BadRequest(batchApprovalView(formWithErrors)))
-        },
-        gmcBatchApproval => {
+        formWithErrors => Future.successful(BadRequest(batchApprovalView(formWithErrors))),
+        gmcBatchApproval =>
           for {
             result        <- messageConnector.approveGmcBatch(gmcBatchApproval)
             batchesResult <- messageService.getGmcBatches()
-          } yield {
-            result.status match {
-              case OK =>
-                batchesResult match {
-                  case Left(batches) => Ok(messageBrakeAdminView(batches))
-                  case Right(error)  => returnError(error)
-                }
-              case _ => returnError("Failed to approve batch.")
-            }
+          } yield result.status match {
+            case OK =>
+              batchesResult match {
+                case Left(batches) => Ok(messageBrakeAdminView(batches))
+                case Right(error)  => returnError(error)
+              }
+            case _ => returnError("Failed to approve batch.")
           }
-        }
       )
   }
 
@@ -102,24 +96,19 @@ class MessageBrakeController @Inject()(
     GmcBatchApproval()
       .bindFromRequest()
       .fold(
-        formWithErrors => {
-          Future.successful(BadRequest(batchRejectionView(formWithErrors)))
-        },
-        gmcBatchApproval => {
+        formWithErrors => Future.successful(BadRequest(batchRejectionView(formWithErrors))),
+        gmcBatchApproval =>
           for {
             result        <- messageConnector.rejectGmcBatch(gmcBatchApproval)
             batchesResult <- messageService.getGmcBatches()
-          } yield {
-            result.status match {
-              case OK =>
-                batchesResult match {
-                  case Left(batches) => Ok(messageBrakeAdminView(batches))
-                  case Right(error)  => returnError(error)
-                }
-              case _ => returnError("Failed to reject batch.")
-            }
+          } yield result.status match {
+            case OK =>
+              batchesResult match {
+                case Left(batches) => Ok(messageBrakeAdminView(batches))
+                case Right(error)  => returnError(error)
+              }
+            case _ => returnError("Failed to reject batch.")
           }
-        }
       )
   }
 

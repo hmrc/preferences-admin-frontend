@@ -20,7 +20,14 @@ import play.api.data.Form
 import play.api.data.Forms.{ mapping, nonEmptyText, number, optional, text }
 import play.api.libs.json.{ Json, OFormat }
 
-case class GmcBatch(batchId: String, formId: String, issueDate: String, templateId: String, count: Option[Int], version: Option[String])
+case class GmcBatch(
+  batchId: String,
+  formId: String,
+  issueDate: String,
+  templateId: String,
+  count: Option[Int],
+  version: Option[String]
+)
 
 object GmcBatch {
   implicit val format: OFormat[GmcBatch] = Json.format[GmcBatch]
