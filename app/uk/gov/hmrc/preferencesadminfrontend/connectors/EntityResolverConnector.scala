@@ -32,103 +32,100 @@ import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.Try
 
 @Singleton
-class EntityResolverConnector @Inject()(httpClient: HttpClient, val servicesConfig: ServicesConfig) {
+class EntityResolverConnector @Inject() (httpClient: HttpClient, val servicesConfig: ServicesConfig) {
 
   val logger = Logger(getClass)
   implicit val ef: Format[Entity] = Entity.formats
 
   def serviceUrl = servicesConfig.baseUrl("entity-resolver")
 
-  def getTaxIdentifiers(taxId: TaxIdentifier)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[TaxIdentifier]] = {
+  def getTaxIdentifiers(
+    taxId: TaxIdentifier
+  )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[TaxIdentifier]] = {
     def warnNotOptedOut(message: String) = s"getTaxIdentifiersTaxId $message"
     val response = httpClient.GET[Option[Entity]](s"$serviceUrl/entity-resolver/${taxId.regime}/${taxId.value}")
     response
       .map(
-        _.fold(Seq.empty[TaxIdentifier])(
-          entity =>
-            Seq(
-              entity.sautr.map(TaxIdentifier("sautr", _)),
-              entity.nino.map(TaxIdentifier("nino", _)),
-              entity.itsaId.map(TaxIdentifier("HMRC-MTD-IT", _))
-            ).flatten)
+        _.fold(Seq.empty[TaxIdentifier])(entity =>
+          Seq(
+            entity.sautr.map(TaxIdentifier("sautr", _)),
+            entity.nino.map(TaxIdentifier("nino", _)),
+            entity.itsaId.map(TaxIdentifier("HMRC-MTD-IT", _))
+          ).flatten
+        )
       )
       .recover {
-        case ex: BadRequestException => {
+        case ex: BadRequestException =>
           warnNotOptedOut(ex.message)
           Seq.empty
-        }
-        case ex @ UpstreamErrorResponse(_, Status.NOT_FOUND, _, _) => {
+        case ex @ UpstreamErrorResponse(_, Status.NOT_FOUND, _, _) =>
           warnNotOptedOut(ex.message)
           Seq.empty
-        }
-        case ex @ UpstreamErrorResponse(_, Status.CONFLICT, _, _) => {
+        case ex @ UpstreamErrorResponse(_, Status.CONFLICT, _, _) =>
           warnNotOptedOut(ex.message)
           Seq.empty
-        }
-        case ex => {
+        case ex =>
           warnNotOptedOut(ex.getMessage)
           Seq.empty
-        }
       }
   }
 
-  def getTaxIdentifiers(preferenceDetails: PreferenceDetails)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[TaxIdentifier]] = {
+  def getTaxIdentifiers(
+    preferenceDetails: PreferenceDetails
+  )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[TaxIdentifier]] = {
     def warnNotOptedOut(message: String) = s"getTaxIdentifiersPreferenceDetails $message"
     val response = httpClient.GET[Option[Entity]](s"$serviceUrl/entity-resolver/${preferenceDetails.entityId.get}")
     response
       .map(
-        _.fold(Seq.empty[TaxIdentifier])(
-          entity =>
-            Seq(
-              entity.sautr.map(TaxIdentifier("sautr", _)),
-              entity.nino.map(TaxIdentifier("nino", _)),
-              entity.itsaId.map(TaxIdentifier("HMRC-MTD-IT", _))
-            ).flatten)
+        _.fold(Seq.empty[TaxIdentifier])(entity =>
+          Seq(
+            entity.sautr.map(TaxIdentifier("sautr", _)),
+            entity.nino.map(TaxIdentifier("nino", _)),
+            entity.itsaId.map(TaxIdentifier("HMRC-MTD-IT", _))
+          ).flatten
+        )
       )
       .recover {
-        case ex: BadRequestException => {
+        case ex: BadRequestException =>
           warnNotOptedOut(ex.message)
           Seq.empty
-        }
-        case ex @ UpstreamErrorResponse(_, Status.NOT_FOUND, _, _) => {
+        case ex @ UpstreamErrorResponse(_, Status.NOT_FOUND, _, _) =>
           warnNotOptedOut(ex.message)
           Seq.empty
-        }
-        case ex @ UpstreamErrorResponse(_, Status.CONFLICT, _, _) => {
+        case ex @ UpstreamErrorResponse(_, Status.CONFLICT, _, _) =>
           warnNotOptedOut(ex.message)
           Seq.empty
-        }
-        case ex => {
+        case ex =>
           warnNotOptedOut(ex.getMessage)
           Seq.empty
-        }
       }
   }
 
-  def getPreferenceDetails(taxId: TaxIdentifier)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[PreferenceDetails]] = {
+  def getPreferenceDetails(
+    taxId: TaxIdentifier
+  )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[PreferenceDetails]] = {
     def warnNotOptedOut(message: String) = s"getTaxIdentifiersPreferenceDetails $message"
-    httpClient.GET[Option[PreferenceDetails]](s"$serviceUrl/portal/preferences/${taxId.regime}/${taxId.value}").recover {
-      case ex: BadRequestException => {
-        warnNotOptedOut(ex.message)
-        None
+    httpClient
+      .GET[Option[PreferenceDetails]](s"$serviceUrl/portal/preferences/${taxId.regime}/${taxId.value}")
+      .recover {
+        case ex: BadRequestException =>
+          warnNotOptedOut(ex.message)
+          None
+        case ex @ UpstreamErrorResponse(_, Status.NOT_FOUND, _, _) =>
+          warnNotOptedOut(ex.message)
+          None
+        case ex @ UpstreamErrorResponse(_, Status.CONFLICT, _, _) =>
+          warnNotOptedOut(ex.message)
+          None
+        case ex =>
+          warnNotOptedOut(ex.getMessage)
+          None
       }
-      case ex @ UpstreamErrorResponse(_, Status.NOT_FOUND, _, _) => {
-        warnNotOptedOut(ex.message)
-        None
-      }
-      case ex @ UpstreamErrorResponse(_, Status.CONFLICT, _, _) => {
-        warnNotOptedOut(ex.message)
-        None
-      }
-      case ex => {
-        warnNotOptedOut(ex.getMessage)
-        None
-      }
-    }
   }
 
   def optOut(taxId: TaxIdentifier)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[OptOutResult] = {
-    def warnNotOptedOut(status: Int): Unit = logger.warn(s"Unable to manually opt-out ${taxId.name} user with id ${taxId.value}. Status: $status")
+    def warnNotOptedOut(status: Int): Unit =
+      logger.warn(s"Unable to manually opt-out ${taxId.name} user with id ${taxId.value}. Status: $status")
 
     httpClient
       .POSTEmpty[HttpResponse](s"$serviceUrl/entity-resolver-admin/manual-opt-out/${taxId.regime}/${taxId.value}")
@@ -149,7 +146,10 @@ class EntityResolverConnector @Inject()(httpClient: HttpClient, val servicesConf
       }
   }
 
-  def confirm(entityId: String, itsaId: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[String, Unit]] =
+  def confirm(entityId: String, itsaId: String)(implicit
+    hc: HeaderCarrier,
+    ec: ExecutionContext
+  ): Future[Either[String, Unit]] =
     httpClient
       .doEmptyPost(
         s"$serviceUrl/preferences/confirm/$entityId/$itsaId",
@@ -158,7 +158,7 @@ class EntityResolverConnector @Inject()(httpClient: HttpClient, val servicesConf
       .map { httpResponse =>
         httpResponse.status match {
           case status if Status.isSuccessful(status) => ().asRight
-          case other                                 => s"upstream error when confirming ITSA preference, $other ${httpResponse.body}".asLeft
+          case other => s"upstream error when confirming ITSA preference, $other ${httpResponse.body}".asLeft
         }
       }
 }
@@ -194,7 +194,8 @@ case class PreferenceDetails(
   genericUpdatedAt: Option[ZonedDateTime],
   isPaperless: Option[Boolean],
   email: Option[Email],
-  entityId: Option[EntityId] = None)
+  entityId: Option[EntityId] = None
+)
 
 object PreferenceDetails {
   implicit val localDateRead: Reads[Option[ZonedDateTime]] = new Reads[Option[ZonedDateTime]] {
@@ -214,12 +215,18 @@ object PreferenceDetails {
     override def writes(o: ZonedDateTime): JsValue = Writes.ZonedDateTimeEpochMilliWrites.writes(o)
   }
   implicit val reads: Reads[PreferenceDetails] = (
-    (JsPath \ "termsAndConditions" \ "generic").readNullable[JsValue].map(_.fold(false)(m => (m \ "accepted").as[Boolean])) and
+    (JsPath \ "termsAndConditions" \ "generic")
+      .readNullable[JsValue]
+      .map(_.fold(false)(m => (m \ "accepted").as[Boolean])) and
       (JsPath \ "termsAndConditions" \ "generic")
         .readNullable[JsValue]
         .map(_.fold(None: Option[ZonedDateTime])(m => (m \ "updatedAt").asOpt[ZonedDateTime])) and
-      (JsPath \ "termsAndConditions" \ "generic").readNullable[JsValue].map(_.fold(None: Option[Boolean])(m => (m \ "paperless").asOpt[Boolean])) and
+      (JsPath \ "termsAndConditions" \ "generic")
+        .readNullable[JsValue]
+        .map(_.fold(None: Option[Boolean])(m => (m \ "paperless").asOpt[Boolean])) and
       (JsPath \ "email").readNullable[Email] and
       (JsPath \ "entityId").readNullable[EntityId]
-  )((genericPaperless, genericUpdatedAt, isPaperless, email, entityId) => PreferenceDetails(genericPaperless, genericUpdatedAt, isPaperless, email, entityId))
+  )((genericPaperless, genericUpdatedAt, isPaperless, email, entityId) =>
+    PreferenceDetails(genericPaperless, genericUpdatedAt, isPaperless, email, entityId)
+  )
 }

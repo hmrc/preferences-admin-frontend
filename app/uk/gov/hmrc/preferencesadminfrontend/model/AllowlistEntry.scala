@@ -25,7 +25,7 @@ case class AllowlistEntry(formId: String, reasonText: String)
 
 object AllowlistEntry {
 
-  val reasonTextConstraint: Constraint[String] = Constraint("constraints.reasonText")({ reasonText =>
+  val reasonTextConstraint: Constraint[String] = Constraint("constraints.reasonText") { reasonText =>
     if (reasonText.isEmpty) {
       Invalid("A reason is required")
     } else if (reasonText.matches("[a-zA-Z0-9\\s\\-\\/\\.,:;'&+@#()]+")) {
@@ -33,7 +33,7 @@ object AllowlistEntry {
     } else {
       Invalid("Invalid characters entered")
     }
-  })
+  }
 
   implicit val writes: OWrites[AllowlistEntry] = Json.writes[AllowlistEntry]
 

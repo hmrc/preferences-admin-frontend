@@ -28,7 +28,8 @@ case class MessagePreview(
   externalRefId: String,
   messageType: String,
   issueDate: String,
-  taxIdentifierName: String)
+  taxIdentifierName: String
+)
 
 case class BatchMessagePreview(message: MessagePreview, batchId: String) {
   def getContentHtml: Html =

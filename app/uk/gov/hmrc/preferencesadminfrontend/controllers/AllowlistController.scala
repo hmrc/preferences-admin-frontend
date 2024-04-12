@@ -31,14 +31,15 @@ import uk.gov.hmrc.preferencesadminfrontend.views.html.{ ErrorTemplate, allowlis
 
 import scala.concurrent.{ ExecutionContext, Future }
 
-class AllowlistController @Inject()(
+class AllowlistController @Inject() (
   authorisedAction: AuthorisedAction,
   messageConnector: MessageConnector,
   mcc: MessagesControllerComponents,
   errorTemplateView: ErrorTemplate,
   allowlistAddView: allowlist_add,
   allowlistShowView: allowlist_show,
-  allowlistDeleteView: allowlist_delete)(implicit appConfig: AppConfig, ec: ExecutionContext)
+  allowlistDeleteView: allowlist_delete
+)(implicit appConfig: AppConfig, ec: ExecutionContext)
     extends FrontendController(mcc) with I18nSupport with Logging {
 
   def showAllowlistPage(): Action[AnyContent] = authorisedAction.async { implicit request => _ =>
@@ -49,10 +50,14 @@ class AllowlistController @Inject()(
           case OK =>
             Json.parse(response.body).validate[Allowlist].asOpt match {
               case Some(allowlist) => Ok(allowlistShowView(allowlist))
-              case None            => BadGateway(errorTemplateView("Error", "There was an error:", "The allowlist does not appear to be valid."))
+              case None =>
+                BadGateway(
+                  errorTemplateView("Error", "There was an error:", "The allowlist does not appear to be valid.")
+                )
             }
           case _ => BadGateway(errorTemplateView("Error", "There was an error:", response.body))
-      })
+        }
+      )
   }
 
   def addFormId: Action[AnyContent] = authorisedAction.async { implicit request => _ =>
@@ -64,7 +69,7 @@ class AllowlistController @Inject()(
       .bindFromRequest()
       .fold(
         formWithErrors => Future.successful(BadRequest(allowlistAddView(formWithErrors))),
-        addEntry => {
+        addEntry =>
           if (appConfig.validFormIds.contains(addEntry.formId.toUpperCase))
             messageConnector
               .addFormIdToAllowlist(addEntry)
@@ -72,11 +77,18 @@ class AllowlistController @Inject()(
                 response.status match {
                   case CREATED => Redirect(routes.AllowlistController.showAllowlistPage())
                   case _       => BadGateway(errorTemplateView("Error", "There was an error:", response.body))
-              })
+                }
+              )
           else
             Future.successful(
-              BadRequest(errorTemplateView("Error", "Invalid Form ID", s"This Form ID ${addEntry.formId} is not added in the message break allow list.")))
-        }
+              BadRequest(
+                errorTemplateView(
+                  "Error",
+                  "Invalid Form ID",
+                  s"This Form ID ${addEntry.formId} is not added in the message break allow list."
+                )
+              )
+            )
       )
   }
 
@@ -88,18 +100,16 @@ class AllowlistController @Inject()(
     AllowlistEntry()
       .bindFromRequest()
       .fold(
-        formWithErrors => {
-          Future.successful(BadRequest(allowlistDeleteView(formWithErrors)))
-        },
-        deleteEntry => {
+        formWithErrors => Future.successful(BadRequest(allowlistDeleteView(formWithErrors))),
+        deleteEntry =>
           messageConnector
             .deleteFormIdFromAllowlist(deleteEntry)
             .map(response =>
               response.status match {
                 case OK => Redirect(routes.AllowlistController.showAllowlistPage())
                 case _  => BadGateway(errorTemplateView("Error", "There was an error:", response.body))
-            })
-        }
+              }
+            )
       )
   }
 

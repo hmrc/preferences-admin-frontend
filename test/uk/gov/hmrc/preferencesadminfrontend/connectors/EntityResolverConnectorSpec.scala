@@ -44,7 +44,7 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
 
       val result = entityConnectorGetEntityMock(expectedPath, responseJson).getTaxIdentifiers(sautr).futureValue
 
-      result.size mustBe (1)
+      result.size mustBe 1
       result must contain(sautr)
     }
 
@@ -54,7 +54,7 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
 
       val result = entityConnectorGetEntityMock(expectedPath, responseJson).getTaxIdentifiers(sautr).futureValue
 
-      result.size mustBe (2)
+      result.size mustBe 2
       result must contain(nino)
       result must contain(sautr)
     }
@@ -65,7 +65,7 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
 
       val result = entityConnectorGetEntityMock(expectedPath, responseJson).getTaxIdentifiers(nino).futureValue
 
-      result.size mustBe (2)
+      result.size mustBe 2
       result must contain(nino)
       result must contain(sautr)
     }
@@ -76,7 +76,7 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
 
       val result = entityConnectorGetEntityMock(expectedPath, responseJson).getTaxIdentifiers(nino).futureValue
 
-      result.size mustBe (3)
+      result.size mustBe 3
       result must contain(nino)
       result must contain(sautr)
       result must contain(itsaId)
@@ -88,7 +88,7 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
 
       val result = entityConnectorGetEntityMock(expectedPath, responseJson).getTaxIdentifiers(sautr).futureValue
 
-      result.size mustBe (3)
+      result.size mustBe 3
       result must contain(nino)
       result must contain(sautr)
       result must contain(itsaId)
@@ -101,12 +101,14 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
         .getTaxIdentifiers(nino)
         .futureValue
 
-      result.size mustBe (0)
+      result.size mustBe 0
     }
 
     "return empty sequence  if Entity-Resolver cannot parse parameter" in new TestCase {
       val expectedPath = s"$entityResolverserviceUrl/entity-resolver/paye/${nino.value}"
-      val error = new BadRequestException(message = s"""'{"statusCode":400,"message":"Cannot parse parameter '${nino.name}' with value '${nino.value}'"}'""")
+      val error = new BadRequestException(message =
+        s"""'{"statusCode":400,"message":"Cannot parse parameter '${nino.name}' with value '${nino.value}'"}'"""
+      )
 
       val result = entityConnectorGetMock(expectedPath, error).getTaxIdentifiers(nino).futureValue
 
@@ -121,7 +123,8 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
       val expectedPath = s"$entityResolverserviceUrl/portal/preferences/sa/${sautr.value}"
       val responseJson = preferenceDetailsResponseForGenericOptedIn(true)
 
-      val result = entityConnectorGetPreferenceDetailsMock(expectedPath, responseJson).getPreferenceDetails(sautr).futureValue
+      val result =
+        entityConnectorGetPreferenceDetailsMock(expectedPath, responseJson).getPreferenceDetails(sautr).futureValue
 
       result mustBe defined
       result.get.genericPaperless mustBe true
@@ -134,7 +137,8 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
       val expectedPath = s"$entityResolverserviceUrl/portal/preferences/sa/${sautr.value}"
       val responseJson = preferenceDetailsResponseForGenericOptedIn(false)
 
-      val result = entityConnectorGetPreferenceDetailsMock(expectedPath, responseJson).getPreferenceDetails(sautr).futureValue
+      val result =
+        entityConnectorGetPreferenceDetailsMock(expectedPath, responseJson).getPreferenceDetails(sautr).futureValue
 
       result mustBe defined
       result.get.genericPaperless mustBe true
@@ -145,7 +149,8 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
       val expectedPath = s"$entityResolverserviceUrl/portal/preferences/sa/${sautr.value}"
       val responseJson = preferenceDetailsResponseForOptedOut()
 
-      val result = entityConnectorGetPreferenceDetailsMock(expectedPath, responseJson).getPreferenceDetails(sautr).futureValue
+      val result =
+        entityConnectorGetPreferenceDetailsMock(expectedPath, responseJson).getPreferenceDetails(sautr).futureValue
 
       result mustBe defined
       result.get.genericPaperless mustBe false
@@ -156,7 +161,8 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
       val expectedPath = s"$entityResolverserviceUrl/portal/preferences/paye/${nino.value}"
       val responseJson = preferenceDetailsResponseForGenericOptedIn(true)
 
-      val result = entityConnectorGetPreferenceDetailsMock(expectedPath, responseJson).getPreferenceDetails(nino).futureValue
+      val result =
+        entityConnectorGetPreferenceDetailsMock(expectedPath, responseJson).getPreferenceDetails(nino).futureValue
 
       result mustBe defined
       result.get.genericPaperless mustBe true
@@ -175,7 +181,9 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
 
     "return None if taxId is malformed" in new TestCase {
       val expectedPath = s"$entityResolverserviceUrl/portal/preferences/paye/${nino.value}"
-      val error = new BadRequestException(message = s"""'{"statusCode":400,"message":"Cannot parse parameter '${nino.name}' with value '${nino.value}'"}'""")
+      val error = new BadRequestException(message =
+        s"""'{"statusCode":400,"message":"Cannot parse parameter '${nino.name}' with value '${nino.value}'"}'"""
+      )
 
       val result = entityConnectorGetMock(expectedPath, error).getPreferenceDetails(nino).futureValue
 
@@ -236,10 +244,16 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
       val mockHttp: HttpClient = mock[HttpClient]
       when(
         mockHttp
-          .GET[Option[Entity]](ArgumentMatchers.eq(expectedPath), ArgumentMatchers.any[Seq[(String, String)]], ArgumentMatchers.any[Seq[(String, String)]])(
+          .GET[Option[Entity]](
+            ArgumentMatchers.eq(expectedPath),
+            ArgumentMatchers.any[Seq[(String, String)]],
+            ArgumentMatchers.any[Seq[(String, String)]]
+          )(
             ArgumentMatchers.any[HttpReads[Option[Entity]]],
             ArgumentMatchers.any[HeaderCarrier],
-            ArgumentMatchers.any[ExecutionContext]))
+            ArgumentMatchers.any[ExecutionContext]
+          )
+      )
         .thenReturn(Future.successful(Some(jsonBody.as[Entity])))
       new EntityResolverConnector(mockHttp, servicesConfig)
     }
@@ -250,10 +264,13 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
         mockHttp.GET[Option[PreferenceDetails]](
           ArgumentMatchers.eq(expectedPath),
           ArgumentMatchers.any[Seq[(String, String)]],
-          ArgumentMatchers.any[Seq[(String, String)]])(
+          ArgumentMatchers.any[Seq[(String, String)]]
+        )(
           ArgumentMatchers.any[HttpReads[Option[PreferenceDetails]]],
           ArgumentMatchers.any[HeaderCarrier],
-          ArgumentMatchers.any[ExecutionContext]))
+          ArgumentMatchers.any[ExecutionContext]
+        )
+      )
         .thenReturn(Future.successful(Some(jsonBody.as[PreferenceDetails])))
       new EntityResolverConnector(mockHttp, servicesConfig)
     }
@@ -261,10 +278,16 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
     def entityConnectorGetMock(expectedPath: String, error: Throwable): EntityResolverConnector = {
       val mockHttp: HttpClient = mock[HttpClient]
       when(
-        mockHttp.GET(ArgumentMatchers.eq(expectedPath), ArgumentMatchers.any[Seq[(String, String)]], ArgumentMatchers.any[Seq[(String, String)]])(
+        mockHttp.GET(
+          ArgumentMatchers.eq(expectedPath),
+          ArgumentMatchers.any[Seq[(String, String)]],
+          ArgumentMatchers.any[Seq[(String, String)]]
+        )(
           ArgumentMatchers.any[HttpReads[HttpResponse]],
           ArgumentMatchers.any[HeaderCarrier],
-          ArgumentMatchers.any[ExecutionContext]))
+          ArgumentMatchers.any[ExecutionContext]
+        )
+      )
         .thenReturn(Future.failed(error))
       new EntityResolverConnector(mockHttp, servicesConfig)
     }
@@ -273,10 +296,13 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
       lazy val mockResponse = mock[HttpResponse]
       val mockHttp: HttpClient = mock[HttpClient]
       when(
-        mockHttp.POSTEmpty[HttpResponse](ArgumentMatchers.eq(expectedPath), ArgumentMatchers.any[Seq[(String, String)]])(
-          ArgumentMatchers.any[HttpReads[HttpResponse]],
-          ArgumentMatchers.any[HeaderCarrier],
-          ArgumentMatchers.any[ExecutionContext]))
+        mockHttp
+          .POSTEmpty[HttpResponse](ArgumentMatchers.eq(expectedPath), ArgumentMatchers.any[Seq[(String, String)]])(
+            ArgumentMatchers.any[HttpReads[HttpResponse]],
+            ArgumentMatchers.any[HeaderCarrier],
+            ArgumentMatchers.any[ExecutionContext]
+          )
+      )
         .thenReturn(Future.successful(mockResponse))
       new EntityResolverConnector(mockHttp, servicesConfig)
     }
@@ -287,14 +313,16 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
         mockHttp.POSTEmpty(ArgumentMatchers.eq(expectedPath), ArgumentMatchers.any[Seq[(String, String)]])(
           ArgumentMatchers.any[HttpReads[HttpResponse]],
           ArgumentMatchers.any[HeaderCarrier],
-          ArgumentMatchers.any[ExecutionContext]))
+          ArgumentMatchers.any[ExecutionContext]
+        )
+      )
         .thenReturn(Future.failed(error))
       new EntityResolverConnector(mockHttp, servicesConfig)
     }
 
     def taxIdentifiersResponseFor(taxIds: TaxIdentifier*) = {
-      val taxIdsJson: Seq[(String, JsValue)] = taxIds.map {
-        case TaxIdentifier(name, value) => name -> JsString(value)
+      val taxIdsJson: Seq[(String, JsValue)] = taxIds.map { case TaxIdentifier(name, value) =>
+        name -> JsString(value)
       }
       taxIdsJson.foldLeft(Json.obj("_id" -> "6a048719-3d4b-4a3e-9440-17b238807bc9"))(_ + _)
     }

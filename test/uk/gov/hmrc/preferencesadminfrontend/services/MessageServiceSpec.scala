@@ -48,7 +48,9 @@ class MessageServiceSpec extends PlaySpec with ScalaFutures with IntegrationPati
       when(messageConnectorMock.getGmcBatches("v3")).thenReturn(Future.successful(response))
       when(messageConnectorMock.getGmcBatches("v4")).thenReturn(Future.successful(response))
       messageService.getGmcBatches().futureValue mustBe
-        Right("The GMC batches retrieved do not appear to be valid.The GMC batches retrieved for version v4 do not appear to be valid.")
+        Right(
+          "The GMC batches retrieved do not appear to be valid.The GMC batches retrieved for version v4 do not appear to be valid."
+        )
     }
 
     "return a response body if status isn't 200" in new MessageServiceTestCase {
@@ -99,7 +101,8 @@ class MessageServiceSpec extends PlaySpec with ScalaFutures with IntegrationPati
             "sautr"
           ),
           "123456789"
-        ))
+        )
+      )
     }
 
     "return an error message if status is 200 but there no valid message preview returned" in new MessageServiceTestCase {
@@ -122,21 +125,26 @@ class MessageServiceSpec extends PlaySpec with ScalaFutures with IntegrationPati
             |  "messageType" : "mailout-batch",
             |  "issueDate" : "05 APR 2019",
             |  "taxIdentifierName" : "sautr"
-            |}""".stripMargin)
+            |}""".stripMargin
+        )
     }
   }
 
   "sendAddHocMessage" should {
     "return a message id if successfully created" in new MessageServiceTestCase {
-      val response = HttpResponse(Status.CREATED, Json.obj(("id" -> "messageid")), Map.empty)
+      val response = HttpResponse(Status.CREATED, Json.obj("id" -> "messageid"), Map.empty)
       when(messageConnectorMock.sendMessage(any[JsValue])(any[HeaderCarrier])).thenReturn(Future.successful(response))
-      messageService.sendPenalyChargeApologyMessage("foo@test.com", "1234567890").futureValue mustBe Right(""""messageid"""")
+      messageService.sendPenalyChargeApologyMessage("foo@test.com", "1234567890").futureValue mustBe Right(
+        """"messageid""""
+      )
     }
     "return error on message creation failure" in new MessageServiceTestCase {
       val errorMessage = "error message"
       val response = HttpResponse(Status.BAD_REQUEST, errorMessage)
       when(messageConnectorMock.sendMessage(any[JsValue])(any[HeaderCarrier])).thenReturn(Future.successful(response))
-      messageService.sendPenalyChargeApologyMessage("foo@test.com", "1234567890").futureValue mustBe (Left((Status.BAD_REQUEST, errorMessage)))
+      messageService.sendPenalyChargeApologyMessage("foo@test.com", "1234567890").futureValue mustBe (Left(
+        (Status.BAD_REQUEST, errorMessage)
+      ))
     }
   }
 
@@ -172,7 +180,8 @@ class MessageServiceSpec extends PlaySpec with ScalaFutures with IntegrationPati
         | "issueDate":"05 APR 2019",
         | "taxIdentifierName":"sautr"
         |}
-      """.stripMargin)
+      """.stripMargin
+    )
 
     val messageService = new MessageService(messageConnectorMock)
   }

@@ -29,7 +29,8 @@ object Rescindment {
       "date"            -> nonEmptyText,
       "reference"       -> nonEmptyText,
       "emailTemplateId" -> nonEmptyText
-    )((batchId, formId, date, reference, emailTemplateId) => RescindmentRequest.apply(batchId, formId, date, reference, emailTemplateId))(
-      RescindmentRequest.unapply _)
+    )((batchId, formId, date, reference, emailTemplateId) =>
+      RescindmentRequest.apply(batchId, formId, date, reference, emailTemplateId)
+    )(RescindmentRequest.unapply _)
   )
 }

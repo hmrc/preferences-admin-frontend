@@ -27,32 +27,39 @@ import javax.inject.{ Inject, Singleton }
 import scala.concurrent.{ ExecutionContext, Future }
 
 @Singleton
-class CustomerPreferenceMigrator @Inject()(
+class CustomerPreferenceMigrator @Inject() (
   entityResolverConnector: EntityResolverConnector,
   channelPreferencesConnector: ChannelPreferencesConnector
 ) {
   val logger = Logger(getClass)
-  def migrateCustomer(identifier: Identifier, migratingCustomer: MigratingCustomer)(
-    implicit headerCarrier: HeaderCarrier,
-    executionContext: ExecutionContext): Future[Either[String, Unit]] =
+  def migrateCustomer(identifier: Identifier, migratingCustomer: MigratingCustomer)(implicit
+    headerCarrier: HeaderCarrier,
+    executionContext: ExecutionContext
+  ): Future[Either[String, Unit]] =
     migratingCustomer match {
       case sa: MTDPMigration.SAOnline               => migrateSAOnline(identifier, sa)
       case itsa: MTDPMigration.ITSAOnlinePreference => migrateITSAOnline(identifier, itsa)
     }
 
-  private def migrateSAOnline(identifier: Identifier, saOnline: SAOnline)(
-    implicit headerCarrier: HeaderCarrier,
-    executionContext: ExecutionContext): Future[Either[String, Unit]] = {
+  private def migrateSAOnline(identifier: Identifier, saOnline: SAOnline)(implicit
+    headerCarrier: HeaderCarrier,
+    executionContext: ExecutionContext
+  ): Future[Either[String, Unit]] = {
     logger.debug(s"migrateSAOnline with ${saOnline.entityId.value} and ${identifier.itsaId}")
     for {
-      _         <- entityResolverConnector.confirm(saOnline.entityId.value, identifier.itsaId)
-      enrolment <- channelPreferencesConnector.updateStatus(StatusUpdate(s"HMRC-MTD-IT~MTDBSA~${identifier.itsaId}", saOnline.isPaperless))
+      _ <- entityResolverConnector.confirm(saOnline.entityId.value, identifier.itsaId)
+      enrolment <- channelPreferencesConnector.updateStatus(
+                     StatusUpdate(s"HMRC-MTD-IT~MTDBSA~${identifier.itsaId}", saOnline.isPaperless)
+                   )
     } yield enrolment
   }
 
-  private def migrateITSAOnline(identifier: Identifier, itsaOnlinePreference: ITSAOnlinePreference)(
-    implicit headerCarrier: HeaderCarrier): Future[Either[String, Unit]] = {
+  private def migrateITSAOnline(identifier: Identifier, itsaOnlinePreference: ITSAOnlinePreference)(implicit
+    headerCarrier: HeaderCarrier
+  ): Future[Either[String, Unit]] = {
     logger.debug(s"migrateITSAOnline with ${identifier.itsaId} and ${itsaOnlinePreference.isPaperless}")
-    channelPreferencesConnector.updateStatus(StatusUpdate(s"HMRC-MTD-IT~MTDBSA~${identifier.itsaId}", itsaOnlinePreference.isPaperless))
+    channelPreferencesConnector.updateStatus(
+      StatusUpdate(s"HMRC-MTD-IT~MTDBSA~${identifier.itsaId}", itsaOnlinePreference.isPaperless)
+    )
   }
 }

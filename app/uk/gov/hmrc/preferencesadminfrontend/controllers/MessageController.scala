@@ -32,13 +32,14 @@ import uk.gov.hmrc.preferencesadminfrontend.views.html.{ migration_entries, migr
 import javax.inject.Inject
 import scala.concurrent.{ ExecutionContext, Future }
 
-class MessageController @Inject()(
+class MessageController @Inject() (
   authorisedAction: AuthorisedAction,
   migrationEntriesView: migration_entries,
   migrationSummaryView: migration_summary,
   migrationStatusView: migration_status,
   migratePreferencesService: MigratePreferencesService,
-  mcc: MessagesControllerComponents)(implicit appConfig: AppConfig, ec: ExecutionContext)
+  mcc: MessagesControllerComponents
+)(implicit appConfig: AppConfig, ec: ExecutionContext)
     extends FrontendController(mcc) with I18nSupport with Logging {
 
   def show(): Action[AnyContent] = authorisedAction.async { implicit request => _ =>
@@ -49,12 +50,8 @@ class MessageController @Inject()(
     MigrationEntries()
       .bindFromRequest()
       .fold(
-        formWithErrors => {
-          Future.successful(BadRequest(migrationEntriesView(formWithErrors)))
-        },
-        input => {
-          summaryResult(input.entries)
-        }
+        formWithErrors => Future.successful(BadRequest(migrationEntriesView(formWithErrors))),
+        input => summaryResult(input.entries)
       )
   }
 
@@ -62,10 +59,8 @@ class MessageController @Inject()(
     SyncEntries()
       .bindFromRequest()
       .fold(
-        _ => {
-          Future.successful(Redirect(routes.MessageController.show()))
-        },
-        input => {
+        _ => Future.successful(Redirect(routes.MessageController.show())),
+        input =>
           request.body.asFormUrlEncoded.flatMap(_.get("accepted")) match {
             case Some(_) =>
               validateIdentities(input.entries)
@@ -74,7 +69,7 @@ class MessageController @Inject()(
                   identifiers =>
                     migratePreferencesService.migrate(identifiers = identifiers, dryRun = false).map { result =>
                       Ok(migrationStatusView(result))
-                  }
+                    }
                 )
             case None =>
               validateIdentities(input.entries)
@@ -92,11 +87,10 @@ class MessageController @Inject()(
                         )
                       )
 
-                  }
+                    }
                 )
 
           }
-        }
       )
   }
 
@@ -108,8 +102,12 @@ class MessageController @Inject()(
   private def returnEntriesLost()(implicit request: Request[AnyContent]) =
     Future.successful(
       BadRequest(
-        migrationEntriesView(MigrationEntries()
-          .withError(FormError("identifiers", "We lost identifiers please start again")))))
+        migrationEntriesView(
+          MigrationEntries()
+            .withError(FormError("identifiers", "We lost identifiers please start again"))
+        )
+      )
+    )
 
   private def dryRun(identifiers: List[Identifier])(implicit hc: HeaderCarrier) =
     migratePreferencesService.migrate(identifiers, dryRun = true)
@@ -118,9 +116,18 @@ class MessageController @Inject()(
     parse(entries) match {
       case Right(identifiers) =>
         dryRun(identifiers).map { result =>
-          Ok(migrationSummaryView(summary(result), identifiers, SyncEntries().fill(SyncEntries(Json.toJson(identifiers).toString(), true))))
+          Ok(
+            migrationSummaryView(
+              summary(result),
+              identifiers,
+              SyncEntries().fill(SyncEntries(Json.toJson(identifiers).toString(), true))
+            )
+          )
         }
-      case Left(value) => Future.successful(BadRequest(migrationEntriesView(MigrationEntries().withError(FormError("identifiers", value)))))
+      case Left(value) =>
+        Future.successful(
+          BadRequest(migrationEntriesView(MigrationEntries().withError(FormError("identifiers", value))))
+        )
     }
 
   private[controllers] def parse(input: String): Either[String, List[Identifier]] = {
@@ -138,10 +145,9 @@ class MessageController @Inject()(
         }
       def loop(lines: List[String], acc: Either[String, List[Identifier]]): Either[String, List[Identifier]] =
         lines match {
-          case line :: tail => {
+          case line :: tail =>
             val lineResult = add(line).left.flatMap(x => Left(x))
             lineResult.flatMap(item => loop(tail, acc.map(i => i :+ item)))
-          }
           case Nil => acc
           case _   => Left("input is empty")
         }
@@ -161,10 +167,15 @@ class MessageController @Inject()(
 
     MigrationSummary(
       total = SummaryItem(total.size, total),
-      noDigitalFootprint = SummaryItem(noDigitalFootPrint.getOrElse(List.empty).size, noDigitalFootPrint.getOrElse(List.empty)),
+      noDigitalFootprint =
+        SummaryItem(noDigitalFootPrint.getOrElse(List.empty).size, noDigitalFootPrint.getOrElse(List.empty)),
       saOnlineCustomer = SummaryItem(saOnline.getOrElse(List.empty).size, saOnline.getOrElse(List.empty)),
-      itsaOnlineNoPreference = SummaryItem(ItsaOnlineNoPreference.getOrElse(List.empty).size, ItsaOnlineNoPreference.getOrElse(List.empty)),
-      itsaOnlineCustomerPreference = SummaryItem(ItsaOnlinewithPreference.getOrElse(List.empty).size, ItsaOnlinewithPreference.getOrElse(List.empty)),
+      itsaOnlineNoPreference =
+        SummaryItem(ItsaOnlineNoPreference.getOrElse(List.empty).size, ItsaOnlineNoPreference.getOrElse(List.empty)),
+      itsaOnlineCustomerPreference = SummaryItem(
+        ItsaOnlinewithPreference.getOrElse(List.empty).size,
+        ItsaOnlinewithPreference.getOrElse(List.empty)
+      ),
       saAndItsaCustomer = SummaryItem(saItsaCustomer.getOrElse(List.empty).size, saItsaCustomer.getOrElse(List.empty))
     )
   }

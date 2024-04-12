@@ -20,7 +20,7 @@ import uk.gov.hmrc.preferencesadminfrontend.connectors.EmailConnector
 import javax.inject.{ Inject, Singleton }
 import scala.concurrent.ExecutionContext
 @Singleton
-class EmailService @Inject()(emailConnector: EmailConnector) {
+class EmailService @Inject() (emailConnector: EmailConnector) {
   def findEvent(transId: String)(implicit ec: ExecutionContext) =
     emailConnector.findEvent(transId).map(_.body)
 }

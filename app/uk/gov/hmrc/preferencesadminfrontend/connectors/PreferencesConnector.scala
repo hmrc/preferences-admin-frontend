@@ -29,18 +29,23 @@ import uk.gov.hmrc.preferencesadminfrontend.controllers.model.EmailRequest
 import scala.concurrent.{ ExecutionContext, Future }
 
 @Singleton
-class PreferencesConnector @Inject()(
+class PreferencesConnector @Inject() (
   val httpClient: HttpClient,
   val runModeConfiguration: Configuration,
   val servicesConfig: ServicesConfig,
-  val actorSystem: ActorSystem) {
+  val actorSystem: ActorSystem
+) {
 
   implicit val ef: Format[Entity] = Entity.formats
 
   def serviceUrl: String = servicesConfig.baseUrl("preferences")
 
-  def getPreferenceDetails(email: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[List[PreferenceDetails]] =
-    httpClient.POST[EmailRequest, List[PreferenceDetails]](s"$serviceUrl/preferences/find-by-email", EmailRequest(email)).recover {
-      case _: BadRequestException => Nil
-    }
+  def getPreferenceDetails(
+    email: String
+  )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[List[PreferenceDetails]] =
+    httpClient
+      .POST[EmailRequest, List[PreferenceDetails]](s"$serviceUrl/preferences/find-by-email", EmailRequest(email))
+      .recover { case _: BadRequestException =>
+        Nil
+      }
 }

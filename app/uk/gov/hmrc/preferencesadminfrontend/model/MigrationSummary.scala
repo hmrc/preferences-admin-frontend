@@ -24,6 +24,7 @@ case class MigrationSummary(
   saOnlineCustomer: SummaryItem,
   itsaOnlineNoPreference: SummaryItem,
   itsaOnlineCustomerPreference: SummaryItem,
-  saAndItsaCustomer: SummaryItem)
+  saAndItsaCustomer: SummaryItem
+)
 
 case class SummaryItem(count: Int, items: List[MigrationResult])

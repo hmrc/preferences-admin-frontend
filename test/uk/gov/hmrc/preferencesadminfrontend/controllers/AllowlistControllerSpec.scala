@@ -49,12 +49,13 @@ class AllowlistControllerSpec extends PlaySpec with GuiceOneAppPerSuite with Spe
 
   implicit val messagesApi: MessagesApi = app.injector.instanceOf[MessagesApi]
 
-  app.injector.instanceOf[Configuration] must not be (null)
+  app.injector.instanceOf[Configuration] must not be null
 
   "showAllowlistPage" should {
 
     "return 200 (Ok) when a populated allowlist is successfully retrieved from the message service" in new AllowlistControllerTestCase {
-      private val fakeRequestWithSession = FakeRequest(routes.AllowlistController.showAllowlistPage()).withSession(User.sessionKey -> "user")
+      private val fakeRequestWithSession =
+        FakeRequest(routes.AllowlistController.showAllowlistPage()).withSession(User.sessionKey -> "user")
       private val allowlistJson = Json.parse("""
                                                |{
                                                | "formIdList" : ["SA359 2018","SA251 2018","SA370 2018"]
@@ -70,7 +71,8 @@ class AllowlistControllerSpec extends PlaySpec with GuiceOneAppPerSuite with Spe
     }
 
     "return 200 (Ok) when an empty allowlist is successfully retrieved from the message service" in new AllowlistControllerTestCase {
-      private val fakeRequestWithSession = FakeRequest(routes.AllowlistController.showAllowlistPage()).withSession(User.sessionKey -> "user")
+      private val fakeRequestWithSession =
+        FakeRequest(routes.AllowlistController.showAllowlistPage()).withSession(User.sessionKey -> "user")
       private val allowlistJson = Json.parse("""
                                                |{
                                                | "formIdList" : []
@@ -86,7 +88,8 @@ class AllowlistControllerSpec extends PlaySpec with GuiceOneAppPerSuite with Spe
     }
 
     "return 502 (Bad Gateway) when the message service returns an invalid allowlist" in new AllowlistControllerTestCase {
-      private val fakeRequestWithSession = FakeRequest(routes.AllowlistController.showAllowlistPage()).withSession(User.sessionKey -> "user")
+      private val fakeRequestWithSession =
+        FakeRequest(routes.AllowlistController.showAllowlistPage()).withSession(User.sessionKey -> "user")
       private val allowlistJson = Json.parse("""
                                                |{
                                                | "blah" : "blah"
@@ -102,7 +105,8 @@ class AllowlistControllerSpec extends PlaySpec with GuiceOneAppPerSuite with Spe
     }
 
     "return 502 (Bad Gateway) when the message service returns any other status" in new AllowlistControllerTestCase {
-      private val fakeRequestWithForm = FakeRequest(routes.AllowlistController.showAllowlistPage()).withSession(User.sessionKey -> "user")
+      private val fakeRequestWithForm =
+        FakeRequest(routes.AllowlistController.showAllowlistPage()).withSession(User.sessionKey -> "user")
       when(mockMessageConnector.getAllowlist()(any[HeaderCarrier])).thenReturn(
         Future.successful(
           HttpResponse(Http.Status.NOT_FOUND, "not found")
@@ -119,7 +123,10 @@ class AllowlistControllerSpec extends PlaySpec with GuiceOneAppPerSuite with Spe
     "return 303 (Redirect) when a Form ID is successfully added via the message service" in new AllowlistControllerTestCase {
       private val fakeRequestWithSession =
         FakeRequest(routes.AllowlistController.confirmAdd())
-          .withFormUrlEncodedBody("formId" -> "SA316 2015", "reasonText" -> "some reason (text) with special characters -@.;#:+'/")
+          .withFormUrlEncodedBody(
+            "formId"     -> "SA316 2015",
+            "reasonText" -> "some reason (text) with special characters -@.;#:+'/"
+          )
           .withSession(User.sessionKey -> "user")
       when(mockMessageConnector.addFormIdToAllowlist(any[AllowlistEntry])(any[HeaderCarrier])).thenReturn(
         Future.successful(

@@ -27,7 +27,7 @@ import uk.gov.hmrc.preferencesadminfrontend.views.html.home
 import scala.concurrent.Future
 
 @Singleton
-class HomeController @Inject()(homeView: home, val mcc: MessagesControllerComponents)(implicit appConfig: AppConfig)
+class HomeController @Inject() (homeView: home, val mcc: MessagesControllerComponents)(implicit appConfig: AppConfig)
     extends FrontendController(mcc) with I18nSupport with Logging {
 
   val showHomePage = Action.async { implicit request =>

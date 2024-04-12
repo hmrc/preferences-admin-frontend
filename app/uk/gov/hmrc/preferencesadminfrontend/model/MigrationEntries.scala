@@ -24,13 +24,13 @@ import play.api.libs.json.{ Json, OWrites }
 case class MigrationEntries(entries: String)
 
 object MigrationEntries {
-  val sizeConstraint: Constraint[String] = Constraint("constraints.size")({ size =>
+  val sizeConstraint: Constraint[String] = Constraint("constraints.size") { size =>
     if (size.trim.isEmpty) {
       Invalid("Can't send empty content")
     } else {
       Valid
     }
-  })
+  }
 
   implicit val writes: OWrites[MigrationEntries] = Json.writes[MigrationEntries]
 

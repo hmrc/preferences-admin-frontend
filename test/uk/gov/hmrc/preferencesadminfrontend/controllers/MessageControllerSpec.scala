@@ -41,7 +41,12 @@ class MessageControllerSpec extends PlaySpec with GuiceOneAppPerSuite {
     "convert to Identifier" in {
       val entries = "XFIT00000004173,123456789\nXFIT00000004173,123456789\nXFIT00000004173,123456789"
       controller.parse(entries) mustBe (Right(
-        List(Identifier("XFIT00000004173", "123456789"), Identifier("XFIT00000004173", "123456789"), Identifier("XFIT00000004173", "123456789"))))
+        List(
+          Identifier("XFIT00000004173", "123456789"),
+          Identifier("XFIT00000004173", "123456789"),
+          Identifier("XFIT00000004173", "123456789")
+        )
+      ))
     }
 
     "convert to 1 Identifier" in {
@@ -73,7 +78,11 @@ class MessageControllerSpec extends PlaySpec with GuiceOneAppPerSuite {
     "only do a dry run" in new TestClass {
       when(
         migratePreferenceServiceMock
-          .migrate(ArgumentMatchers.eq(List(Identifier("1", "2"))), ArgumentMatchers.eq(true))(any[HeaderCarrier], any[ExecutionContext]))
+          .migrate(ArgumentMatchers.eq(List(Identifier("1", "2"))), ArgumentMatchers.eq(true))(
+            any[HeaderCarrier],
+            any[ExecutionContext]
+          )
+      )
         .thenReturn(Future.successful(List(MigrationResult(Identifier("", ""), "", "", ""))))
       val controller = new MessageController(
         authorisedAction,
@@ -81,22 +90,30 @@ class MessageControllerSpec extends PlaySpec with GuiceOneAppPerSuite {
         migrationSummaryView,
         migrationStatusView,
         migratePreferenceServiceMock,
-        messagesControllerComponents)(appConfig, executionContext)
+        messagesControllerComponents
+      )(appConfig, executionContext)
 
       val result = controller.check()(fakeRequestWithSession)
-      status(result) mustBe (200)
-      verify(migratePreferenceServiceMock, times(1)).migrate(any[List[Identifier]], any[Boolean])(any[HeaderCarrier], any[ExecutionContext])
+      status(result) mustBe 200
+      verify(migratePreferenceServiceMock, times(1))
+        .migrate(any[List[Identifier]], any[Boolean])(any[HeaderCarrier], any[ExecutionContext])
     }
   }
 
   "sync function" must {
     "only do a dry run when sync is not confirmed" in new TestClass {
       val identifiers = Json.toJson(List(Identifier("1", "2"))).toString()
-      val fakeRequest = FakeRequest(routes.MessageController.sync()).withSession(User.sessionKey -> "user").withFormUrlEncodedBody("entries" -> identifiers)
+      val fakeRequest = FakeRequest(routes.MessageController.sync())
+        .withSession(User.sessionKey -> "user")
+        .withFormUrlEncodedBody("entries" -> identifiers)
 
       when(
         migratePreferenceServiceMock
-          .migrate(ArgumentMatchers.eq(List(Identifier("1", "2"))), ArgumentMatchers.eq(true))(any[HeaderCarrier], any[ExecutionContext]))
+          .migrate(ArgumentMatchers.eq(List(Identifier("1", "2"))), ArgumentMatchers.eq(true))(
+            any[HeaderCarrier],
+            any[ExecutionContext]
+          )
+      )
         .thenReturn(Future.successful(List(MigrationResult(Identifier("", ""), "", "", ""))))
       val controller = new MessageController(
         authorisedAction,
@@ -104,11 +121,13 @@ class MessageControllerSpec extends PlaySpec with GuiceOneAppPerSuite {
         migrationSummaryView,
         migrationStatusView,
         migratePreferenceServiceMock,
-        messagesControllerComponents)(appConfig, executionContext)
+        messagesControllerComponents
+      )(appConfig, executionContext)
 
       val result = controller.sync()(fakeRequest)
-      status(result) mustBe (200)
-      verify(migratePreferenceServiceMock, times(1)).migrate(any[List[Identifier]], any[Boolean])(any[HeaderCarrier], any[ExecutionContext])
+      status(result) mustBe 200
+      verify(migratePreferenceServiceMock, times(1))
+        .migrate(any[List[Identifier]], any[Boolean])(any[HeaderCarrier], any[ExecutionContext])
     }
     "do dryRun false when sync is confirmed" in new TestClass {
       val identifiers = Json.toJson(List(Identifier("1", "2"))).toString()
@@ -118,7 +137,11 @@ class MessageControllerSpec extends PlaySpec with GuiceOneAppPerSuite {
 
       when(
         migratePreferenceServiceMock
-          .migrate(ArgumentMatchers.eq(List(Identifier("1", "2"))), ArgumentMatchers.eq(false))(any[HeaderCarrier], any[ExecutionContext]))
+          .migrate(ArgumentMatchers.eq(List(Identifier("1", "2"))), ArgumentMatchers.eq(false))(
+            any[HeaderCarrier],
+            any[ExecutionContext]
+          )
+      )
         .thenReturn(Future.successful(List(MigrationResult(Identifier("", ""), "", "", ""))))
       val controller = new MessageController(
         authorisedAction,
@@ -126,18 +149,22 @@ class MessageControllerSpec extends PlaySpec with GuiceOneAppPerSuite {
         migrationSummaryView,
         migrationStatusView,
         migratePreferenceServiceMock,
-        messagesControllerComponents)(appConfig, executionContext)
+        messagesControllerComponents
+      )(appConfig, executionContext)
 
       val result = controller.sync()(fakeRequest)
-      status(result) mustBe (200)
-      verify(migratePreferenceServiceMock, times(1)).migrate(any[List[Identifier]], any[Boolean])(any[HeaderCarrier], any[ExecutionContext])
+      status(result) mustBe 200
+      verify(migratePreferenceServiceMock, times(1))
+        .migrate(any[List[Identifier]], any[Boolean])(any[HeaderCarrier], any[ExecutionContext])
     }
   }
 
   class TestClass {
     val entries = "1,2"
     val fakeRequestWithSession =
-      FakeRequest(routes.MessageController.check()).withSession(User.sessionKey -> "user").withFormUrlEncodedBody("identifiers" -> entries)
+      FakeRequest(routes.MessageController.check())
+        .withSession(User.sessionKey -> "user")
+        .withFormUrlEncodedBody("identifiers" -> entries)
 
     val authorisedAction = app.injector.instanceOf[AuthorisedAction]
     val migrationEntriesView = app.injector.instanceOf[migration_entries]

@@ -31,48 +31,54 @@ import uk.gov.hmrc.preferencesadminfrontend.services.model.{ Preference, TaxIden
 import scala.concurrent.{ ExecutionContext, Future }
 
 @Singleton
-class SearchService @Inject()(
+class SearchService @Inject() (
   entityResolverConnector: EntityResolverConnector,
   preferencesConnector: PreferencesConnector,
   auditConnector: AuditConnector,
-  config: Configuration) {
+  config: Configuration
+) {
 
-  def searchPreference(taxId: TaxIdentifier)(implicit user: User, hc: HeaderCarrier, ec: ExecutionContext): Future[List[Preference]] = {
+  def searchPreference(
+    taxId: TaxIdentifier
+  )(implicit user: User, hc: HeaderCarrier, ec: ExecutionContext): Future[List[Preference]] = {
     val preferences = if (taxId.name.equals("email")) getPreferences(taxId) else getPreference(taxId)
-    preferences.map(preference => auditConnector.sendMergedEvent(createSearchEvent(user.username, taxId, preference.headOption)))
+    preferences.map(preference =>
+      auditConnector.sendMergedEvent(createSearchEvent(user.username, taxId, preference.headOption))
+    )
     preferences
   }
 
-  def getPreferences(taxId: TaxIdentifier)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[List[Preference]] = {
+  def getPreferences(
+    taxId: TaxIdentifier
+  )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[List[Preference]] = {
     val preferences = for {
       preferenceDetails <- preferencesConnector.getPreferenceDetails(taxId.value)
-    } yield {
-      preferenceDetails.map { details =>
-        val taxIdentifiers = entityResolverConnector.getTaxIdentifiers(details)
-        taxIdentifiers.map { taxIds =>
-          Preference(details.entityId, details.genericPaperless, details.genericUpdatedAt, details.email, taxIds)
-        }
+    } yield preferenceDetails.map { details =>
+      val taxIdentifiers = entityResolverConnector.getTaxIdentifiers(details)
+      taxIdentifiers.map { taxIds =>
+        Preference(details.entityId, details.genericPaperless, details.genericUpdatedAt, details.email, taxIds)
       }
     }
-    preferences.flatMap(Future.sequence(_)).recover {
-      case _ => Nil
+    preferences.flatMap(Future.sequence(_)).recover { case _ =>
+      Nil
     }
   }
 
-  def getPreference(taxId: TaxIdentifier)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[List[Preference]] = {
+  def getPreference(
+    taxId: TaxIdentifier
+  )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[List[Preference]] = {
     val preferenceDetail = for {
       preferenceDetail <- entityResolverConnector.getPreferenceDetails(taxId)
       taxIdentifiers   <- entityResolverConnector.getTaxIdentifiers(taxId)
-    } yield
-      preferenceDetail.map(
-        details =>
-          Preference(
-            details.entityId,
-            details.genericPaperless,
-            details.genericUpdatedAt,
-            details.email,
-            taxIdentifiers
-        ))
+    } yield preferenceDetail.map(details =>
+      Preference(
+        details.entityId,
+        details.genericPaperless,
+        details.genericUpdatedAt,
+        details.email,
+        taxIdentifiers
+      )
+    )
 
     preferenceDetail map {
       case Some(preference) => List(preference)
@@ -80,13 +86,26 @@ class SearchService @Inject()(
     }
   }
 
-  def optOut(taxId: TaxIdentifier, reason: String)(implicit user: User, hc: HeaderCarrier, ec: ExecutionContext): Future[OptOutResult] =
+  def optOut(taxId: TaxIdentifier, reason: String)(implicit
+    user: User,
+    hc: HeaderCarrier,
+    ec: ExecutionContext
+  ): Future[OptOutResult] =
     for {
       originalPreference <- getPreference(taxId)
       optoutResult       <- entityResolverConnector.optOut(taxId)
       newPreference      <- getPreference(taxId)
     } yield {
-      auditConnector.sendMergedEvent(createOptOutEvent(user.username, taxId, originalPreference.headOption, newPreference.headOption, optoutResult, reason))
+      auditConnector.sendMergedEvent(
+        createOptOutEvent(
+          user.username,
+          taxId,
+          originalPreference.headOption,
+          newPreference.headOption,
+          optoutResult,
+          reason
+        )
+      )
       optoutResult
     }
 
@@ -96,7 +115,8 @@ class SearchService @Inject()(
     originalPreference: Option[Preference],
     newPreference: Option[Preference],
     optOutResult: OptOutResult,
-    reason: String): MergedDataEvent = {
+    reason: String
+  ): MergedDataEvent = {
 
     val reasonOfFailureJson = optOutResult match {
       case OptedOut           => "Done"
@@ -129,7 +149,11 @@ class SearchService @Inject()(
     )
   }
 
-  def createSearchEvent(username: String, taxIdentifier: TaxIdentifier, preference: Option[Preference]): MergedDataEvent = {
+  def createSearchEvent(
+    username: String,
+    taxIdentifier: TaxIdentifier,
+    preference: Option[Preference]
+  ): MergedDataEvent = {
 
     val details: Map[String, String] = Map(
       "user"       -> username,

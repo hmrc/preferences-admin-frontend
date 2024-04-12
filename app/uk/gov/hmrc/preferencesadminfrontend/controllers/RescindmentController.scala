@@ -29,12 +29,13 @@ import uk.gov.hmrc.preferencesadminfrontend.views.html.{ rescindment, rescindmen
 import scala.concurrent.{ ExecutionContext, Future }
 
 @Singleton
-class RescindmentController @Inject()(
+class RescindmentController @Inject() (
   authorisedAction: AuthorisedAction,
   rescindmentService: RescindmentService,
   mcc: MessagesControllerComponents,
   rescindmentView: rescindment,
-  rescindmentSendView: rescindment_send)(implicit appConfig: AppConfig, ec: ExecutionContext)
+  rescindmentSendView: rescindment_send
+)(implicit appConfig: AppConfig, ec: ExecutionContext)
     extends FrontendController(mcc) with I18nSupport with Logging {
 
   def showRescindmentPage(): Action[AnyContent] = authorisedAction.async { implicit request => _ =>
@@ -48,11 +49,12 @@ class RescindmentController @Inject()(
       .bindFromRequest()
       .fold(
         errors => Future.successful(BadRequest(rescindmentView(errors))),
-        rescindmentRequest => {
+        rescindmentRequest =>
           rescindmentService
             .addRescindments(rescindmentRequest)
-            .map(updateResult => Ok(rescindmentSendView(Rescindment().discardingErrors, succeeded = updateResult.succeeded.toString)))
-        }
+            .map(updateResult =>
+              Ok(rescindmentSendView(Rescindment().discardingErrors, succeeded = updateResult.succeeded.toString))
+            )
       )
   }
 
@@ -65,13 +67,14 @@ class RescindmentController @Inject()(
   def sendRescindmentAlerts(): Action[AnyContent] = authorisedAction.async { implicit request => _ =>
     rescindmentService
       .sendRescindmentAlerts()
-      .map(
-        alertsResult =>
-          Ok(
-            rescindmentSendView(
-              Rescindment().discardingErrors,
-              sent = alertsResult.sent.toString,
-              failed = alertsResult.failed.toString
-            )))
+      .map(alertsResult =>
+        Ok(
+          rescindmentSendView(
+            Rescindment().discardingErrors,
+            sent = alertsResult.sent.toString,
+            failed = alertsResult.failed.toString
+          )
+        )
+      )
   }
 }

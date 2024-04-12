@@ -28,12 +28,13 @@ import scala.concurrent.{ ExecutionContext, Future }
 import scala.io.Source
 import uk.gov.hmrc.templates.views.html.penaltyChargeApologies
 
-class MessageService @Inject()(messageConnector: MessageConnector) {
+class MessageService @Inject() (messageConnector: MessageConnector) {
 
   def getGmcBatches()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[Seq[GmcBatch], String]] =
     Future.reduceLeft(List(getGmcBatchesV3(), getGmcBatchesV4()))(partialF)
 
-  private def partialF: (Either[Seq[GmcBatch], String], Either[Seq[GmcBatch], String]) => Either[Seq[GmcBatch], String] = {
+  private def partialF
+    : (Either[Seq[GmcBatch], String], Either[Seq[GmcBatch], String]) => Either[Seq[GmcBatch], String] = {
     case (Left(v3Batch), Left(v4Batch))   => Left(v3Batch ++ v4Batch)
     case (Left(v3Batch), Right(_))        => Left(v3Batch)
     case (Right(_), Left(v4Batch))        => Left(v4Batch)
@@ -51,7 +52,8 @@ class MessageService @Inject()(messageConnector: MessageConnector) {
               case None          => Right("The GMC batches retrieved do not appear to be valid.")
             }
           case _ => Right(response.body)
-      })
+        }
+      )
 
   def getGmcBatchesV4()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[Seq[GmcBatch], String]] =
     messageConnector
@@ -64,9 +66,12 @@ class MessageService @Inject()(messageConnector: MessageConnector) {
               case None          => Right("The GMC batches retrieved for version v4 do not appear to be valid.")
             }
           case _ => Right(response.body)
-      })
+        }
+      )
 
-  def getRandomMessagePreview(batch: GmcBatch)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[BatchMessagePreview, String]] =
+  def getRandomMessagePreview(
+    batch: GmcBatch
+  )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[BatchMessagePreview, String]] =
     messageConnector
       .getRandomMessagePreview(batch)
       .map(response =>
@@ -77,7 +82,8 @@ class MessageService @Inject()(messageConnector: MessageConnector) {
               case None          => Right("The message preview retrieved does not appear to be valid.")
             }
           case _ => Right(response.body)
-      })
+        }
+      )
 
   type ResponseStatus = Int
   type ResponseBody = String
@@ -85,9 +91,10 @@ class MessageService @Inject()(messageConnector: MessageConnector) {
 
   val messageContent = Base64.getEncoder.encode(penaltyChargeApologies().toString().getBytes("UTF-8"))
 
-  def sendPenalyChargeApologyMessage(email: String, sautr: String)(
-    implicit hc: HeaderCarrier,
-    ec: ExecutionContext): Future[Either[(ResponseStatus, ResponseBody), String]] = {
+  def sendPenalyChargeApologyMessage(email: String, sautr: String)(implicit
+    hc: HeaderCarrier,
+    ec: ExecutionContext
+  ): Future[Either[(ResponseStatus, ResponseBody), String]] = {
     val aMessage: JsObject = Json
       .parse(
         Source.fromURL(getClass.getResource("/message.json")).mkString
@@ -108,7 +115,8 @@ class MessageService @Inject()(messageConnector: MessageConnector) {
               case JsError(_)          => Left((response.status, response.body))
             }
           case _ => Left((response.status, response.body))
-      })
+        }
+      )
   }
 
 }

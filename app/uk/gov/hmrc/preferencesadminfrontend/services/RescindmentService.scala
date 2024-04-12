@@ -24,9 +24,11 @@ import uk.gov.hmrc.preferencesadminfrontend.model.{ RescindmentAlertsResult, Res
 import scala.concurrent.{ ExecutionContext, Future }
 
 @Singleton
-class RescindmentService @Inject()(messageConnector: MessageConnector) {
+class RescindmentService @Inject() (messageConnector: MessageConnector) {
 
-  def addRescindments(rescindmentRequest: RescindmentRequest)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[RescindmentUpdateResult] =
+  def addRescindments(
+    rescindmentRequest: RescindmentRequest
+  )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[RescindmentUpdateResult] =
     messageConnector.addRescindments(rescindmentRequest)
 
   def sendRescindmentAlerts()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[RescindmentAlertsResult] =

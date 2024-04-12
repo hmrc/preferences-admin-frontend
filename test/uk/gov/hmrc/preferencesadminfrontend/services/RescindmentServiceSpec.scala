@@ -32,7 +32,8 @@ class RescindmentServiceSpec extends PlaySpec with ScalaFutures with Integration
 
   "addRescindments" should {
     "return a valid update result" in new RescindmentServiceTestCase {
-      when(messageConnectorMock.addRescindments(rescindmentRequest)).thenReturn(Future.successful(rescindmentUpdateResult))
+      when(messageConnectorMock.addRescindments(rescindmentRequest))
+        .thenReturn(Future.successful(rescindmentUpdateResult))
       rescindmentService.addRescindments(rescindmentRequest).futureValue mustBe rescindmentUpdateResult
     }
   }

@@ -1,7 +1,7 @@
-import sbt.Keys._
-import sbt._
-import uk.gov.hmrc._
-import DefaultBuildSettings._
+import sbt.Keys.*
+import sbt.*
+import uk.gov.hmrc.*
+import DefaultBuildSettings.*
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin
 import uk.gov.hmrc.versioning.SbtGitVersioning.autoImport.majorVersion
 
@@ -41,3 +41,7 @@ lazy val microservice = Project(appName, file("."))
   .settings(resolvers ++= Seq(Resolver.jcenterRepo))
   .settings(ScoverageSettings())
   .settings(tpolecatExcludeOptions += ScalacOptions.warnNonUnitStatement)
+
+Test / test := (Test / test)
+  .dependsOn(scalafmtCheckAll)
+  .value

@@ -24,8 +24,9 @@ import uk.gov.hmrc.preferencesadminfrontend.services.EmailService
 import javax.inject.{ Inject, Singleton }
 import scala.concurrent.ExecutionContext
 @Singleton
-class EmailController @Inject()(emailService: EmailService, val mcc: MessagesControllerComponents)(implicit ec: ExecutionContext)
-    extends FrontendController(mcc) with I18nSupport {
+class EmailController @Inject() (emailService: EmailService, val mcc: MessagesControllerComponents)(implicit
+  ec: ExecutionContext
+) extends FrontendController(mcc) with I18nSupport {
 
   def findEvent(transId: String) = Action.async { _ =>
     emailService.findEvent(transId).map(item => Ok(item))

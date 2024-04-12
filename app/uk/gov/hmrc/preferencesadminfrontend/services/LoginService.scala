@@ -22,26 +22,26 @@ import javax.inject.Inject
 import play.api.Configuration
 import uk.gov.hmrc.preferencesadminfrontend.controllers.model.User
 
-class LoginService @Inject()(loginServiceConfig: LoginServiceConfiguration) {
+class LoginService @Inject() (loginServiceConfig: LoginServiceConfiguration) {
 
   def isAuthorised(user: User): Boolean = loginServiceConfig.authorisedUsers.contains(user)
 }
 
-class LoginServiceConfiguration @Inject()(val configuration: Configuration) {
+class LoginServiceConfiguration @Inject() (val configuration: Configuration) {
 
   def verifyConfiguration() = if (authorisedUsers.isEmpty) throw new Missing("Property users is empty")
 
-  lazy val authorisedUsers: Seq[User] = {
+  lazy val authorisedUsers: Seq[User] =
     configuration
       .getOptional[Seq[Configuration]](s"users")
       .getOrElse(throw new Missing("Property users missing"))
       .map { userConfig: Configuration =>
-        val encodedPwd = userConfig.getOptional[String]("password").getOrElse(throw new Missing("Property password missing"))
+        val encodedPwd =
+          userConfig.getOptional[String]("password").getOrElse(throw new Missing("Property password missing"))
         val decodedPwd = new String(BaseEncoding.base64().decode(encodedPwd))
         User(
           userConfig.getOptional[String]("username").getOrElse(throw new Missing("Property username missing")),
           decodedPwd
         )
       }
-  }
 }

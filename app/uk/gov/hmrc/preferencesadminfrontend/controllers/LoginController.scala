@@ -37,13 +37,14 @@ import java.time.Instant
 import scala.concurrent.{ ExecutionContext, Future }
 
 @Singleton
-class LoginController @Inject()(
+class LoginController @Inject() (
   authorisedAction: AuthorisedAction,
   loginService: LoginService,
   auditConnector: AuditConnector,
   config: Configuration,
   mcc: MessagesControllerComponents,
-  loginView: login)(implicit appConfig: AppConfig, ec: ExecutionContext)
+  loginView: login
+)(implicit appConfig: AppConfig, ec: ExecutionContext)
     extends FrontendController(mcc) with I18nSupport with Logging {
 
   def showLoginPage(): Action[AnyContent] = Action.async { implicit request =>
@@ -58,17 +59,17 @@ class LoginController @Inject()(
       .bindFromRequest()
       .fold(
         formWithErrors => Future.successful(BadRequest(loginView(formWithErrors))),
-        userData => {
+        userData =>
           if (loginService.isAuthorised(userData)) {
             auditConnector.sendEvent(createLoginEvent(userData.username, true))
-            val sessionUpdated = request.session + (User.sessionKey -> userData.username) + ("ts" -> Instant.now.toEpochMilli.toString)
+            val sessionUpdated =
+              request.session + (User.sessionKey -> userData.username) + ("ts" -> Instant.now.toEpochMilli.toString)
             Future.successful(Redirect(routes.HomeController.showHomePage()).withSession(sessionUpdated))
           } else {
             auditConnector.sendEvent(createLoginEvent(userData.username, false))
             val userFormWithErrors = userForm.fill(userData).withGlobalError("error.credentials.invalid")
             Future.successful(Unauthorized(loginView(userFormWithErrors)))
           }
-        }
       )
   }
 
@@ -81,14 +82,14 @@ class LoginController @Inject()(
   def createLoginEvent(username: String, successful: Boolean) = DataEvent(
     auditSource = AppName.fromConfiguration(config),
     auditType = if (successful) "TxSucceeded" else "TxFailed",
-    detail = Map("user"          -> username),
+    detail = Map("user" -> username),
     tags = Map("transactionName" -> "Login")
   )
 
   def createLogoutEvent(username: String) = DataEvent(
     auditSource = AppName.fromConfiguration(config),
     auditType = "TxSucceeded",
-    detail = Map("user"          -> username),
+    detail = Map("user" -> username),
     tags = Map("transactionName" -> "Logout")
   )
 

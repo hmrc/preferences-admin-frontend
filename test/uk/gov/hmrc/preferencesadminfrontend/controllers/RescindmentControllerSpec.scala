@@ -51,7 +51,8 @@ class RescindmentControllerSpec extends PlaySpec with ScalaFutures with GuiceOne
 
   "showRescindmentPage" should {
     "return ok if session is authorised" in new RescindmentTestCase {
-      val result = rescindmentController.showRescindmentPage()(FakeRequest().withSession(User.sessionKey -> "user").withCSRFToken)
+      val result =
+        rescindmentController.showRescindmentPage()(FakeRequest().withSession(User.sessionKey -> "user").withCSRFToken)
 
       status(result) mustBe Status.OK
     }
@@ -66,7 +67,9 @@ class RescindmentControllerSpec extends PlaySpec with ScalaFutures with GuiceOne
 
   "showRescindmentAlertsPage" should {
     "return ok if session is authorised" in new RescindmentTestCase {
-      val result = rescindmentController.showRescindmentAlertsPage()(FakeRequest().withSession(User.sessionKey -> "user").withCSRFToken)
+      val result = rescindmentController.showRescindmentAlertsPage()(
+        FakeRequest().withSession(User.sessionKey -> "user").withCSRFToken
+      )
 
       status(result) mustBe Status.OK
     }
@@ -104,7 +107,10 @@ class RescindmentControllerSpec extends PlaySpec with ScalaFutures with GuiceOne
         alreadyUpdated = 0,
         invalidState = 0
       )
-      when(rescindmentServiceMock.addRescindments(ArgumentMatchers.eq(rescindmentRequest))(any[HeaderCarrier](), any[ExecutionContext]()))
+      when(
+        rescindmentServiceMock
+          .addRescindments(ArgumentMatchers.eq(rescindmentRequest))(any[HeaderCarrier](), any[ExecutionContext]())
+      )
         .thenReturn(Future.successful(rescindmentUpdateResult))
       val result = rescindmentController.rescindmentAction()(fakeRequestWithForm)
 
@@ -123,7 +129,8 @@ class RescindmentControllerSpec extends PlaySpec with ScalaFutures with GuiceOne
     }
 
     "return a 400 BAD_REQUEST when not providing a correct body" in new RescindmentTestCase {
-      val result = rescindmentController.rescindmentAction()(FakeRequest().withSession(User.sessionKey -> "user").withCSRFToken)
+      val result =
+        rescindmentController.rescindmentAction()(FakeRequest().withSession(User.sessionKey -> "user").withCSRFToken)
 
       status(result) mustBe Status.BAD_REQUEST
     }
@@ -131,7 +138,8 @@ class RescindmentControllerSpec extends PlaySpec with ScalaFutures with GuiceOne
 
   "sendRescindmentAlerts" should {
     "return ok if session is authorised" in new RescindmentTestCase {
-      val fakeRequestWithForm = FakeRequest(routes.RescindmentController.sendRescindmentAlerts()).withSession(User.sessionKey -> "user")
+      val fakeRequestWithForm =
+        FakeRequest(routes.RescindmentController.sendRescindmentAlerts()).withSession(User.sessionKey -> "user")
       val rescindmentAlertsResult = RescindmentAlertsResult(
         sent = 1,
         requeued = 1,
