@@ -42,7 +42,6 @@ class SearchServiceSpec
     reset(auditConnectorMock)
 
   "getPreferences" should {
-    SearchControllerSpec
     "return preference for nino user when it exists" in {
       when(entityResolverConnectorMock.getPreferenceDetails(validNino))
         .thenReturn(Future.successful(optedInPreferenceDetails))
