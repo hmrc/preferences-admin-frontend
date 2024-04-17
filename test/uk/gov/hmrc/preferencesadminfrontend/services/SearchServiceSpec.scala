@@ -18,6 +18,7 @@ package uk.gov.hmrc.preferencesadminfrontend.services
 
 import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito._
+import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.{ IntegrationPatience, ScalaFutures }
 import org.scalatestplus.play.PlaySpec
 import play.api.Configuration
@@ -32,13 +33,16 @@ import java.time.{ ZoneOffset, ZonedDateTime }
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ ExecutionContext, Future }
 
-class SearchServiceSpec extends PlaySpec with ScalaFutures with IntegrationPatience {
+class SearchServiceSpec
+    extends PlaySpec with SearchServiceTestCase with ScalaFutures with IntegrationPatience with BeforeAndAfterEach {
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  "getPreferences" should {
+  override def beforeEach(): Unit =
+    reset(auditConnectorMock)
 
-    "return preference for nino user when it exists" in new SearchServiceTestCase {
+  "getPreferences" should {
+    "return preference for nino user when it exists" in {
       when(entityResolverConnectorMock.getPreferenceDetails(validNino))
         .thenReturn(Future.successful(optedInPreferenceDetails))
       when(entityResolverConnectorMock.getTaxIdentifiers(validNino)).thenReturn(Future.successful(taxIdentifiers))
@@ -50,7 +54,7 @@ class SearchServiceSpec extends PlaySpec with ScalaFutures with IntegrationPatie
         .sendMergedEvent(argThat(isSimilar(expectedAuditEvent)))(any[HeaderCarrier], any[ExecutionContext])
     }
 
-    "return preference for itsa user when it exists" in new SearchServiceTestCase {
+    "return preference for itsa user when it exists" in {
       when(entityResolverConnectorMock.getPreferenceDetails(validItsa))
         .thenReturn(Future.successful(optedInPreferenceDetails))
       when(entityResolverConnectorMock.getTaxIdentifiers(validItsa)).thenReturn(Future.successful(taxIdentifiers))
@@ -62,7 +66,7 @@ class SearchServiceSpec extends PlaySpec with ScalaFutures with IntegrationPatie
         .sendMergedEvent(argThat(isSimilar(expectedAuditEvent)))(any[HeaderCarrier], any[ExecutionContext])
     }
 
-    "return preference for utr user when it exists" in new SearchServiceTestCase {
+    "return preference for utr user when it exists" in {
       when(entityResolverConnectorMock.getPreferenceDetails(validSaUtr))
         .thenReturn(Future.successful(optedInPreferenceDetails))
       when(entityResolverConnectorMock.getTaxIdentifiers(validSaUtr)).thenReturn(Future.successful(taxIdentifiers))
@@ -74,7 +78,7 @@ class SearchServiceSpec extends PlaySpec with ScalaFutures with IntegrationPatie
         .sendMergedEvent(argThat(isSimilar(expectedAuditEvent)))(any[HeaderCarrier], any[ExecutionContext])
     }
 
-    "return preference for utr user who has opted out" in new SearchServiceTestCase {
+    "return preference for utr user who has opted out" in {
       when(entityResolverConnectorMock.getPreferenceDetails(validSaUtr))
         .thenReturn(Future.successful(optedOutPreferenceDetails))
       when(entityResolverConnectorMock.getTaxIdentifiers(validSaUtr)).thenReturn(Future.successful(taxIdentifiers))
@@ -86,7 +90,7 @@ class SearchServiceSpec extends PlaySpec with ScalaFutures with IntegrationPatie
         .sendMergedEvent(argThat(isSimilar(expectedAuditEvent)))(any[HeaderCarrier], any[ExecutionContext])
     }
 
-    "return preference for email address user when it exists" in new SearchServiceTestCase {
+    "return preference for email address user when it exists" in {
       when(preferencesConnectorMock.getPreferenceDetails(validEmailid.value))
         .thenReturn(Future.successful(optedInPreferenceDetailsList))
       when(entityResolverConnectorMock.getTaxIdentifiers(optedInPreferenceDetailsList.head))
@@ -95,17 +99,16 @@ class SearchServiceSpec extends PlaySpec with ScalaFutures with IntegrationPatie
       searchService.searchPreference(validEmailid).futureValue mustBe List(optedInPreference)
     }
 
-    "return None if the saUtr identifier does not exist" in new SearchServiceTestCase {
+    "return None if the saUtr identifier does not exist" in {
       val preferenceDetails = None
       when(entityResolverConnectorMock.getPreferenceDetails(validSaUtr))
         .thenReturn(Future.successful(preferenceDetails))
-      override val taxIdentifiers = Seq()
-      when(entityResolverConnectorMock.getTaxIdentifiers(validSaUtr)).thenReturn(Future.successful(taxIdentifiers))
+      when(entityResolverConnectorMock.getTaxIdentifiers(validSaUtr)).thenReturn(Future.successful(Seq()))
 
       searchService.searchPreference(validSaUtr).futureValue mustBe Nil
     }
 
-    "return None if that nino does not exist" in new SearchServiceTestCase {
+    "return None if that nino does not exist" in {
       when(preferencesConnectorMock.getPreferenceDetails(unknownEmailid.value)).thenReturn(Future.successful(Nil))
       when(entityResolverConnectorMock.getTaxIdentifiers(optedInPreferenceDetailsList.head))
         .thenReturn(Future.successful(taxIdentifiers))
@@ -113,7 +116,7 @@ class SearchServiceSpec extends PlaySpec with ScalaFutures with IntegrationPatie
       searchService.searchPreference(unknownEmailid).futureValue mustBe Nil
     }
 
-    "return multiple preferences for email address user when it exists" in new SearchServiceTestCase {
+    "return multiple preferences for email address user when it exists" in {
       when(preferencesConnectorMock.getPreferenceDetails(validEmailid.value))
         .thenReturn(Future.successful(optedInPreferenceDetailsList2))
       when(entityResolverConnectorMock.getTaxIdentifiers(optedInPreferenceDetailsList.head))
@@ -126,7 +129,7 @@ class SearchServiceSpec extends PlaySpec with ScalaFutures with IntegrationPatie
 
   "optOut" should {
 
-    "call entity resolver to opt the user out" in new SearchServiceTestCase {
+    "call entity resolver to opt the user out" in {
       when(entityResolverConnectorMock.getPreferenceDetails(validSaUtr))
         .thenReturn(Future.successful(optedInPreferenceDetails), Future.successful(optedOutPreferenceDetails))
       when(entityResolverConnectorMock.getTaxIdentifiers(validSaUtr)).thenReturn(Future.successful(taxIdentifiers))
@@ -136,7 +139,7 @@ class SearchServiceSpec extends PlaySpec with ScalaFutures with IntegrationPatie
       verify(entityResolverConnectorMock, times(1)).optOut(validSaUtr)
     }
 
-    "create an audit event when the user is opted out" in new SearchServiceTestCase {
+    "create an audit event when the user is opted out" in {
       when(entityResolverConnectorMock.getPreferenceDetails(validSaUtr))
         .thenReturn(Future.successful(optedInPreferenceDetails), Future.successful(optedOutPreferenceDetails))
       when(entityResolverConnectorMock.getTaxIdentifiers(validSaUtr)).thenReturn(Future.successful(taxIdentifiers))
@@ -159,7 +162,7 @@ class SearchServiceSpec extends PlaySpec with ScalaFutures with IntegrationPatie
         .sendMergedEvent(argThat(isSimilar(expectedAuditEvent)))(any[HeaderCarrier], any[ExecutionContext])
     }
 
-    "create an audit event when the user is not opted out as it is not found" in new SearchServiceTestCase {
+    "create an audit event when the user is not opted out as it is not found" in {
       when(entityResolverConnectorMock.getPreferenceDetails(validSaUtr))
         .thenReturn(Future.successful(None), Future.successful(None))
       when(entityResolverConnectorMock.getTaxIdentifiers(validSaUtr)).thenReturn(Future.successful(Seq.empty))
@@ -175,7 +178,7 @@ class SearchServiceSpec extends PlaySpec with ScalaFutures with IntegrationPatie
         .sendMergedEvent(argThat(isSimilar(expectedAuditEvent)))(any[HeaderCarrier], any[ExecutionContext])
     }
 
-    "create an audit event when the user is already opted out" in new SearchServiceTestCase {
+    "create an audit event when the user is already opted out" in {
       when(entityResolverConnectorMock.getPreferenceDetails(validSaUtr))
         .thenReturn(Future.successful(optedOutPreferenceDetails), Future.successful(optedOutPreferenceDetails))
       when(entityResolverConnectorMock.getTaxIdentifiers(validSaUtr)).thenReturn(Future.successful(taxIdentifiers))
@@ -200,7 +203,7 @@ class SearchServiceSpec extends PlaySpec with ScalaFutures with IntegrationPatie
   }
 
   "createSearchEvent" should {
-    "generate the correct event when the preference exists" in new SearchServiceTestCase {
+    "generate the correct event when the preference exists" in {
       val preference = Preference(
         entityId = Some(EntityId("383cfb1b-5f57-417b-9380-545f35c29a22")),
         genericPaperless = true,
@@ -231,7 +234,7 @@ class SearchServiceSpec extends PlaySpec with ScalaFutures with IntegrationPatie
       event.request.tags("transactionName") mustBe "Paperless opt out search"
     }
 
-    "generate the correct event when the preference does not exist" in new SearchServiceTestCase {
+    "generate the correct event when the preference does not exist" in {
       val event = searchService.createSearchEvent("me", TaxIdentifier("sautr", "123"), None)
 
       event.auditSource mustBe "preferences-admin-frontend"
@@ -250,7 +253,7 @@ class SearchServiceSpec extends PlaySpec with ScalaFutures with IntegrationPatie
 
   "createOptoutEvent" should {
 
-    "generate the correct event user is opted out" in new SearchServiceTestCase {
+    "generate the correct event user is opted out" in {
       val event = searchService.createOptOutEvent(
         "me",
         validSaUtr,
@@ -274,7 +277,7 @@ class SearchServiceSpec extends PlaySpec with ScalaFutures with IntegrationPatie
       event.request.tags("transactionName") mustBe "Manual opt out from paperless"
     }
 
-    "generate the correct event when the preference already opted out" in new SearchServiceTestCase {
+    "generate the correct event when the preference already opted out" in {
       val event = searchService.createOptOutEvent(
         "me",
         validSaUtr,
@@ -299,7 +302,7 @@ class SearchServiceSpec extends PlaySpec with ScalaFutures with IntegrationPatie
 
     }
 
-    "generate the correct event when the preference does not exist" in new SearchServiceTestCase {
+    "generate the correct event when the preference does not exist" in {
       val event = searchService.createOptOutEvent("me", validSaUtr, None, None, PreferenceNotFound, "my optOut reason")
 
       event.auditSource mustBe "preferences-admin-frontend"
@@ -317,7 +320,7 @@ class SearchServiceSpec extends PlaySpec with ScalaFutures with IntegrationPatie
 
     }
 
-    "generate the correct event when entity is not found" in new SearchServiceTestCase {
+    "generate the correct event when entity is not found" in {
       val event = searchService.createOptOutEvent("me", validSaUtr, None, None, PreferenceNotFound, "my optOut reason")
 
       event.auditSource mustBe "preferences-admin-frontend"
@@ -346,86 +349,86 @@ class SearchServiceSpec extends PlaySpec with ScalaFutures with IntegrationPatie
     }
 
   }
+}
 
-  trait SearchServiceTestCase extends SpecBase {
+trait SearchServiceTestCase extends SpecBase {
 
-    val validSaUtr = TaxIdentifier("sautr", "123456789")
-    val validNino = TaxIdentifier("nino", "CE067583D")
-    val validItsa = TaxIdentifier("HMRC-MTD-IT", "testItsa123")
-    val invalidNino = TaxIdentifier("nino", "123123456S")
-    val validEmailid = TaxIdentifier("email", "test@test.com")
-    val unknownEmailid = TaxIdentifier("email", "test9@test.com")
+  val validSaUtr = TaxIdentifier("sautr", "123456789")
+  val validNino = TaxIdentifier("nino", "CE067583D")
+  val validItsa = TaxIdentifier("HMRC-MTD-IT", "testItsa123")
+  val invalidNino = TaxIdentifier("nino", "123123456S")
+  val validEmailid = TaxIdentifier("email", "test@test.com")
+  val unknownEmailid = TaxIdentifier("email", "test9@test.com")
 
-    val genericUpdatedAt = Some(ZonedDateTime.of(2018, 2, 15, 0, 0, 0, 0, ZoneOffset.UTC))
-    val verifiedOn = genericUpdatedAt
+  val genericUpdatedAt = Some(ZonedDateTime.of(2018, 2, 15, 0, 0, 0, 0, ZoneOffset.UTC))
+  val verifiedOn = genericUpdatedAt
 
-    val verifiedEmail = Email(
-      "john.doe@digital.hmrc.gov.uk",
-      verified = true,
-      verifiedOn = verifiedOn,
-      language = Some("cy"),
-      false,
-      None
+  val verifiedEmail = Email(
+    "john.doe@digital.hmrc.gov.uk",
+    verified = true,
+    verifiedOn = verifiedOn,
+    language = Some("cy"),
+    false,
+    None
+  )
+
+  def preferenceDetails(genericPaperless: Boolean) = {
+    val email = if (genericPaperless) Some(verifiedEmail) else None
+    Some(PreferenceDetails(genericPaperless, genericUpdatedAt, None, email))
+  }
+
+  def preferenceDetailsList(genericPaperless: Boolean) = {
+    val email = if (genericPaperless) Some(verifiedEmail) else None
+    List(PreferenceDetails(genericPaperless, genericUpdatedAt, None, email))
+  }
+
+  def multiplepreferenceDetails(genericPaperless: Boolean) = {
+    val email = if (genericPaperless) Some(verifiedEmail) else None
+    List(
+      PreferenceDetails(genericPaperless, genericUpdatedAt, None, email),
+      PreferenceDetails(genericPaperless, genericUpdatedAt, None, email)
     )
+  }
 
-    def preferenceDetails(genericPaperless: Boolean) = {
-      val email = if (genericPaperless) Some(verifiedEmail) else None
-      Some(PreferenceDetails(genericPaperless, genericUpdatedAt, None, email))
-    }
+  val optedInPreferenceDetails = preferenceDetails(genericPaperless = true)
+  val optedOutPreferenceDetails = preferenceDetails(genericPaperless = false)
+  val optedInPreferenceDetailsList = preferenceDetailsList(genericPaperless = true)
+  val optedInPreferenceDetailsList2 = multiplepreferenceDetails(genericPaperless = true)
 
-    def preferenceDetailsList(genericPaperless: Boolean) = {
-      val email = if (genericPaperless) Some(verifiedEmail) else None
-      List(PreferenceDetails(genericPaperless, genericUpdatedAt, None, email))
-    }
+  val taxIdentifiers = Seq(validSaUtr, validNino, validItsa)
 
-    def multiplepreferenceDetails(genericPaperless: Boolean) = {
-      val email = if (genericPaperless) Some(verifiedEmail) else None
-      List(
-        PreferenceDetails(genericPaperless, genericUpdatedAt, None, email),
-        PreferenceDetails(genericPaperless, genericUpdatedAt, None, email)
-      )
-    }
-
-    val optedInPreferenceDetails = preferenceDetails(genericPaperless = true)
-    val optedOutPreferenceDetails = preferenceDetails(genericPaperless = false)
-    val optedInPreferenceDetailsList = preferenceDetailsList(genericPaperless = true)
-    val optedInPreferenceDetailsList2 = multiplepreferenceDetails(genericPaperless = true)
-
-    val taxIdentifiers = Seq(validSaUtr, validNino, validItsa)
-
-    val optedInPreference = Preference(
+  val optedInPreference = Preference(
+    entityId = None,
+    genericPaperless = true,
+    genericUpdatedAt = genericUpdatedAt,
+    email = Some(verifiedEmail),
+    taxIdentifiers = taxIdentifiers
+  )
+  val optedInPreferenceList = List(
+    Preference(
+      entityId = None,
+      genericPaperless = true,
+      genericUpdatedAt = genericUpdatedAt,
+      email = Some(verifiedEmail),
+      taxIdentifiers = taxIdentifiers
+    ),
+    Preference(
       entityId = None,
       genericPaperless = true,
       genericUpdatedAt = genericUpdatedAt,
       email = Some(verifiedEmail),
       taxIdentifiers = taxIdentifiers
     )
-    val optedInPreferenceList = List(
-      Preference(
-        entityId = None,
-        genericPaperless = true,
-        genericUpdatedAt = genericUpdatedAt,
-        email = Some(verifiedEmail),
-        taxIdentifiers = taxIdentifiers
-      ),
-      Preference(
-        entityId = None,
-        genericPaperless = true,
-        genericUpdatedAt = genericUpdatedAt,
-        email = Some(verifiedEmail),
-        taxIdentifiers = taxIdentifiers
-      )
-    )
+  )
 
-    val optedOutPreference = Preference(
-      entityId = None,
-      genericPaperless = false,
-      genericUpdatedAt = genericUpdatedAt,
-      email = None,
-      taxIdentifiers = taxIdentifiers
-    )
-    val config = Configuration.from(Map("appName" -> "preferences-admin-frontend"))
-    val searchService =
-      new SearchService(entityResolverConnectorMock, preferencesConnectorMock, auditConnectorMock, config)
-  }
+  val optedOutPreference = Preference(
+    entityId = None,
+    genericPaperless = false,
+    genericUpdatedAt = genericUpdatedAt,
+    email = None,
+    taxIdentifiers = taxIdentifiers
+  )
+  val config = Configuration.from(Map("appName" -> "preferences-admin-frontend"))
+  val searchService =
+    new SearchService(entityResolverConnectorMock, preferencesConnectorMock, auditConnectorMock, config)
 }

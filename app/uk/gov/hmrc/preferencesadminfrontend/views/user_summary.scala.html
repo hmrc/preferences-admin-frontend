@@ -18,6 +18,7 @@
 @import uk.gov.hmrc.govukfrontend.views.html.components.implicits._
 @import uk.gov.hmrc.preferencesadminfrontend.controllers.routes
 @import java.time.format.DateTimeFormatter
+@import java.util.Locale
 
 @(govukSummaryList: GovukSummaryList, preferences: List[uk.gov.hmrc.preferencesadminfrontend.services.model.Preference])
 
@@ -80,7 +81,7 @@
                     value = Value(
                         content = Text(
                             preference.email.fold("Not available")(email =>
-                                email.verifiedOn.fold("Not available")(date => DateTimeFormatter.ofPattern("d MMMM yyyy hh:mm:ss a").format(date)))
+                                email.verifiedOn.fold("Not available")(date => DateTimeFormatter.ofPattern("d MMMM yyyy hh:mm:ss a").withLocale(Locale.ENGLISH).format(date)))
                             )
                         )
                     )
