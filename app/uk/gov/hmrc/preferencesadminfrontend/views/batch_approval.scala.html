@@ -31,7 +31,7 @@ govukTextarea: GovukTextarea)
  <div class="section">
  @form(action = routes.MessageBrakeController.confirmApproveBatch) {
   <div class='form-group @if(gmcBatchApproval("reasonText").hasErrors){form-group-error}'>
-   <p class="govuk-body">Please see you are releasing the following batches:</p>
+   <p class="govuk-body">Please see you are approving the following batches:</p>
 
    <p class="govuk-body">@gmcBatchApproval("batchId").value</p>
 
