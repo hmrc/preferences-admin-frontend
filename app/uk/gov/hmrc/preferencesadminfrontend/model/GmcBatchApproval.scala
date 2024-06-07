@@ -54,4 +54,13 @@ object GmcBatchApproval {
       "version"    -> optional(text)
     )(GmcBatchApproval.apply)(GmcBatchApproval.unapply)
   )
+
+  def apply(gmcBatch: GmcBatch, reason: String): GmcBatchApproval = GmcBatchApproval(
+    gmcBatch.batchId,
+    gmcBatch.formId,
+    gmcBatch.issueDate,
+    gmcBatch.templateId,
+    reason,
+    gmcBatch.version
+  )
 }

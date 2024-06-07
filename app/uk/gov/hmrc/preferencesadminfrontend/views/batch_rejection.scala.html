@@ -31,21 +31,22 @@ govukInput: GovukInput)
  <div class="section">
  @form(action = routes.MessageBrakeController.confirmRejectBatch) {
   <div class='form-group @if(gmcBatchApprovalForm("reasonText").hasErrors){form-group-error}'>
-   <label class="form-label" for="reasonText">Please enter a reason for rejecting this batch</label>
-   @gmcBatchApprovalForm("reasonText").errors.map { error =>
-    <span class="error-message" id="error-message-reason-input">@messages(error.message)</span>
-   }
+
+   <p class="govuk-body">Please see you are rejecting the following batches:</p>
+
+   <p class="govuk-body">@gmcBatchApprovalForm("batchId").value</p>
+
+   <label class="govuk-label" for="reasonText">Please enter a reason for rejecting these batches</label>
+    @gmcBatchApprovalForm("reasonText").errors.map { error =>
+     <span class="govuk-error-message" id="error-message-reason-input">@messages(error.message)</span>
+    }
    <textarea id="reasonText" name="reasonText" maxlength="120">@gmcBatchApprovalForm("reasonText").value</textarea>
   </div>
   <div class="govuk-button-group">
-   <input type="submit" name="confirm" class="button" value="Confirm"/>
+   <input type="submit" name="confirm" class="govuk-button" value="Confirm"/>
    <input type="button" onclick="location.href='@routes.MessageBrakeController.showAdminPage';" class="govuk-button govuk-button--secondary" data-module="govuk-button" value="Cancel"/>
   </div>
   <input type="hidden" name="batchId" value='@gmcBatchApprovalForm("batchId").value'/>
-  <input type="hidden" name="formId" value='@gmcBatchApprovalForm("formId").value'/>
-  <input type="hidden" name="issueDate" value='@gmcBatchApprovalForm("issueDate").value'/>
-  <input type="hidden" name="templateId" value='@gmcBatchApprovalForm("templateId").value'/>
-  <input type="hidden" name="version" value='@gmcBatchApprovalForm("version").value'/>
  }
  </div>
 }
