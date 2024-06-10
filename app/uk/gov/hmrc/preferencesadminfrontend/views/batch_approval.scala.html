@@ -49,6 +49,10 @@ govukTextarea: GovukTextarea)
    <input type="button" onclick="location.href='@routes.MessageBrakeController.showAdminPage';" class="govuk-button govuk-button--secondary" data-module="govuk-button" value="Cancel"/>
   </div>
   <input type="hidden" name="batchId" value='@gmcBatchApproval("batchId").value'/>
+  <input type="hidden" name="formId" value='@gmcBatchApproval("formId").value'/>
+  <input type="hidden" name="issueDate" value='@gmcBatchApproval("issueDate").value'/>
+  <input type="hidden" name="templateId" value='@gmcBatchApproval("templateId").value'/>
+  <input type="hidden" name="version" value='@gmcBatchApproval("version").value'/>
  }
  </div>
 }
