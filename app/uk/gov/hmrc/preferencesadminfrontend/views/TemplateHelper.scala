@@ -34,9 +34,4 @@ object TemplateHelper {
       case None => Html(<fieldset/>.mkString)
     }
   // format: on
-
-  // format: off
-  def getFormButton(name: String, value: String, classNames: String = "govuk-button"): Html =
-    Html(<button name={name} data-module="govuk-button" class={classNames} onclick="myFunction()">{value}</button>.mkString)
-  // format: on
 }
