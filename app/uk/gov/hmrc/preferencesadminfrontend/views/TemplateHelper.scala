@@ -37,7 +37,6 @@ object TemplateHelper {
 
   // format: off
   def getFormButton(name: String, value: String, classNames: String = "govuk-button"): Html =
-    Html(<input type="hidden" id="batchIds" name="batchIds" value=""/>
-      <button name={name} data-module="govuk-button" class={classNames} onclick="myFunction()">{value}</button>.mkString)
+    Html(<button name={name} data-module="govuk-button" class={classNames} onclick="myFunction()">{value}</button>.mkString)
   // format: on
 }
