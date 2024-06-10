@@ -21,7 +21,7 @@ import play.api.Logging
 import javax.inject.Inject
 import play.api.i18n.I18nSupport
 import play.api.mvc._
-import uk.gov.hmrc.http.{ HeaderCarrier, HttpResponse }
+import uk.gov.hmrc.http.HttpResponse
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
 import uk.gov.hmrc.preferencesadminfrontend.connectors.MessageConnector
@@ -77,7 +77,7 @@ class MessageBrakeController @Inject() (
     batches: Seq[GmcBatch],
     gmcBatchApproval: GmcBatchApproval,
     approveReject: GmcBatchApproval => Future[HttpResponse]
-  )(implicit hc: HeaderCarrier): Future[Option[HttpResponse]] = {
+  ): Future[Option[HttpResponse]] = {
     val filteredBatches = batches
       .filter(b => gmcBatchApproval.batchId.split(",").toList.contains(b.batchId))
       .map(GmcBatchApproval(_, gmcBatchApproval.reasonText))
