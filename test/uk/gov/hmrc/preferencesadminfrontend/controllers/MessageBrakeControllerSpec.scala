@@ -17,6 +17,7 @@
 package uk.gov.hmrc.preferencesadminfrontend.controllers
 
 import org.apache.pekko.stream.Materializer
+import org.jsoup.Jsoup
 import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito.when
@@ -156,9 +157,11 @@ class MessageBrakeControllerSpec extends PlaySpec with GuiceOneAppPerSuite with 
       private val result =
         messageBrakeController().showApproveBatchConfirmationPage()(requestWithFormData.withCSRFToken)
       status(result) mustBe Status.OK
-      contentAsString(result) must contain(
-        """<p class="govuk-body">Please see you are approving the following batches:</p>"""
-      )
+      Jsoup
+        .parse(contentAsString(result))
+        .getElementsByClass("govuk-body")
+        .first()
+        .text() mustBe "Please see you are approving the following batches:"
     }
   }
 
@@ -168,9 +171,11 @@ class MessageBrakeControllerSpec extends PlaySpec with GuiceOneAppPerSuite with 
 
       private val result = messageBrakeController().showRejectBatchConfirmationPage()(requestWithFormData.withCSRFToken)
       status(result) mustBe Status.OK
-      contentAsString(result) must contain(
-        """<p class="govuk-body">Please see you are rejecting the following batches:</p>"""
-      )
+      Jsoup
+        .parse(contentAsString(result))
+        .getElementsByClass("govuk-body")
+        .first()
+        .text() mustBe "Please see you are rejecting the following batches:"
     }
   }
 
