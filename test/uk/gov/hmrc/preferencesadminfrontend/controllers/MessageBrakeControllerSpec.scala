@@ -17,6 +17,7 @@
 package uk.gov.hmrc.preferencesadminfrontend.controllers
 
 import org.apache.pekko.stream.Materializer
+import org.jsoup.Jsoup
 import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito.when
@@ -29,7 +30,7 @@ import play.api.i18n.MessagesApi
 import play.api.mvc.{ AnyContentAsEmpty, AnyContentAsFormUrlEncoded, Call }
 import play.api.test.CSRFTokenHelper._
 import play.api.test.FakeRequest
-import play.api.test.Helpers.{ defaultAwaitTimeout, status }
+import play.api.test.Helpers.{ contentAsString, defaultAwaitTimeout, status }
 import uk.gov.hmrc.http.{ HeaderCarrier, HttpResponse }
 import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
 import uk.gov.hmrc.preferencesadminfrontend.controllers.model.User
@@ -146,6 +147,35 @@ class MessageBrakeControllerSpec extends PlaySpec with GuiceOneAppPerSuite with 
         .thenReturn(Future(Right("error")))
       private val result = messageBrakeController().previewMessage()(requestWithFormData.withCSRFToken)
       status(result) mustBe Status.BAD_GATEWAY
+    }
+  }
+
+  "showApproveBatchConfirmationPage" should {
+    "return 200 with the approved batchIds & confirmation text" in new MessageBrakeControllerTestCase {
+      val requestWithFormData = getRequestWithFormData(routes.MessageBrakeController.showApproveBatchConfirmationPage())
+
+      private val result =
+        messageBrakeController().showApproveBatchConfirmationPage()(requestWithFormData.withCSRFToken)
+      status(result) mustBe Status.OK
+      Jsoup
+        .parse(contentAsString(result))
+        .getElementsByClass("govuk-body")
+        .first()
+        .text() mustBe "Please see you are approving the following batches:"
+    }
+  }
+
+  "showRejectBatchConfirmationPage" should {
+    "return 200 with the approved batchIds & confirmation text" in new MessageBrakeControllerTestCase {
+      val requestWithFormData = getRequestWithFormData(routes.MessageBrakeController.showRejectBatchConfirmationPage())
+
+      private val result = messageBrakeController().showRejectBatchConfirmationPage()(requestWithFormData.withCSRFToken)
+      status(result) mustBe Status.OK
+      Jsoup
+        .parse(contentAsString(result))
+        .getElementsByClass("govuk-body")
+        .first()
+        .text() mustBe "Please see you are rejecting the following batches:"
     }
   }
 

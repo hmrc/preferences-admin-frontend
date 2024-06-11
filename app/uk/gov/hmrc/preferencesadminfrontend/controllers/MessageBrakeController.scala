@@ -21,6 +21,7 @@ import play.api.Logging
 import javax.inject.Inject
 import play.api.i18n.I18nSupport
 import play.api.mvc._
+import uk.gov.hmrc.http.HttpResponse
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
 import uk.gov.hmrc.preferencesadminfrontend.connectors.MessageConnector
@@ -72,6 +73,18 @@ class MessageBrakeController @Inject() (
     Future.successful(Ok(batchRejectionView(GmcBatchApproval().bindFromRequest().discardingErrors)))
   }
 
+  private def approveOrRejectBatches(
+    batches: Seq[GmcBatch],
+    gmcBatchApproval: GmcBatchApproval,
+    approveReject: GmcBatchApproval => Future[HttpResponse]
+  ): Future[Option[HttpResponse]] = {
+    val filteredBatches = batches
+      .filter(b => gmcBatchApproval.batchId.split(",").toList.contains(b.batchId))
+      .map(GmcBatchApproval(_, gmcBatchApproval.reasonText))
+    val result = Future.traverse(filteredBatches)(approveReject)
+    result.map(httpResponses => httpResponses.find(_.status != OK).orElse(httpResponses.headOption))
+  }
+
   def confirmApproveBatch: Action[AnyContent] = authorisedAction.async { implicit request => _ =>
     GmcBatchApproval()
       .bindFromRequest()
@@ -79,11 +92,16 @@ class MessageBrakeController @Inject() (
         formWithErrors => Future.successful(BadRequest(batchApprovalView(formWithErrors))),
         gmcBatchApproval =>
           for {
-            result        <- messageConnector.approveGmcBatch(gmcBatchApproval)
             batchesResult <- messageService.getGmcBatches()
-          } yield result.status match {
-            case OK =>
-              batchesResult match {
+            result <- batchesResult match {
+                        case Left(batches) =>
+                          approveOrRejectBatches(batches, gmcBatchApproval, messageConnector.approveGmcBatch)
+                        case Right(_) => Future.successful(None)
+                      }
+            newBatches <- messageService.getGmcBatches()
+          } yield result match {
+            case Some(res) if res.status == OK =>
+              newBatches match {
                 case Left(batches) => Ok(messageBrakeAdminView(batches))
                 case Right(error)  => returnError(error)
               }
@@ -99,11 +117,16 @@ class MessageBrakeController @Inject() (
         formWithErrors => Future.successful(BadRequest(batchRejectionView(formWithErrors))),
         gmcBatchApproval =>
           for {
-            result        <- messageConnector.rejectGmcBatch(gmcBatchApproval)
             batchesResult <- messageService.getGmcBatches()
-          } yield result.status match {
-            case OK =>
-              batchesResult match {
+            result <- batchesResult match {
+                        case Left(batches) =>
+                          approveOrRejectBatches(batches, gmcBatchApproval, messageConnector.rejectGmcBatch)
+                        case Right(_) => Future.successful(None)
+                      }
+            newBatches <- messageService.getGmcBatches()
+          } yield result match {
+            case Some(res) if res.status == OK =>
+              newBatches match {
                 case Left(batches) => Ok(messageBrakeAdminView(batches))
                 case Right(error)  => returnError(error)
               }

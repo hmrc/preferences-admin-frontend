@@ -31,14 +31,21 @@ govukTextarea: GovukTextarea)
  <div class="section">
  @form(action = routes.MessageBrakeController.confirmApproveBatch) {
   <div class='form-group @if(gmcBatchApproval("reasonText").hasErrors){form-group-error}'>
-   <label class="form-label" for="reasonText">Please enter a reason for approving this gmcBatchApproval</label>
+   <p class="govuk-body">Please see you are approving the following batches:</p>
+
+   <p class="govuk-body">@gmcBatchApproval("batchId").value</p>
+
+   <label class="govuk-label" for="reasonText">Please enter a reason for approving these batches</label>
+
    @gmcBatchApproval("reasonText").errors.map { error =>
-    <span class="error-message" id="error-message-reason-input">@messages(error.message)</span>
+     <span class="govuk-error-message" id="error-message-reason-input">@messages(error.message)</span>
    }
+
    <textarea id="reasonText" name="reasonText" maxlength="120">@gmcBatchApproval("reasonText").value</textarea>
   </div>
+
   <div class="govuk-button-group">
-   <input type="submit" name="confirm" class="button" value="Confirm"/>
+   <input type="submit" name="confirm" class="govuk-button" value="Confirm"/>
    <input type="button" onclick="location.href='@routes.MessageBrakeController.showAdminPage';" class="govuk-button govuk-button--secondary" data-module="govuk-button" value="Cancel"/>
   </div>
   <input type="hidden" name="batchId" value='@gmcBatchApproval("batchId").value'/>

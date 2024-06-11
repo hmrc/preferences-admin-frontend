@@ -47,11 +47,20 @@ object GmcBatchApproval {
   def apply(): Form[GmcBatchApproval] = Form(
     mapping(
       "batchId"    -> nonEmptyText,
-      "formId"     -> nonEmptyText,
-      "issueDate"  -> nonEmptyText,
-      "templateId" -> nonEmptyText,
+      "formId"     -> text,
+      "issueDate"  -> text,
+      "templateId" -> text,
       "reasonText" -> text.verifying(reasonTextConstraint),
       "version"    -> optional(text)
     )(GmcBatchApproval.apply)(GmcBatchApproval.unapply)
+  )
+
+  def apply(gmcBatch: GmcBatch, reason: String): GmcBatchApproval = GmcBatchApproval(
+    gmcBatch.batchId,
+    gmcBatch.formId,
+    gmcBatch.issueDate,
+    gmcBatch.templateId,
+    reason,
+    gmcBatch.version
   )
 }
