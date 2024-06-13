@@ -17,6 +17,7 @@
 package uk.gov.hmrc.preferencesadminfrontend.services
 
 import org.mockito.ArgumentMatchers._
+import org.mockito.Mockito
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.{ IntegrationPatience, ScalaFutures }
@@ -38,8 +39,7 @@ class SearchServiceSpec
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  override def beforeEach(): Unit =
-    reset(auditConnectorMock)
+  override def beforeEach(): Unit = Mockito.reset(auditConnectorMock)
 
   "getPreferences" should {
     "return preference for nino user when it exists" in {
