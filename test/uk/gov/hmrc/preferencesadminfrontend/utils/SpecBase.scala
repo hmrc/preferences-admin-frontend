@@ -19,7 +19,7 @@ package uk.gov.hmrc.preferencesadminfrontend.utils
 import org.mockito.ArgumentMatcher
 import org.scalatestplus.mockito.MockitoSugar.mock
 import play.api.i18n.Lang
-import play.api.mvc.{ AnyContent, ControllerComponents, DefaultActionBuilder, DefaultMessagesActionBuilderImpl, DefaultMessagesControllerComponents, MessagesActionBuilder, MessagesControllerComponents }
+import play.api.mvc._
 import play.api.test.Helpers.{ stubBodyParser, stubControllerComponents, stubLangs, stubMessagesApi }
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.MergedDataEvent
@@ -51,10 +51,10 @@ trait SpecBase {
     ExecutionContext.global
   )
 
-  val auditConnectorMock = mock[AuditConnector]
-  val entityResolverConnectorMock = mock[EntityResolverConnector]
-  val preferencesConnectorMock = mock[PreferencesConnector]
-  val messageConnectorMock = mock[MessageConnector]
+  val auditConnectorMock: AuditConnector = mock[AuditConnector]
+  val entityResolverConnectorMock: EntityResolverConnector = mock[EntityResolverConnector]
+  val preferencesConnectorMock: PreferencesConnector = mock[PreferencesConnector]
+  val messageConnectorMock: MessageConnector = mock[MessageConnector]
 
   def isSimilar(expected: MergedDataEvent): ArgumentMatcher[MergedDataEvent] =
     new ArgumentMatcher[MergedDataEvent]() {

@@ -38,8 +38,7 @@ class SearchServiceSpec
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  override def beforeEach(): Unit =
-    reset(auditConnectorMock)
+  override def afterEach(): Unit = reset(auditConnectorMock)
 
   "getPreferences" should {
     "return preference for nino user when it exists" in {
