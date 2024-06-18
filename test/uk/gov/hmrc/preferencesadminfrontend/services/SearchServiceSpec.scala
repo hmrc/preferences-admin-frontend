@@ -45,48 +45,52 @@ class SearchServiceSpec
       when(entityResolverConnectorMock.getPreferenceDetails(validNino))
         .thenReturn(Future.successful(optedInPreferenceDetails))
       when(entityResolverConnectorMock.getTaxIdentifiers(validNino)).thenReturn(Future.successful(taxIdentifiers))
+      val expectedAuditEvent = searchService.createSearchEvent("me", validNino, Some(optedInPreference))
+      when(
+        auditConnectorMock
+          .sendMergedEvent(argThat(isSimilar(expectedAuditEvent)))(any[HeaderCarrier], any[ExecutionContext])
+      ).thenReturn(Future.successful(AuditResult.Success))
 
       searchService.searchPreference(validNino).futureValue mustBe List(optedInPreference)
-
-      val expectedAuditEvent = searchService.createSearchEvent("me", validNino, Some(optedInPreference))
-      verify(auditConnectorMock)
-        .sendMergedEvent(argThat(isSimilar(expectedAuditEvent)))(any[HeaderCarrier], any[ExecutionContext])
     }
 
     "return preference for itsa user when it exists" in {
       when(entityResolverConnectorMock.getPreferenceDetails(validItsa))
         .thenReturn(Future.successful(optedInPreferenceDetails))
       when(entityResolverConnectorMock.getTaxIdentifiers(validItsa)).thenReturn(Future.successful(taxIdentifiers))
+      val expectedAuditEvent = searchService.createSearchEvent("me", validItsa, Some(optedInPreference))
+      when(
+        auditConnectorMock
+          .sendMergedEvent(argThat(isSimilar(expectedAuditEvent)))(any[HeaderCarrier], any[ExecutionContext])
+      ).thenReturn(Future.successful(AuditResult.Success))
 
       searchService.searchPreference(validItsa).futureValue mustBe List(optedInPreference)
-
-      val expectedAuditEvent = searchService.createSearchEvent("me", validItsa, Some(optedInPreference))
-      verify(auditConnectorMock)
-        .sendMergedEvent(argThat(isSimilar(expectedAuditEvent)))(any[HeaderCarrier], any[ExecutionContext])
     }
 
     "return preference for utr user when it exists" in {
       when(entityResolverConnectorMock.getPreferenceDetails(validSaUtr))
         .thenReturn(Future.successful(optedInPreferenceDetails))
       when(entityResolverConnectorMock.getTaxIdentifiers(validSaUtr)).thenReturn(Future.successful(taxIdentifiers))
+      val expectedAuditEvent = searchService.createSearchEvent("me", validSaUtr, Some(optedInPreference))
+      when(
+        auditConnectorMock
+          .sendMergedEvent(argThat(isSimilar(expectedAuditEvent)))(any[HeaderCarrier], any[ExecutionContext])
+      ).thenReturn(Future.successful(AuditResult.Success))
 
       searchService.searchPreference(validSaUtr).futureValue mustBe List(optedInPreference)
-
-      val expectedAuditEvent = searchService.createSearchEvent("me", validSaUtr, Some(optedInPreference))
-      verify(auditConnectorMock)
-        .sendMergedEvent(argThat(isSimilar(expectedAuditEvent)))(any[HeaderCarrier], any[ExecutionContext])
     }
 
     "return preference for utr user who has opted out" in {
       when(entityResolverConnectorMock.getPreferenceDetails(validSaUtr))
         .thenReturn(Future.successful(optedOutPreferenceDetails))
       when(entityResolverConnectorMock.getTaxIdentifiers(validSaUtr)).thenReturn(Future.successful(taxIdentifiers))
+      val expectedAuditEvent = searchService.createSearchEvent("me", validSaUtr, Some(optedOutPreference))
+      when(
+        auditConnectorMock
+          .sendMergedEvent(argThat(isSimilar(expectedAuditEvent)))(any[HeaderCarrier], any[ExecutionContext])
+      ).thenReturn(Future.successful(AuditResult.Success))
 
       searchService.searchPreference(validSaUtr).futureValue mustBe List(optedOutPreference)
-
-      val expectedAuditEvent = searchService.createSearchEvent("me", validSaUtr, Some(optedOutPreference))
-      verify(auditConnectorMock)
-        .sendMergedEvent(argThat(isSimilar(expectedAuditEvent)))(any[HeaderCarrier], any[ExecutionContext])
     }
 
     "return preference for email address user when it exists" in {
