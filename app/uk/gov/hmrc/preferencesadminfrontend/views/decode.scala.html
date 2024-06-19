@@ -1,0 +1,59 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
+@import uk.gov.hmrc.preferencesadminfrontend.controllers.model.User
+
+@this(layout: Layout, govukBreadcrumbs: GovukBreadcrumbs)
+
+@()(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
+@scriptsBlock = {
+    <script>
+        function decodeMessage() {
+            let base64Encoded = document.getElementById('encoded-text').value;
+            let base64Decode = new TextDecoder().decode(Uint8Array.from(atob(base64Encoded), m => m.codePointAt(0)));
+            document.getElementById("decoded-text").innerHTML = base64Decode;
+        }
+        resetButton.addEventListener('click', () => {
+            document.getElementById("decoded-text").innerHTML = '';
+            document.getElementById("encoded-text").value = '';
+        });
+    </script>
+}
+@layout(pageTitle = Some("Message Decode"), scriptsBlock = Some(scriptsBlock)) {
+    @govukBreadcrumbs(Breadcrumbs(
+        items = Seq(
+            BreadcrumbsItem(
+                content = Text("Home"),
+                href = Some("/paperless/admin/home")
+            ),
+            BreadcrumbsItem(
+                content = Text("Message Decode"),
+                href = Some("#")
+            )
+        )
+    ))
+    <div class="govuk-body">
+        <p class="govuk-heading-m">Decode from Base64 encoded format</p>
+        <p class="govuk-caption-m">Simply enter your encoded text then push the decode button.</p>
+        <textarea class="govuk-textarea" id="encoded-text" name="encoded-text" rows="10" placeholder="Type (or paste) here..."></textarea>
+    </div>
+    <div class="govuk-button-group">
+        <button id="decode" name="decode" data-module="govuk-button" class="govuk-button" onclick="decodeMessage()">Decode</button>
+        <button id="resetButton" name="resetButton" class="govuk-button">Clear</button>
+    </div>
+    <p class="govuk-body" id="decoded-text"></p>
+}

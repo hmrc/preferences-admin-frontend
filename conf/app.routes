@@ -7,6 +7,7 @@ POST        /login                                      uk.gov.hmrc.preferencesa
 POST        /logout                                     uk.gov.hmrc.preferencesadminfrontend.controllers.LoginController.logoutAction()
 GET         /                                           uk.gov.hmrc.preferencesadminfrontend.controllers.LoginController.showLoginPage()
 GET         /home                                       uk.gov.hmrc.preferencesadminfrontend.controllers.HomeController.showHomePage()
+GET         /decode                                     uk.gov.hmrc.preferencesadminfrontend.controllers.HomeController.showDecodePage()
 GET         /search                                     uk.gov.hmrc.preferencesadminfrontend.controllers.SearchController.showSearchPage()
 POST        /search/q                                   uk.gov.hmrc.preferencesadminfrontend.controllers.SearchController.search()
 POST        /search/opt-out                             uk.gov.hmrc.preferencesadminfrontend.controllers.SearchController.optOut()

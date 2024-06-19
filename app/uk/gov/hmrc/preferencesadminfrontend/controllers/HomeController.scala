@@ -23,14 +23,19 @@ import play.api.i18n.I18nSupport
 import play.api.mvc._
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
-import uk.gov.hmrc.preferencesadminfrontend.views.html.home
+import uk.gov.hmrc.preferencesadminfrontend.views.html.{ decode, home }
 import scala.concurrent.Future
 
 @Singleton
-class HomeController @Inject() (homeView: home, val mcc: MessagesControllerComponents)(implicit appConfig: AppConfig)
-    extends FrontendController(mcc) with I18nSupport with Logging {
+class HomeController @Inject() (homeView: home, decoderView: decode, val mcc: MessagesControllerComponents)(implicit
+  appConfig: AppConfig
+) extends FrontendController(mcc) with I18nSupport with Logging {
 
   val showHomePage = Action.async { implicit request =>
     Future.successful(Ok(homeView()))
+  }
+
+  val showDecodePage = Action.async { implicit request =>
+    Future.successful(Ok(decoderView()))
   }
 }
