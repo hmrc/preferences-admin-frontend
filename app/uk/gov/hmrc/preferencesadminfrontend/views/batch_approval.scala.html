@@ -41,7 +41,7 @@ govukTextarea: GovukTextarea)
      <span class="govuk-error-message" id="error-message-reason-input">@messages(error.message)</span>
    }
 
-   <textarea id="reasonText" name="reasonText" maxlength="120">@gmcBatchApproval("reasonText").value</textarea>
+   <textarea id="reasonText" name="reasonText" maxlength="255">@gmcBatchApproval("reasonText").value</textarea>
   </div>
 
   <div class="govuk-button-group">

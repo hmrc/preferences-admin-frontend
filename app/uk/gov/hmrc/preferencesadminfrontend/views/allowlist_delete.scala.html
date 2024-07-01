@@ -55,7 +55,7 @@ govukBreadcrumbs: GovukBreadcrumbs)
                 label = Label(
                   content = Text(s"Please enter a reason for deleting the form ID ${entryForm("formId").value.getOrElse("")}")
                 ),
-                attributes = Map("maxlength" -> "120")
+                attributes = Map("maxlength" -> "255")
               ).withFormField(entryForm("reasonText"))
             )
             <h2 class="heading-medium">Are you sure you want to delete this form?</h2>

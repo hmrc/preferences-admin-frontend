@@ -40,7 +40,7 @@ govukInput: GovukInput)
     @gmcBatchApprovalForm("reasonText").errors.map { error =>
      <span class="govuk-error-message" id="error-message-reason-input">@messages(error.message)</span>
     }
-   <textarea id="reasonText" name="reasonText" maxlength="120">@gmcBatchApprovalForm("reasonText").value</textarea>
+   <textarea id="reasonText" name="reasonText" maxlength="255">@gmcBatchApprovalForm("reasonText").value</textarea>
   </div>
   <div class="govuk-button-group">
    <input type="submit" name="confirm" class="govuk-button" value="Confirm"/>
