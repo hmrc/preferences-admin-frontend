@@ -161,7 +161,7 @@ class MessageBrakeControllerSpec extends PlaySpec with GuiceOneAppPerSuite with 
         .parse(contentAsString(result))
         .getElementsByClass("govuk-body")
         .first()
-        .text() mustBe "Please see you are approving the following batches:"
+        .text() mustBe "Please see you are approving the messages for following form id:"
     }
   }
 
@@ -175,7 +175,7 @@ class MessageBrakeControllerSpec extends PlaySpec with GuiceOneAppPerSuite with 
         .parse(contentAsString(result))
         .getElementsByClass("govuk-body")
         .first()
-        .text() mustBe "Please see you are rejecting the following batches:"
+        .text() mustBe "Please see you are rejecting the messages for following form id:"
     }
   }
 

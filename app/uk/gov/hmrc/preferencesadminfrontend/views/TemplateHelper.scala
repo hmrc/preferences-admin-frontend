@@ -16,8 +16,9 @@
 
 package uk.gov.hmrc.preferencesadminfrontend.views
 
+import play.api.data.Form
 import play.twirl.api.Html
-import uk.gov.hmrc.preferencesadminfrontend.model.GmcBatch
+import uk.gov.hmrc.preferencesadminfrontend.model.{ GmcBatch, GmcBatchApproval }
 
 object TemplateHelper {
 
@@ -34,4 +35,7 @@ object TemplateHelper {
       case None => Html(<fieldset/>.mkString)
     }
   // format: on
+
+  def showFormIds(gmcBatchApproval: Form[GmcBatchApproval]): List[String] =
+    gmcBatchApproval("formId").value.map(_.split(",").toList).getOrElse(Nil)
 }
