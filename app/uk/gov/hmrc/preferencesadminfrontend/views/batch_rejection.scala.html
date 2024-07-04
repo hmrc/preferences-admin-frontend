@@ -19,6 +19,7 @@
 @import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
 @import uk.gov.hmrc.preferencesadminfrontend.controllers.routes
 @import uk.gov.hmrc.preferencesadminfrontend.model.GmcBatchApproval
+@import uk.gov.hmrc.preferencesadminfrontend.views.TemplateHelper
 
 @this(
 layout: Layout,
@@ -32,9 +33,11 @@ govukInput: GovukInput)
  @form(action = routes.MessageBrakeController.confirmRejectBatch) {
   <div class='form-group @if(gmcBatchApprovalForm("reasonText").hasErrors){form-group-error}'>
 
-   <p class="govuk-body">Please see you are rejecting the following batches:</p>
+   <p class="govuk-body">Please see you are rejecting the messages for following form id:</p>
 
-   <p class="govuk-body">@gmcBatchApprovalForm("batchId").value</p>
+   @TemplateHelper.showFormIds(gmcBatchApprovalForm).map { formId =>
+     <p class="govuk-body">@formId</p>
+   }
 
    <label class="govuk-label" for="reasonText">Please enter a reason for rejecting these batches</label>
     @gmcBatchApprovalForm("reasonText").errors.map { error =>
