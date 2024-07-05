@@ -28,6 +28,6 @@ object OptOutReasonWithIdentifier {
         "reason"          -> nonEmptyText,
         "identifierName"  -> text,
         "identifierValue" -> text
-      )(OptOutReasonWithIdentifier.apply)(OptOutReasonWithIdentifier.unapply)
+      )(OptOutReasonWithIdentifier.apply)(o => Some(Tuple.fromProductTyped(o)))
     )
 }

@@ -18,7 +18,7 @@
 @import helper._
 @import uk.gov.hmrc.preferencesadminfrontend.controllers.routes
 <li>
-    @form(action = CSRF(routes.LoginController.logoutAction)) {
+    @form(action = CSRF(routes.LoginController.logoutAction())) {
         <button class="linkButton" type="submit" id="logout">Logout</button>
     }
 </li>

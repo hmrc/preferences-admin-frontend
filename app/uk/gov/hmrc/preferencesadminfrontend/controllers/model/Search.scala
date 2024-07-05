@@ -31,8 +31,8 @@ object Search {
             name => name == "sautr" || name == "nino" || name == "email" || name == "HMRC-MTD-IT"
           ),
         "value" -> nonEmptyText
-      )((name, value) => TaxIdentifier.apply(name, if (name == "HMRC-MTD-IT") value else value.toUpperCase))(
-        TaxIdentifier.unapply
+      )((name, value) => TaxIdentifier.apply(name, if (name == "HMRC-MTD-IT") value else value.toUpperCase))(t =>
+        Some(Tuple.fromProductTyped(t))
       )
     )
 }

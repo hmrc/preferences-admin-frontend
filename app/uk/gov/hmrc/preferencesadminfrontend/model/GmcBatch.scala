@@ -40,6 +40,6 @@ object GmcBatch {
       "templateId" -> nonEmptyText,
       "count"      -> optional(number),
       "version"    -> optional(text)
-    )(GmcBatch.apply)(GmcBatch.unapply)
+    )(GmcBatch.apply)(g => Some(Tuple.fromProductTyped(g)))
   )
 }

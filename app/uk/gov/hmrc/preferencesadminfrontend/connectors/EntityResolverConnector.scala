@@ -27,12 +27,14 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.preferencesadminfrontend.services.model.{ Email, EntityId, TaxIdentifier }
 import cats.syntax.either._
 import uk.gov.hmrc.http.HttpReads.Implicits.{ readFromJson, readOptionOfNotFound, readRaw }
+import uk.gov.hmrc.http.client.HttpClientV2
 
+import java.net.URI
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.Try
 
 @Singleton
-class EntityResolverConnector @Inject() (httpClient: HttpClient, val servicesConfig: ServicesConfig) {
+class EntityResolverConnector @Inject() (httpClient: HttpClientV2, val servicesConfig: ServicesConfig) {
 
   val logger = Logger(getClass)
   implicit val ef: Format[Entity] = Entity.formats
@@ -43,7 +45,10 @@ class EntityResolverConnector @Inject() (httpClient: HttpClient, val servicesCon
     taxId: TaxIdentifier
   )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[TaxIdentifier]] = {
     def warnNotOptedOut(message: String) = s"getTaxIdentifiersTaxId $message"
-    val response = httpClient.GET[Option[Entity]](s"$serviceUrl/entity-resolver/${taxId.regime}/${taxId.value}")
+    val response =
+      httpClient
+        .get(new URI(s"$serviceUrl/entity-resolver/${taxId.regime}/${taxId.value}").toURL)
+        .execute[Option[Entity]]
     response
       .map(
         _.fold(Seq.empty[TaxIdentifier])(entity =>
@@ -74,7 +79,10 @@ class EntityResolverConnector @Inject() (httpClient: HttpClient, val servicesCon
     preferenceDetails: PreferenceDetails
   )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[TaxIdentifier]] = {
     def warnNotOptedOut(message: String) = s"getTaxIdentifiersPreferenceDetails $message"
-    val response = httpClient.GET[Option[Entity]](s"$serviceUrl/entity-resolver/${preferenceDetails.entityId.get}")
+    val response =
+      httpClient
+        .get(new URI(s"$serviceUrl/entity-resolver/${preferenceDetails.entityId.get}").toURL)
+        .execute[Option[Entity]]
     response
       .map(
         _.fold(Seq.empty[TaxIdentifier])(entity =>
@@ -106,7 +114,8 @@ class EntityResolverConnector @Inject() (httpClient: HttpClient, val servicesCon
   )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[PreferenceDetails]] = {
     def warnNotOptedOut(message: String) = s"getTaxIdentifiersPreferenceDetails $message"
     httpClient
-      .GET[Option[PreferenceDetails]](s"$serviceUrl/portal/preferences/${taxId.regime}/${taxId.value}")
+      .get(new URI(s"$serviceUrl/portal/preferences/${taxId.regime}/${taxId.value}").toURL)
+      .execute[Option[PreferenceDetails]]
       .recover {
         case ex: BadRequestException =>
           warnNotOptedOut(ex.message)
@@ -128,7 +137,8 @@ class EntityResolverConnector @Inject() (httpClient: HttpClient, val servicesCon
       logger.warn(s"Unable to manually opt-out ${taxId.name} user with id ${taxId.value}. Status: $status")
 
     httpClient
-      .POSTEmpty[HttpResponse](s"$serviceUrl/entity-resolver-admin/manual-opt-out/${taxId.regime}/${taxId.value}")
+      .post(new URI(s"$serviceUrl/entity-resolver-admin/manual-opt-out/${taxId.regime}/${taxId.value}").toURL)
+      .execute[HttpResponse]
       .map(_ => OptedOut)
       .recover {
         case _: NotFoundException =>
@@ -151,10 +161,9 @@ class EntityResolverConnector @Inject() (httpClient: HttpClient, val servicesCon
     ec: ExecutionContext
   ): Future[Either[String, Unit]] =
     httpClient
-      .doEmptyPost(
-        s"$serviceUrl/preferences/confirm/$entityId/$itsaId",
-        hc.headers(Seq(HeaderNames.authorisation))
-      )
+      .post(new URI(s"$serviceUrl/preferences/confirm/$entityId/$itsaId").toURL)
+      .transform(_.addHttpHeaders(hc.headers(Seq(HeaderNames.authorisation)): _*))
+      .execute[HttpResponse]
       .map { httpResponse =>
         httpResponse.status match {
           case status if Status.isSuccessful(status) => ().asRight

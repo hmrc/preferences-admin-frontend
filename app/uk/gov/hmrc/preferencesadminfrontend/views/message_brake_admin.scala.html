@@ -1,4 +1,20 @@
 @*
+ * Copyright 2024 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@*
  * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,9 +30,6 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.govukfrontend.views.html.components._
-@import uk.gov.hmrc.govukfrontend.views.html.components.implicits._
-@import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
 @import uk.gov.hmrc.preferencesadminfrontend.controllers.routes
 @import uk.gov.hmrc.preferencesadminfrontend.model.{GmcBatch,BatchMessagePreview}
 @import uk.gov.hmrc.preferencesadminfrontend.views.TemplateHelper
@@ -26,7 +39,6 @@
 layout: Layout,
 form: FormWithCSRF,
 govukButton: GovukButton,
-govukInput: GovukInput,
 govukBreadcrumbs: GovukBreadcrumbs)
 @(batchList: Seq[GmcBatch], batchMessagePreview: Option[BatchMessagePreview] = None)(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
 
@@ -89,7 +101,7 @@ govukBreadcrumbs: GovukBreadcrumbs)
                     <td class="govuk-table__cell">@batch.count</td>
                     <td class="govuk-table__cell">@batch.templateId</td>
                     <td>
-                        @form(action = routes.MessageBrakeController.previewMessage) {
+                        @form(action = routes.MessageBrakeController.previewMessage()) {
                             <input type="hidden" name="batchId" value="@batch.batchId"/>
                             <input type="hidden" name="formId" value="@batch.formId"/>
                             <input type="hidden" name="issueDate" value="@batch.issueDate"/>
@@ -110,11 +122,11 @@ govukBreadcrumbs: GovukBreadcrumbs)
 <div class="grid-row">
     <div class="column-full">
         <div class="button-group">
-            @form(action = routes.MessageBrakeController.showApproveBatchConfirmationPage(), 'class -> "button-form") {
+            @form(action = routes.MessageBrakeController.showApproveBatchConfirmationPage(), Symbol("class") -> "button-form") {
                 <input type="hidden" name="batchId" id="approved-batchId" value=""/>
                 <button id="approve" name="approve" data-module="govuk-button" class="govuk-button" onclick="retrieveBatchIds()" disabled>Approve</button>
             }
-            @form(action = routes.MessageBrakeController.showRejectBatchConfirmationPage(), 'class -> "button-form") {
+            @form(action = routes.MessageBrakeController.showRejectBatchConfirmationPage(), Symbol("class") -> "button-form") {
                 <input type="hidden" name="batchId" id="rejected-batchId" value=""/>
                 <button id="reject" name="reject" data-module="govuk-button govuk-button--warning" class="govuk-button" onclick="retrieveBatchIds()" disabled>Reject</button>
             }
@@ -131,7 +143,7 @@ govukBreadcrumbs: GovukBreadcrumbs)
                         <div class="message-preview">@batchPreview.getContentHtml</div>
                         <h2>Welsh Message Preview</h2>
                         <div class="message-preview">@batchPreview.getWelshContentHtml</div>
-                        @{form(action = routes.MessageBrakeController.previewMessage) {
+                        @{form(action = routes.MessageBrakeController.previewMessage()) {
                             TemplateHelper.getPreviewButton("preview","Preview Next",batchList,batchPreview.batchId)
                         }}
                     </div>

@@ -17,15 +17,19 @@
 package uk.gov.hmrc.preferencesadminfrontend.connectors
 
 import org.mockito.Mockito.when
+import org.mockito.ArgumentMatchers.any
 import org.scalatest.EitherValues
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import uk.gov.hmrc.http.{ HeaderCarrier, HttpClient, HttpResponse }
+import uk.gov.hmrc.http.{ HeaderCarrier, HttpResponse }
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.preferencesadminfrontend.connectors.ChannelPreferencesConnector.StatusUpdate
 import uk.gov.hmrc.http.HttpReads.Implicits.readRaw
+import uk.gov.hmrc.http.client.{ HttpClientV2, RequestBuilder }
+
+import java.net.URI
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -39,13 +43,14 @@ class ChannelPreferencesConnectorSpec extends PlaySpec with ScalaFutures with Ei
     val statusUpdate: StatusUpdate = StatusUpdate(enrolment, status)
 
     implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
-    val httpClient: HttpClient = mock[HttpClient]
+    val httpClient: HttpClientV2 = mock[HttpClientV2]
+    val requestBuilder: RequestBuilder = mock[RequestBuilder]
     val servicesConfig: ServicesConfig = app.injector.instanceOf[ServicesConfig]
 
     val channelPreferencesConnector = new ChannelPreferencesConnector(httpClient, servicesConfig)
 
     val channelPreferencesServiceUrl: String = app.injector.instanceOf[ServicesConfig].baseUrl("channel-preferences")
-    val expectedPath = s"$channelPreferencesServiceUrl/channel-preferences/preference/itsa/status"
+    val expectedPath = new URI(s"$channelPreferencesServiceUrl/channel-preferences/preference/itsa/status").toURL
 
     def httpResponse(status: Int, body: String): HttpResponse = HttpResponse(
       status = status,
@@ -56,8 +61,9 @@ class ChannelPreferencesConnectorSpec extends PlaySpec with ScalaFutures with Ei
 
   "updateStatus" must {
     "return right SentStatus.Sent upon success" in new Scope {
-      when(httpClient.POST[StatusUpdate, HttpResponse](expectedPath, statusUpdate))
-        .thenReturn(Future.successful(httpResponse(OK, "ITSA-GREAT-DAY")))
+      when(httpClient.post(expectedPath)).thenReturn(requestBuilder)
+      when(requestBuilder.withBody(any)(any, any, any)).thenReturn(requestBuilder)
+      when(requestBuilder.execute[HttpResponse]).thenReturn(Future.successful(httpResponse(OK, "ITSA-GREAT-DAY")))
 
       channelPreferencesConnector
         .updateStatus(statusUpdate)(headerCarrier)
@@ -65,8 +71,9 @@ class ChannelPreferencesConnectorSpec extends PlaySpec with ScalaFutures with Ei
     }
 
     "return left upstream error message upon a failure response" in new Scope {
-      when(httpClient.POST[StatusUpdate, HttpResponse](expectedPath, statusUpdate))
-        .thenReturn(Future.successful(httpResponse(Bad, "ITSA-BAD-DAY")))
+      when(httpClient.post(expectedPath)).thenReturn(requestBuilder)
+      when(requestBuilder.withBody(any)(any, any, any)).thenReturn(requestBuilder)
+      when(requestBuilder.execute[HttpResponse]).thenReturn(Future.successful(httpResponse(Bad, "ITSA-BAD-DAY")))
 
       channelPreferencesConnector
         .updateStatus(statusUpdate)(headerCarrier)

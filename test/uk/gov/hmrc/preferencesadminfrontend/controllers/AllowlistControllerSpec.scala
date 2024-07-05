@@ -133,7 +133,7 @@ class AllowlistControllerSpec extends PlaySpec with GuiceOneAppPerSuite with Spe
           HttpResponse(Http.Status.CREATED, "")
         )
       )
-      private val result = allowlistController.confirmAdd().apply(fakeRequestWithSession.withCSRFToken)
+      private val result = allowlistController.confirmAdd.apply(fakeRequestWithSession.withCSRFToken)
       status(result) mustBe Status.SEE_OTHER
     }
 

@@ -23,10 +23,14 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.preferencesadminfrontend.model._
 import play.api.libs.json._
 import uk.gov.hmrc.http.HttpReads.Implicits._
+import uk.gov.hmrc.http.client.HttpClientV2
+import play.api.libs.ws.writeableOf_JsValue
+
+import java.net.URI
 import scala.concurrent.{ ExecutionContext, Future }
 
 @Singleton
-class MessageConnector @Inject() (httpClient: HttpClient, val servicesConfig: ServicesConfig)(implicit
+class MessageConnector @Inject() (httpClient: HttpClientV2, val servicesConfig: ServicesConfig)(implicit
   ec: ExecutionContext
 ) {
 
@@ -39,60 +43,84 @@ class MessageConnector @Inject() (httpClient: HttpClient, val servicesConfig: Se
   def addRescindments(
     rescindmentRequest: RescindmentRequest
   )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[RescindmentUpdateResult] =
-    httpClient.POST[RescindmentRequest, RescindmentUpdateResult](
-      s"$serviceUrl/admin/message/add-rescindments",
-      rescindmentRequest
-    )
+    httpClient
+      .post(new URI(s"$serviceUrl/admin/message/add-rescindments").toURL)
+      .withBody(Json.toJson(rescindmentRequest))
+      .execute[RescindmentUpdateResult]
 
   def sendRescindmentAlerts()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[RescindmentAlertsResult] =
-    httpClient.POSTEmpty[RescindmentAlertsResult](s"$serviceUrl/admin/send-rescindment-alerts")
+    httpClient
+      .post(new URI(s"$serviceUrl/admin/send-rescindment-alerts").toURL)
+      .execute[RescindmentAlertsResult]
 
   def getAllowlist()(implicit hc: HeaderCarrier): Future[HttpResponse] =
-    httpClient.GET[HttpResponse](s"$serviceUrl/admin/message/brake/gmc/allowlist").recover { case e: Exception =>
-      HttpResponse(BAD_GATEWAY, e.getMessage)
-    }
+    httpClient
+      .get(new URI(s"$serviceUrl/admin/message/brake/gmc/allowlist").toURL)
+      .execute[HttpResponse]
+      .recover { case e: Exception =>
+        HttpResponse(BAD_GATEWAY, e.getMessage)
+      }
 
   def addFormIdToAllowlist(formIdEntry: AllowlistEntry)(implicit hc: HeaderCarrier): Future[HttpResponse] =
     httpClient
-      .POST[AllowlistEntry, HttpResponse](s"$serviceUrl/admin/message/brake/gmc/allowlist/add", formIdEntry)
+      .post(new URI(s"$serviceUrl/admin/message/brake/gmc/allowlist/add").toURL)
+      .withBody(Json.toJson(formIdEntry))
+      .execute[HttpResponse]
       .recover { case e: Exception =>
         HttpResponse(BAD_GATEWAY, e.getMessage)
       }
 
   def deleteFormIdFromAllowlist(formIdEntry: AllowlistEntry)(implicit hc: HeaderCarrier): Future[HttpResponse] =
     httpClient
-      .POST[AllowlistEntry, HttpResponse](s"$serviceUrl/admin/message/brake/gmc/allowlist/delete", formIdEntry)
+      .post(new URI(s"$serviceUrl/admin/message/brake/gmc/allowlist/delete").toURL)
+      .withBody(Json.toJson(formIdEntry))
+      .execute[HttpResponse]
       .recover { case e: Exception =>
         HttpResponse(BAD_GATEWAY, e.getMessage)
       }
 
   def getGmcBatches(version: String)(implicit hc: HeaderCarrier): Future[HttpResponse] =
-    httpClient.GET[HttpResponse](s"${serviceUrl(Some(version))}/admin/message/brake/gmc/batches").recover {
-      case e: Exception => HttpResponse(BAD_GATEWAY, e.getMessage)
-    }
+    httpClient
+      .get(new URI(s"${serviceUrl(Some(version))}/admin/message/brake/gmc/batches").toURL)
+      .execute[HttpResponse]
+      .recover { case e: Exception =>
+        HttpResponse(BAD_GATEWAY, e.getMessage)
+      }
 
   def getRandomMessagePreview(batch: GmcBatch)(implicit hc: HeaderCarrier): Future[HttpResponse] =
-    httpClient.POST[GmcBatch, HttpResponse](s"${serviceUrl(batch.version)}/admin/message/brake/random", batch).recover {
-      case e: Exception => HttpResponse(BAD_GATEWAY, e.getMessage)
-    }
+    httpClient
+      .post(new URI(s"${serviceUrl(batch.version)}/admin/message/brake/random").toURL)
+      .withBody(Json.toJson(batch))
+      .execute[HttpResponse]
+      .recover { case e: Exception =>
+        HttpResponse(BAD_GATEWAY, e.getMessage)
+      }
 
   def approveGmcBatch(batch: GmcBatchApproval)(implicit hc: HeaderCarrier): Future[HttpResponse] =
     httpClient
-      .POST[GmcBatchApproval, HttpResponse](s"${serviceUrl(batch.version)}/admin/message/brake/accept", batch)
+      .post(new URI(s"${serviceUrl(batch.version)}/admin/message/brake/accept").toURL)
+      .withBody(Json.toJson(batch))
+      .execute[HttpResponse]
       .recover { case e: Exception =>
         HttpResponse(BAD_GATEWAY, e.getMessage)
       }
 
   def rejectGmcBatch(batch: GmcBatchApproval)(implicit hc: HeaderCarrier): Future[HttpResponse] =
     httpClient
-      .POST[GmcBatchApproval, HttpResponse](s"${serviceUrl(batch.version)}/admin/message/brake/reject", batch)
+      .post(new URI(s"${serviceUrl(batch.version)}/admin/message/brake/reject").toURL)
+      .withBody(Json.toJson(batch))
+      .execute[HttpResponse]
       .recover { case e: Exception =>
         HttpResponse(BAD_GATEWAY, e.getMessage)
       }
 
   def sendMessage(body: JsValue)(implicit hc: HeaderCarrier): Future[HttpResponse] =
-    httpClient.POST[JsValue, HttpResponse](s"$serviceUrl/messages", body).recover { case e: Exception =>
-      HttpResponse(BAD_GATEWAY, e.getMessage)
-    }
+    httpClient
+      .post(new URI(s"$serviceUrl/messages").toURL)
+      .withBody(Json.toJson(body))
+      .execute[HttpResponse]
+      .recover { case e: Exception =>
+        HttpResponse(BAD_GATEWAY, e.getMessage)
+      }
 
 }

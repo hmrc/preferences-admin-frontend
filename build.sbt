@@ -10,11 +10,11 @@ val appName: String = "preferences-admin-frontend"
 lazy val microservice = Project(appName, file("."))
   .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin)
   .disablePlugins(JUnitXmlReportPlugin) // Required to prevent https://github.com/scalatest/scalatest/issues/1427
-  .settings(majorVersion := 1)
-  .settings(scalaSettings: _*)
-  .settings(defaultSettings(): _*)
+  .settings(majorVersion := 2)
+  .settings(scalaSettings *)
+  .settings(defaultSettings() *)
   .settings(
-    scalaVersion := "2.13.12",
+    scalaVersion := "3.3.3",
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
     Test / parallelExecution := false,
     Test / fork := false,
@@ -40,7 +40,6 @@ lazy val microservice = Project(appName, file("."))
   )
   .settings(resolvers ++= Seq(Resolver.jcenterRepo))
   .settings(ScoverageSettings())
-  .settings(tpolecatExcludeOptions += ScalacOptions.warnNonUnitStatement)
 
 Test / test := (Test / test)
   .dependsOn(scalafmtCheckAll)

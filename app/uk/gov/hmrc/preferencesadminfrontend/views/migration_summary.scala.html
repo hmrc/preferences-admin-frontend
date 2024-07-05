@@ -14,7 +14,6 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
 @import uk.gov.hmrc.preferencesadminfrontend.services._
 @import uk.gov.hmrc.preferencesadminfrontend.model._
 @import uk.gov.hmrc.preferencesadminfrontend.controllers.routes
@@ -27,7 +26,7 @@
 <a href="/paperless/admin/migration" class="govuk-back-link">Back</a>
 
 <h1 class="heading-large">Summary of Items that will be Migrated</h1>
-@form(action = routes.MessageController.sync) {
+@form(action = routes.MessageController.sync()) {
 
 <div>
 @syncEntries("accepted").errors.map { error =>

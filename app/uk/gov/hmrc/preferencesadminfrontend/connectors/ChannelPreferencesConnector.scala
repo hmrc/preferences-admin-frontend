@@ -19,10 +19,14 @@ package uk.gov.hmrc.preferencesadminfrontend.connectors
 import cats.syntax.either._
 import play.api.http.Status
 import play.api.libs.json.{ Json, OFormat }
-import uk.gov.hmrc.http.{ HeaderCarrier, HttpClient, HttpResponse }
+import play.api.libs.ws.writeableOf_JsValue
+import uk.gov.hmrc.http.{ HeaderCarrier, HttpResponse }
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.preferencesadminfrontend.connectors.ChannelPreferencesConnector.StatusUpdate
 import uk.gov.hmrc.http.HttpReads.Implicits._
+import uk.gov.hmrc.http.client.HttpClientV2
+
+import java.net.URI
 import javax.inject.{ Inject, Singleton }
 import scala.concurrent.{ ExecutionContext, Future }
 
@@ -35,14 +39,16 @@ object ChannelPreferencesConnector {
 }
 
 @Singleton
-class ChannelPreferencesConnector @Inject() (httpClient: HttpClient, val servicesConfig: ServicesConfig)(implicit
+class ChannelPreferencesConnector @Inject() (httpClient: HttpClientV2, val servicesConfig: ServicesConfig)(implicit
   ec: ExecutionContext
 ) {
   def serviceUrl: String = servicesConfig.baseUrl("channel-preferences")
 
   def updateStatus(statusUpdate: StatusUpdate)(implicit hc: HeaderCarrier): Future[Either[String, Unit]] =
     httpClient
-      .POST[StatusUpdate, HttpResponse](s"$serviceUrl/channel-preferences/preference/itsa/status", statusUpdate)
+      .post(new URI(s"$serviceUrl/channel-preferences/preference/itsa/status").toURL)
+      .withBody(Json.toJson(statusUpdate))
+      .execute[HttpResponse]
       .map { httpResponse =>
         httpResponse.status match {
           case status if Status.isSuccessful(status) => ().asRight

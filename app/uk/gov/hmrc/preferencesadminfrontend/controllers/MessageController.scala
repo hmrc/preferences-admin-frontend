@@ -148,8 +148,8 @@ class MessageController @Inject() (
           case line :: tail =>
             val lineResult = add(line).left.flatMap(x => Left(x))
             lineResult.flatMap(item => loop(tail, acc.map(i => i :+ item)))
-          case Nil => acc
-          case _   => Left("input is empty")
+          case Nil  => acc
+          case null => Left("input is empty")
         }
       loop(lines, Right(List.empty))
     }

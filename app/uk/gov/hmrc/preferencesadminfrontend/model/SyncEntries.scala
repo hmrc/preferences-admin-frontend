@@ -29,6 +29,6 @@ object SyncEntries {
     mapping(
       "entries" -> text.verifying("Entries are lost", _.nonEmpty),
       "confirm" -> boolean
-    )(SyncEntries.apply)(SyncEntries.unapply)
+    )(SyncEntries.apply)(o => Some(Tuple.fromProductTyped(o)))
   )
 }

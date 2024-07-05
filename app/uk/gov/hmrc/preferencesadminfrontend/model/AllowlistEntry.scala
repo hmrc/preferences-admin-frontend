@@ -41,7 +41,7 @@ object AllowlistEntry {
     mapping(
       "formId"     -> nonEmptyTextWithError("A form ID is required"),
       "reasonText" -> text.verifying(reasonTextConstraint)
-    )(AllowlistEntry.apply)(AllowlistEntry.unapply)
+    )(AllowlistEntry.apply)(a => Some(Tuple.fromProductTyped(a)))
   )
 
   def nonEmptyTextWithError(error: String): Mapping[String] =

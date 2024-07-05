@@ -31,6 +31,6 @@ object Rescindment {
       "emailTemplateId" -> nonEmptyText
     )((batchId, formId, date, reference, emailTemplateId) =>
       RescindmentRequest.apply(batchId, formId, date, reference, emailTemplateId)
-    )(RescindmentRequest.unapply _)
+    )(r => Some(Tuple.fromProductTyped(r)))
   )
 }

@@ -97,6 +97,6 @@ class LoginController @Inject() (
     mapping(
       "username" -> nonEmptyText,
       "password" -> nonEmptyText
-    )(User.apply)(User.unapply)
+    )(User.apply)(u => Some(Tuple.fromProductTyped(u)))
   )
 }

@@ -14,9 +14,6 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.govukfrontend.views.html.components._
-@import uk.gov.hmrc.govukfrontend.views.html.components.implicits._
-@import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
 @import uk.gov.hmrc.preferencesadminfrontend.model._
 @import uk.gov.hmrc.preferencesadminfrontend.controllers.routes
 
@@ -36,7 +33,7 @@ govukButton: GovukButton,
 
 </p>
 <div class="section">
-    @form(action = routes.MessageController.check) {
+    @form(action = routes.MessageController.check()) {
     <div class='form-group @if(migrationEntries("identifiers").hasErrors){form-group-error}'>
 
 

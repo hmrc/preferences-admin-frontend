@@ -35,7 +35,7 @@ class LoginServiceConfiguration @Inject() (val configuration: Configuration) {
     configuration
       .getOptional[Seq[Configuration]](s"users")
       .getOrElse(throw new Missing("Property users missing"))
-      .map { userConfig: Configuration =>
+      .map { (userConfig: Configuration) =>
         val encodedPwd =
           userConfig.getOptional[String]("password").getOrElse(throw new Missing("Property password missing"))
         val decodedPwd = new String(BaseEncoding.base64().decode(encodedPwd))
