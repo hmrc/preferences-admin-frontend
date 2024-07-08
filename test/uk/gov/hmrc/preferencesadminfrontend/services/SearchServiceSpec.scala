@@ -16,16 +16,17 @@
 
 package uk.gov.hmrc.preferencesadminfrontend.services
 
-import org.mockito.ArgumentMatchers._
-import org.mockito.Mockito._
+import org.mockito.ArgumentMatchers.*
+import org.mockito.Mockito.*
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.{ IntegrationPatience, ScalaFutures }
 import org.scalatestplus.play.PlaySpec
 import play.api.Configuration
+import play.api.libs.json.Json
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditResult
 import uk.gov.hmrc.play.audit.model.DataEvent
-import uk.gov.hmrc.preferencesadminfrontend.connectors._
+import uk.gov.hmrc.preferencesadminfrontend.connectors.*
 import uk.gov.hmrc.preferencesadminfrontend.services.model.{ Email, EntityId, Preference, TaxIdentifier }
 import uk.gov.hmrc.preferencesadminfrontend.utils.SpecBase
 
@@ -228,7 +229,7 @@ class SearchServiceSpec
       event.auditSource mustBe "preferences-admin-frontend"
       event.auditType mustBe "TxSucceeded"
       event.request.detail mustBe Map(
-        "preference" -> "{\"entityId\":\"383cfb1b-5f57-417b-9380-545f35c29a22\",\"genericPaperless\":true,\"genericUpdatedAt\":1518652800000,\"email\":{\"address\":\"john.doe@digital.hmrc.gov.uk\",\"verified\":true,\"verifiedOn\":1518652800000,\"hasBounces\":false},\"taxIdentifiers\":[{\"name\":\"sautr\",\"value\":\"123\"},{\"name\":\"nino\",\"value\":\"ABC\"}]}",
+        "preference"   -> s"${Json.toJson(preference)}",
         "result"       -> "Found",
         "query"        -> "{\"name\":\"sautr\",\"value\":\"123\"}",
         "DataCallType" -> "request",
@@ -269,13 +270,13 @@ class SearchServiceSpec
       event.auditSource mustBe "preferences-admin-frontend"
       event.auditType mustBe "TxSucceeded"
       event.request.detail mustBe Map(
-        "optOutReason" -> "my optOut reason",
-        "query"        -> "{\"name\":\"sautr\",\"value\":\"123456789\"}",
-        "originalPreference" -> "{\"genericPaperless\":true,\"genericUpdatedAt\":1518652800000,\"email\":{\"address\":\"john.doe@digital.hmrc.gov.uk\",\"verified\":true,\"verifiedOn\":1518652800000,\"language\":\"cy\",\"hasBounces\":false},\"taxIdentifiers\":[{\"name\":\"sautr\",\"value\":\"123456789\"},{\"name\":\"nino\",\"value\":\"CE067583D\"},{\"name\":\"HMRC-MTD-IT\",\"value\":\"testItsa123\"}]}",
-        "DataCallType" -> "request",
-        "newPreference" -> "{\"genericPaperless\":false,\"genericUpdatedAt\":1518652800000,\"taxIdentifiers\":[{\"name\":\"sautr\",\"value\":\"123456789\"},{\"name\":\"nino\",\"value\":\"CE067583D\"},{\"name\":\"HMRC-MTD-IT\",\"value\":\"testItsa123\"}]}",
-        "reasonOfFailure" -> "Done",
-        "user"            -> "me"
+        "optOutReason"       -> "my optOut reason",
+        "query"              -> "{\"name\":\"sautr\",\"value\":\"123456789\"}",
+        "originalPreference" -> s"${Json.toJson(optedInPreference)}",
+        "DataCallType"       -> "request",
+        "newPreference"      -> s"${Json.toJson(optedOutPreference)}",
+        "reasonOfFailure"    -> "Done",
+        "user"               -> "me"
       )
       event.request.tags("transactionName") mustBe "Manual opt out from paperless"
     }
@@ -293,13 +294,13 @@ class SearchServiceSpec
       event.auditSource mustBe "preferences-admin-frontend"
       event.auditType mustBe "TxFailed"
       event.request.detail mustBe Map(
-        "optOutReason" -> "my optOut reason",
-        "query"        -> "{\"name\":\"sautr\",\"value\":\"123456789\"}",
-        "originalPreference" -> "{\"genericPaperless\":false,\"genericUpdatedAt\":1518652800000,\"taxIdentifiers\":[{\"name\":\"sautr\",\"value\":\"123456789\"},{\"name\":\"nino\",\"value\":\"CE067583D\"},{\"name\":\"HMRC-MTD-IT\",\"value\":\"testItsa123\"}]}",
-        "DataCallType" -> "request",
-        "newPreference" -> "{\"genericPaperless\":false,\"genericUpdatedAt\":1518652800000,\"taxIdentifiers\":[{\"name\":\"sautr\",\"value\":\"123456789\"},{\"name\":\"nino\",\"value\":\"CE067583D\"},{\"name\":\"HMRC-MTD-IT\",\"value\":\"testItsa123\"}]}",
-        "reasonOfFailure" -> "Preference already opted out",
-        "user"            -> "me"
+        "optOutReason"       -> "my optOut reason",
+        "query"              -> "{\"name\":\"sautr\",\"value\":\"123456789\"}",
+        "originalPreference" -> s"${Json.toJson(optedOutPreference)}",
+        "DataCallType"       -> "request",
+        "newPreference"      -> s"${Json.toJson(optedOutPreference)}",
+        "reasonOfFailure"    -> "Preference already opted out",
+        "user"               -> "me"
       )
       event.request.tags("transactionName") mustBe "Manual opt out from paperless"
 

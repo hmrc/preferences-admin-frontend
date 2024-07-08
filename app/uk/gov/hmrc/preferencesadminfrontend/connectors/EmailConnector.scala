@@ -17,19 +17,24 @@
 package uk.gov.hmrc.preferencesadminfrontend.connectors
 
 import uk.gov.hmrc.http.HttpReads.Implicits._
-import uk.gov.hmrc.http.{ HeaderCarrier, HttpClient, HttpResponse }
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{ HeaderCarrier, HttpResponse }
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+
+import java.net.URI
 import javax.inject.{ Inject, Singleton }
 import scala.concurrent.{ ExecutionContext, Future }
 
 @Singleton
-class EmailConnector @Inject() (httpClient: HttpClient, val servicesConfig: ServicesConfig)(implicit
+class EmailConnector @Inject() (httpClient: HttpClientV2, val servicesConfig: ServicesConfig)(implicit
   ec: ExecutionContext
 ) {
   val serviceUrl = servicesConfig.baseUrl("email")
 
   implicit val headerCarrier: HeaderCarrier = new HeaderCarrier()
   def findEvent(transId: String): Future[HttpResponse] =
-    httpClient.GET[HttpResponse](s"$serviceUrl/event/$transId")
+    httpClient
+      .get(new URI(s"$serviceUrl/event/$transId").toURL)
+      .execute[HttpResponse]
 
 }

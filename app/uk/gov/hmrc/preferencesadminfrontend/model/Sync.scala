@@ -26,7 +26,7 @@ object SyncOne {
   def apply(): Form[Sync] = Form(
     mapping(
       "entries" -> text
-    )(Sync.apply)(Sync.unapply)
+    )(Sync.apply)(o => Some(o.entries))
   )
 
 }

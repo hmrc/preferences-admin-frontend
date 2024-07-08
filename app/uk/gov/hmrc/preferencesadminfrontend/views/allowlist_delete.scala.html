@@ -14,9 +14,7 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.govukfrontend.views.html.components._
 @import uk.gov.hmrc.govukfrontend.views.html.components.implicits._
-@import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
 @import uk.gov.hmrc.preferencesadminfrontend.controllers.routes
 @import uk.gov.hmrc.preferencesadminfrontend.model.AllowlistEntry
 
@@ -48,7 +46,7 @@ govukBreadcrumbs: GovukBreadcrumbs)
     )
     <h1 class="heading-large">Message Form IDs Allowlist</h1>
     <div class="section">
-        @form(action = routes.AllowlistController.confirmDelete) {
+        @form(action = routes.AllowlistController.confirmDelete()) {
             @govukTextarea(Textarea(
                 id = "reasonText",
                 name = "reasonText",
@@ -65,7 +63,7 @@ govukBreadcrumbs: GovukBreadcrumbs)
                 content = Text("Confirm")
               ))
               <input type="hidden" name="formId" value='@{entryForm("formId").value}'/>
-              <button type="button" onclick="location.href='@routes.AllowlistController.showAllowlistPage';" class="govuk-button govuk-button--secondary" data-module="govuk-button">Cancel</button>
+              <button type="button" onclick="location.href='@routes.AllowlistController.showAllowlistPage()';" class="govuk-button govuk-button--secondary" data-module="govuk-button">Cancel</button>
             </div>
         }
     </div>

@@ -18,19 +18,21 @@ package uk.gov.hmrc.preferencesadminfrontend.config
 
 import javax.inject.{ Inject, Singleton }
 import play.api.i18n.{ I18nSupport, MessagesApi }
-import play.api.mvc.Request
+import play.api.mvc.RequestHeader
 import play.twirl.api.Html
 import uk.gov.hmrc.preferencesadminfrontend.views.html.ErrorTemplate
 import uk.gov.hmrc.play.bootstrap.frontend.http.FrontendErrorHandler
 
+import scala.concurrent.{ ExecutionContext, Future }
+
 @Singleton
 class ErrorHandler @Inject() (val messagesApi: MessagesApi, errorTemplateView: ErrorTemplate)(implicit
+  val ec: ExecutionContext,
   val appConfig: AppConfig
 ) extends FrontendErrorHandler with I18nSupport {
 
   override def standardErrorTemplate(pageTitle: String, heading: String, message: String)(implicit
-    request: Request[_]
-  ): Html =
-    errorTemplateView(pageTitle, heading, message)
-
+    request: RequestHeader
+  ): Future[Html] =
+    Future.successful(errorTemplateView(pageTitle, heading, message))
 }

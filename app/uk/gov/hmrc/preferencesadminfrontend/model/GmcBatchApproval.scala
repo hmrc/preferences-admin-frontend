@@ -52,7 +52,7 @@ object GmcBatchApproval {
       "templateId" -> text,
       "reasonText" -> text.verifying(reasonTextConstraint),
       "version"    -> optional(text)
-    )(GmcBatchApproval.apply)(GmcBatchApproval.unapply)
+    )(GmcBatchApproval.apply)(g => Some(Tuple.fromProductTyped(g)))
   )
 
   def apply(gmcBatch: GmcBatch, reason: String): GmcBatchApproval = GmcBatchApproval(

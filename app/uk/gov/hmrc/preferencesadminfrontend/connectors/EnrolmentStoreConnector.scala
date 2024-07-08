@@ -21,16 +21,19 @@ import cats.syntax.either._
 import cats.syntax.option._
 import play.api.Logger
 import play.api.http.Status._
-import uk.gov.hmrc.http.{ HeaderCarrier, HttpClient, HttpResponse }
+import uk.gov.hmrc.http.{ HeaderCarrier, HttpResponse }
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.preferencesadminfrontend.model.{ PrincipalUserIds, UserState }
 import uk.gov.hmrc.preferencesadminfrontend.services.model.TaxIdentifier
 import uk.gov.hmrc.http.HttpReads.Implicits._
+import uk.gov.hmrc.http.client.HttpClientV2
+
+import java.net.URI
 import javax.inject.{ Inject, Singleton }
 import scala.concurrent.{ ExecutionContext, Future }
 
 @Singleton
-class EnrolmentStoreConnector @Inject() (httpClient: HttpClient, val servicesConfig: ServicesConfig)(implicit
+class EnrolmentStoreConnector @Inject() (httpClient: HttpClientV2, val servicesConfig: ServicesConfig)(implicit
   ec: ExecutionContext
 ) {
 
@@ -43,7 +46,10 @@ class EnrolmentStoreConnector @Inject() (httpClient: HttpClient, val servicesCon
       response <-
         EitherT(
           httpClient
-            .GET[HttpResponse](s"$serviceUrl/enrolment-store-proxy/enrolment-store/enrolments/$id/users?type=principal")
+            .get(
+              new URI(s"$serviceUrl/enrolment-store-proxy/enrolment-store/enrolments/$id/users?type=principal").toURL
+            )
+            .execute[HttpResponse]
             .map(handleGetUserIdsResponse)
         )
 
@@ -56,9 +62,12 @@ class EnrolmentStoreConnector @Inject() (httpClient: HttpClient, val servicesCon
       id <- EitherT.fromEither[Future](resolveId(saUtr))
       response <- EitherT(
                     httpClient
-                      .GET[HttpResponse](
-                        s"$serviceUrl/enrolment-store-proxy/enrolment-store/users/$principalUserId/enrolments/$id"
+                      .get(
+                        new URI(
+                          s"$serviceUrl/enrolment-store-proxy/enrolment-store/users/$principalUserId/enrolments/$id"
+                        ).toURL
                       )
+                      .execute[HttpResponse]
                       .map(handleCheckEnrolmentsResponse)
                   )
     } yield response).value

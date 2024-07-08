@@ -37,6 +37,6 @@ object MigrationEntries {
   def apply(): Form[MigrationEntries] = Form(
     mapping(
       "identifiers" -> text.verifying(sizeConstraint)
-    )(MigrationEntries.apply)(MigrationEntries.unapply)
+    )(MigrationEntries.apply)((o: MigrationEntries) => Some(o.entries))
   )
 }

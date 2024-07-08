@@ -100,7 +100,7 @@ class CustomerMigrationResolver @Inject() (
     getITSAPreference(identifier).map(_.flatMap(maybeITSAPreference))
 
   def maybeITSAPreference(preferenceDetails: PreferenceDetails): Option[ITSAOnlinePreference] =
-    preferenceDetails.isPaperless.map(ITSAOnlinePreference)
+    preferenceDetails.isPaperless.map(ITSAOnlinePreference.apply)
 
   def maybeSAPreference(preferenceDetails: PreferenceDetails): Option[SAOnline] =
     for {

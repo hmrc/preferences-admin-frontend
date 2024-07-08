@@ -14,23 +14,19 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.govukfrontend.views.html.components._
-@import uk.gov.hmrc.govukfrontend.views.html.components.implicits._
-@import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
 @import uk.gov.hmrc.preferencesadminfrontend.controllers.routes
 @import uk.gov.hmrc.preferencesadminfrontend.model.GmcBatchApproval
 @import uk.gov.hmrc.preferencesadminfrontend.views.TemplateHelper
 
 @this(
 layout: Layout,
-form: FormWithCSRF,
-govukInput: GovukInput)
+form: FormWithCSRF)
 @(gmcBatchApprovalForm: Form[GmcBatchApproval])(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
 
 @layout(pageTitle = Some("Batch Rejection")) {
  <h1 class="heading-large">Batch Rejection</h1>
  <div class="section">
- @form(action = routes.MessageBrakeController.confirmRejectBatch) {
+ @form(action = routes.MessageBrakeController.confirmRejectBatch()) {
   <div class='form-group @if(gmcBatchApprovalForm("reasonText").hasErrors){form-group-error}'>
 
    <p class="govuk-body">Please see you are rejecting the messages for following form id:</p>
@@ -47,7 +43,7 @@ govukInput: GovukInput)
   </div>
   <div class="govuk-button-group">
    <input type="submit" name="confirm" class="govuk-button" value="Confirm"/>
-   <input type="button" onclick="location.href='@routes.MessageBrakeController.showAdminPage';" class="govuk-button govuk-button--secondary" data-module="govuk-button" value="Cancel"/>
+   <input type="button" onclick="location.href='@routes.MessageBrakeController.showAdminPage()';" class="govuk-button govuk-button--secondary" data-module="govuk-button" value="Cancel"/>
   </div>
   <input type="hidden" name="batchId" value='@gmcBatchApprovalForm("batchId").value'/>
   <input type="hidden" name="formId" value='@gmcBatchApprovalForm("formId").value'/>

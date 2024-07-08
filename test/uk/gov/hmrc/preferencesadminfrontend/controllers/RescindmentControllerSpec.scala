@@ -31,7 +31,8 @@ import play.api.i18n.MessagesApi
 import play.api.test.CSRFTokenHelper._
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{ contentAsString, defaultAwaitTimeout, headers, status }
-import uk.gov.hmrc.http.{ HeaderCarrier, HttpClient }
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.play.audit.model.MergedDataEvent
 import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
 import uk.gov.hmrc.preferencesadminfrontend.controllers.model.User
@@ -168,7 +169,7 @@ class RescindmentControllerSpec extends PlaySpec with ScalaFutures with GuiceOne
   class RescindmentTestCase extends SpecBase {
     implicit val ecc: ExecutionContext = stubbedMCC.executionContext
     implicit val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
-    val httpClient: HttpClient = app.injector.instanceOf[HttpClient]
+    val httpClient: HttpClientV2 = app.injector.instanceOf[HttpClientV2]
     val authorisedAction: AuthorisedAction = app.injector.instanceOf[AuthorisedAction]
     val rescindmentView: rescindment = app.injector.instanceOf[rescindment]
     val rescindmentSendView: rescindment_send = app.injector.instanceOf[rescindment_send]

@@ -14,9 +14,7 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.govukfrontend.views.html.components._
 @import uk.gov.hmrc.govukfrontend.views.html.components.implicits._
-@import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
 @import uk.gov.hmrc.preferencesadminfrontend.controllers.model.User
 @import uk.gov.hmrc.preferencesadminfrontend.controllers.routes
 
@@ -41,8 +39,8 @@ govukBreadcrumbs: GovukBreadcrumbs)
 
     <h1 class="govuk-heading-l">Login</h1>
     <p class="govuk-body">Enter your details to access the admin console</p>
-    @form(action = routes.LoginController.loginAction) {
-        <fieldset class='govuk-fieldset @{if(userForm.hasGlobalErrors) "form-field--error" }'>
+    @form(action = routes.LoginController.loginAction()) {
+        <fieldset class='govuk-fieldset @(if (userForm.hasGlobalErrors) {"form-field--error"} else {""})'>
             @for(error <- userForm.globalErrors) {
                 <span class="error-notification govuk-error-message">@Messages(error.message)</span>
             }

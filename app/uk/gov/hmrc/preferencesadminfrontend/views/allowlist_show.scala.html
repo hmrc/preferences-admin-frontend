@@ -14,16 +14,12 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.govukfrontend.views.html.components._
-@import uk.gov.hmrc.govukfrontend.views.html.components.implicits._
-@import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
 @import uk.gov.hmrc.preferencesadminfrontend.controllers.routes
 @import uk.gov.hmrc.preferencesadminfrontend.model.Allowlist
 
 @this(
 layout: Layout,
 form: FormWithCSRF,
-govukInput: GovukInput,
 govukBreadcrumbs: GovukBreadcrumbs)
 @(allowlist: Allowlist)(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
 
@@ -45,15 +41,15 @@ govukBreadcrumbs: GovukBreadcrumbs)
     <h2 class="heading-medium">Form ID</h2>
     @for(formId <- allowlist.formIdList.value) {
         <div class="form-group">
-        @form(action = routes.AllowlistController.showAllowlistPage) {
+        @form(action = routes.AllowlistController.showAllowlistPage()) {
             <input name="formId" class="govuk-input govuk-input--width-10" type="text" value="@formId.as[String]" readonly/>
             <button type="button" onclick="location.href='@routes.AllowlistController.deleteFormId(formId.as[String])';" class="govuk-button govuk-button--warning">Delete Form</button>
         }
         </div>
     }
-    @form(action = routes.AllowlistController.showAllowlistPage) {
+    @form(action = routes.AllowlistController.showAllowlistPage()) {
         <div class="form-group">
-            <button type="button" onclick="location.href='@routes.AllowlistController.addFormId';" class="govuk-button">Add New Form</button>
+            <button type="button" onclick="location.href='@routes.AllowlistController.addFormId()';" class="govuk-button">Add New Form</button>
         </div>
     }
 }

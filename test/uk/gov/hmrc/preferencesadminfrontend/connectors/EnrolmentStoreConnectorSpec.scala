@@ -16,20 +16,25 @@
 
 package uk.gov.hmrc.preferencesadminfrontend.connectors
 
-import cats.syntax.option._
+import cats.syntax.option.*
+import org.mockito.ArgumentMatchers.eq as eql
 import org.mockito.Mockito.when
+import org.mockito.ArgumentMatchers.any
 import org.scalatest.EitherValues
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.libs.json.Json
-import uk.gov.hmrc.http.{ HeaderCarrier, HttpClient, HttpResponse }
+import uk.gov.hmrc.http.{ HeaderCarrier, HttpResponse }
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.preferencesadminfrontend.model.UserState.Activated
 import uk.gov.hmrc.preferencesadminfrontend.model.{ PrincipalUserIds, UserState }
 import uk.gov.hmrc.preferencesadminfrontend.services.model.TaxIdentifier
 import uk.gov.hmrc.http.HttpReads.Implicits.readRaw
+import uk.gov.hmrc.http.client.{ HttpClientV2, RequestBuilder }
+
+import java.net.{ URI, URL }
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -37,7 +42,8 @@ class EnrolmentStoreConnectorSpec extends PlaySpec with ScalaFutures with Either
 
   "getUserIds" must {
     "return right list of principal ids upon success" in new Scope {
-      when(httpClient.GET[HttpResponse](expectedPrincipalPath))
+      when(httpClient.get(eql(expectedPrincipalPath))(any)).thenReturn(requestBuilder)
+      when(requestBuilder.execute[HttpResponse])
         .thenReturn(Future.successful(HttpResponse(OK, Json.toJson(principalUserIds).toString())))
 
       enrolmentStoreConnector
@@ -46,8 +52,8 @@ class EnrolmentStoreConnectorSpec extends PlaySpec with ScalaFutures with Either
     }
 
     "return an empty list of principal user ids when NO_CONTENT is returned" in new Scope {
-      when(httpClient.GET[HttpResponse](expectedPrincipalPath))
-        .thenReturn(Future.successful(httpResponse(NoContent, body = "")))
+      when(httpClient.get(eql(expectedPrincipalPath))(any)).thenReturn(requestBuilder)
+      when(requestBuilder.execute[HttpResponse]).thenReturn(Future.successful(httpResponse(NoContent, body = "")))
 
       enrolmentStoreConnector
         .getUserIds(taxId)(headerCarrier)
@@ -55,8 +61,8 @@ class EnrolmentStoreConnectorSpec extends PlaySpec with ScalaFutures with Either
     }
 
     "return an upstream error when neither OK or NO_CONTENT status code is returned" in new Scope {
-      when(httpClient.GET[HttpResponse](expectedPrincipalPath))
-        .thenReturn(Future.successful(httpResponse(Bad, body = "BAD_NEWS")))
+      when(httpClient.get(eql(expectedPrincipalPath))(any)).thenReturn(requestBuilder)
+      when(requestBuilder.execute[HttpResponse]).thenReturn(Future.successful(httpResponse(Bad, body = "BAD_NEWS")))
 
       enrolmentStoreConnector
         .getUserIds(taxId)(headerCarrier)
@@ -68,7 +74,8 @@ class EnrolmentStoreConnectorSpec extends PlaySpec with ScalaFutures with Either
 
   "getUserState" must {
     "return right some users state upon success" in new Scope {
-      when(httpClient.GET[HttpResponse](expectedUserStatePath))
+      when(httpClient.get(eql(expectedUserStatePath))(any)).thenReturn(requestBuilder)
+      when(requestBuilder.execute[HttpResponse])
         .thenReturn(Future.successful(httpResponse(OK, body = Json.toJson(userState).toString())))
 
       enrolmentStoreConnector
@@ -77,8 +84,8 @@ class EnrolmentStoreConnectorSpec extends PlaySpec with ScalaFutures with Either
     }
 
     "return right none when a NOT_FOUND status is returned" in new Scope {
-      when(httpClient.GET[HttpResponse](expectedUserStatePath))
-        .thenReturn(Future.successful(httpResponse(NotFound, body = "")))
+      when(httpClient.get(eql(expectedUserStatePath))(any)).thenReturn(requestBuilder)
+      when(requestBuilder.execute[HttpResponse]).thenReturn(Future.successful(httpResponse(NotFound, body = "")))
 
       enrolmentStoreConnector
         .getUserState(principalUserId, taxId)(headerCarrier)
@@ -86,8 +93,8 @@ class EnrolmentStoreConnectorSpec extends PlaySpec with ScalaFutures with Either
     }
 
     "return an upstream error when neither OK or NOT_FOUND status code is returned" in new Scope {
-      when(httpClient.GET[HttpResponse](expectedUserStatePath))
-        .thenReturn(Future.successful(httpResponse(Bad, body = "BAD_NEWS")))
+      when(httpClient.get(eql(expectedUserStatePath))(any)).thenReturn(requestBuilder)
+      when(requestBuilder.execute[HttpResponse]).thenReturn(Future.successful(httpResponse(Bad, body = "BAD_NEWS")))
 
       enrolmentStoreConnector
         .getUserState(principalUserId, taxId)(headerCarrier)
@@ -120,15 +127,20 @@ class EnrolmentStoreConnectorSpec extends PlaySpec with ScalaFutures with Either
     val userState: UserState = UserState(Activated)
 
     implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
-    val httpClient: HttpClient = mock[HttpClient]
+    val httpClient: HttpClientV2 = mock[HttpClientV2]
+    val requestBuilder: RequestBuilder = mock[RequestBuilder]
     val servicesConfig: ServicesConfig = app.injector.instanceOf[ServicesConfig]
 
     val enrolmentStoreConnector = new EnrolmentStoreConnector(httpClient, servicesConfig)
     val enrolmentStoreServiceUrl: String = app.injector.instanceOf[ServicesConfig].baseUrl("enrolment-store")
-    val expectedPrincipalPath =
-      s"$enrolmentStoreServiceUrl/enrolment-store-proxy/enrolment-store/enrolments/IR-SA~UTR~$saUtr/users?type=principal"
-    val expectedUserStatePath =
-      s"$enrolmentStoreServiceUrl/enrolment-store-proxy/enrolment-store/users/$principalUserId/enrolments/IR-SA~UTR~$saUtr"
+    val expectedPrincipalPath: URL =
+      new URI(
+        s"$enrolmentStoreServiceUrl/enrolment-store-proxy/enrolment-store/enrolments/IR-SA~UTR~$saUtr/users?type=principal"
+      ).toURL
+    val expectedUserStatePath: URL =
+      new URI(
+        s"$enrolmentStoreServiceUrl/enrolment-store-proxy/enrolment-store/users/$principalUserId/enrolments/IR-SA~UTR~$saUtr"
+      ).toURL
 
     def httpResponse(status: Int, body: String): HttpResponse = HttpResponse(
       status = status,
