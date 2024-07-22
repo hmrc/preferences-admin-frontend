@@ -22,7 +22,6 @@
         function copyMessage() {
             let copyText = document.getElementById("encoded-text");
             copyText.select();
-            copyText.setSelectionRange(0, 99999);
             navigator.clipboard.writeText(copyText.value);
             document.getElementById("copyButton").disabled = true
             alert("Copied the message");
