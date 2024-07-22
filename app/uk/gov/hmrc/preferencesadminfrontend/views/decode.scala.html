@@ -25,7 +25,7 @@
             copyText.setSelectionRange(0, 99999);
             navigator.clipboard.writeText(copyText.value);
             document.getElementById("copyButton").disabled = true
-            alert("Copied the text");
+            alert("Copied the message");
         }
         function decodeMessage() {
             let base64Encoded = document.getElementById("encoded-text").value;
