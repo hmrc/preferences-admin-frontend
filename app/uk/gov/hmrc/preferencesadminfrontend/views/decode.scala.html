@@ -19,14 +19,24 @@
 @()(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
 @scriptsBlock = {
     <script>
+        function copyMessage() {
+            let copyText = document.getElementById("encoded-text");
+            copyText.select();
+            navigator.clipboard.writeText(copyText.value);
+            document.getElementById("copyButton").disabled = true
+            alert("Copied the message");
+        }
         function decodeMessage() {
-            let base64Encoded = document.getElementById('encoded-text').value;
-            let base64Decode = new TextDecoder().decode(Uint8Array.from(atob(base64Encoded), m => m.codePointAt(0)));
-            document.getElementById("decoded-text").innerHTML = base64Decode;
+            let base64Encoded = document.getElementById("encoded-text").value;
+            let base64Decoded = new TextDecoder().decode(Uint8Array.from(atob(base64Encoded), m => m.codePointAt(0)));
+            document.getElementById("encoded-text").value = base64Decoded;
+            document.getElementById("copyButton").disabled = false
+            document.getElementById("decode").disabled = true
         }
         resetButton.addEventListener('click', () => {
-            document.getElementById("decoded-text").innerHTML = '';
             document.getElementById("encoded-text").value = '';
+            document.getElementById("copyButton").disabled = true
+            document.getElementById("decode").disabled = false
         });
     </script>
 }
@@ -50,7 +60,7 @@
     </div>
     <div class="govuk-button-group">
         <button id="decode" name="decode" data-module="govuk-button" class="govuk-button" onclick="decodeMessage()">Decode</button>
-        <button id="resetButton" name="resetButton" class="govuk-button">Clear</button>
+        <button id="copyButton" name="copyButton" class="govuk-button" onclick="copyMessage()" disabled>Copy</button>
+        <button id="resetButton" name="resetButton" class="govuk-button govuk-button--secondary" style="float: right;">Clear</button>
     </div>
-    <p class="govuk-body" id="decoded-text"></p>
 }
