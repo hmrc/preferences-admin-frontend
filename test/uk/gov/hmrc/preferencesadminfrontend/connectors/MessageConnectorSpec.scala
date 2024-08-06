@@ -58,33 +58,6 @@ class MessageConnectorSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
   def secureMessageServiceUrl: String =
     app.injector.instanceOf[ServicesConfig].baseUrl("secure-message") + "/secure-messaging"
 
-  "Rescindments" should {
-
-    "addRescindments" should {
-      "return a valid update result with status 200" in new TestCase {
-        val expectedPath = url"$serviceUrl/admin/message/add-rescindments"
-        when(mockHttp.post(any)(any)).thenReturn(requestBuilder)
-        when(requestBuilder.withBody(any)(any, any, any)).thenReturn(requestBuilder)
-        when(requestBuilder.execute[RescindmentUpdateResult](any, any))
-          .thenReturn(Future.successful(Json.fromJson[RescindmentUpdateResult](rescindmentUpdateResultJson).get))
-
-        val result = app.injector.instanceOf[MessageConnector].addRescindments(rescindmentRequest).futureValue
-        result mustBe rescindmentUpdateResult
-      }
-    }
-
-    "sendRescindmentAlerts" should {
-      "return a valid alert result with status 200" in new TestCase {
-        val expectedPath = url"$serviceUrl/admin/send-rescindment-alerts"
-        when(mockHttp.post(any)(any)).thenReturn(requestBuilder)
-        when(requestBuilder.withBody(any)(any, any, any)).thenReturn(requestBuilder)
-        when(requestBuilder.execute[RescindmentUpdateResult](any, any))
-          .thenReturn(Future.successful(rescindmentAlertsResult))
-        val result = app.injector.instanceOf[MessageConnector].sendRescindmentAlerts().futureValue
-        result mustBe rescindmentAlertsResult
-      }
-    }
-  }
   "GMC Batches Admin" should {
 
     "getAllowlist" should {
@@ -418,32 +391,6 @@ class MessageConnectorSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
     val expectedApproveGmcBatchPath = s"/admin/message/brake/accept"
     val expectedRejectGmcBatchPath = s"/admin/message/brake/reject"
     val emptyJson = Json.obj()
-    val rescindmentRequest = RescindmentRequest(
-      batchId = "1234567",
-      formId = "SA316",
-      date = "2017-03-16",
-      reference = "ref-test",
-      emailTemplateId = "rescindedMessageAlert"
-    )
-    val rescindmentUpdateResultJson = Json.obj(
-      "tried"          -> 1,
-      "succeeded"      -> 1,
-      "alreadyUpdated" -> 0,
-      "invalidState"   -> 0
-    )
-    val rescindmentUpdateResult = RescindmentUpdateResult(
-      tried = 1,
-      succeeded = 1,
-      alreadyUpdated = 0,
-      invalidState = 0
-    )
-    val rescindmentAlertsResultJson = Json.obj(
-      "alerts sent"         -> 1,
-      "ready for retrial"   -> 1,
-      "failed permanently"  -> 0,
-      "hard copy requested" -> 0
-    )
-
     val getGmcBatchesResultJson = Json.parse("""
                                                |[
                                                |    {
@@ -481,13 +428,6 @@ class MessageConnectorSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
         | "taxIdentifierName":"sautr"
         |}
       """.stripMargin
-    )
-
-    val rescindmentAlertsResult = RescindmentAlertsResult(
-      sent = 1,
-      requeued = 1,
-      failed = 0,
-      hardCopyRequested = 0
     )
 
     val gmcBatch = GmcBatch(
@@ -541,10 +481,6 @@ class MessageConnectorSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
       when(requestBuilder.execute[HttpResponse](any, any))
         .thenReturn(Future.successful(HttpResponse(Status.OK, Json.obj(), Map.empty)))
 
-      when(mockHttp.post(any)(any)).thenReturn(requestBuilder)
-      when(requestBuilder.execute[RescindmentAlertsResult](any, any))
-        .thenReturn(Future.successful(RescindmentAlertsResult(1, 1, 1, 1)))
-
       new MessageConnector(mockHttp, mockServicesConfig)
     }
 
@@ -559,9 +495,6 @@ class MessageConnectorSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
       when(requestBuilder.execute[HttpResponse](any, any))
         .thenReturn(Future.failed(error))
 
-      when(mockHttp.post(any)(any)).thenReturn(requestBuilder)
-      when(requestBuilder.execute[RescindmentAlertsResult](any, any))
-        .thenReturn(Future.failed(error))
       new MessageConnector(mockHttp, mockServicesConfig)
     }
   }

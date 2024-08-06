@@ -40,19 +40,6 @@ class MessageConnector @Inject() (httpClient: HttpClientV2, val servicesConfig: 
 
   val serviceUrl: String = serviceUrl(Some("v3"))
 
-  def addRescindments(
-    rescindmentRequest: RescindmentRequest
-  )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[RescindmentUpdateResult] =
-    httpClient
-      .post(new URI(s"$serviceUrl/admin/message/add-rescindments").toURL)
-      .withBody(Json.toJson(rescindmentRequest))
-      .execute[RescindmentUpdateResult]
-
-  def sendRescindmentAlerts()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[RescindmentAlertsResult] =
-    httpClient
-      .post(new URI(s"$serviceUrl/admin/send-rescindment-alerts").toURL)
-      .execute[RescindmentAlertsResult]
-
   def getAllowlist()(implicit hc: HeaderCarrier): Future[HttpResponse] =
     httpClient
       .get(new URI(s"$serviceUrl/admin/message/brake/gmc/allowlist").toURL)
