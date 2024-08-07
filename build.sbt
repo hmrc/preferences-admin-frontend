@@ -24,10 +24,7 @@ lazy val microservice = Project(appName, file("."))
     scalacOptions ++= List(
       "-feature",
       "-language:postfixOps",
-      "-language:reflectiveCalls",
-      "-Xlint:-missing-interpolator",
-      "-Wconf:src=routes/.*:s",
-      "-Wconf:src=html/.*:s"
+      "-language:reflectiveCalls"
     )
   )
   .settings(
