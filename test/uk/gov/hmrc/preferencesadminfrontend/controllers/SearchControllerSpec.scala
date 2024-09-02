@@ -90,7 +90,8 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
             None
           )
         ),
-        Seq(TaxIdentifier("email", "john.doe@digital.hmrc.gov.uk"))
+        Seq(TaxIdentifier("email", "john.doe@digital.hmrc.gov.uk")),
+        ""
       )
       when(searchServiceMock.searchPreference(any[TaxIdentifier])(any[User], any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.successful(List(preference)))
@@ -112,7 +113,8 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
         genericPaperless = true,
         genericUpdatedAt = genericUpdatedAt,
         Some(Email("test@test.com", verified = true, verifiedOn = verifiedOn, language = None, false, None)),
-        Seq(TaxIdentifier("email", "test@test.com"))
+        Seq(TaxIdentifier("email", "test@test.com")),
+        ""
       )
       when(searchServiceMock.searchPreference(any[TaxIdentifier])(any[User], any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.successful(List(preference)))
@@ -158,7 +160,8 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
             None
           )
         ),
-        Seq(TaxIdentifier("nino", "CE067583D"))
+        Seq(TaxIdentifier("nino", "CE067583D")),
+        ""
       )
       when(searchServiceMock.searchPreference(any[TaxIdentifier])(any[User], any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.successful(List(preference)))
@@ -202,7 +205,8 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
             None
           )
         ),
-        Seq(TaxIdentifier("nino", "CE067583D"))
+        Seq(TaxIdentifier("nino", "CE067583D")),
+        ""
       )
       when(searchServiceMock.searchPreference(any[TaxIdentifier])(any[User], any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.successful(List(preference)))
@@ -249,7 +253,8 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
             None
           )
         ),
-        Seq(TaxIdentifier("email", "john.doe@digital.hmrc.gov.uk"))
+        Seq(TaxIdentifier("email", "john.doe@digital.hmrc.gov.uk")),
+        ""
       )
 
       when(
@@ -304,7 +309,8 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
             None
           )
         ),
-        Seq(TaxIdentifier("email", "john.doe@digital.hmrc.gov.uk"))
+        Seq(TaxIdentifier("email", "john.doe@digital.hmrc.gov.uk")),
+        ""
       )
       when(
         searchServiceMock.getPreference(ArgumentMatchers.eq(TaxIdentifier("nino", "CE067583D")))(
@@ -342,7 +348,8 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
             None
           )
         ),
-        Seq(TaxIdentifier("email", "john.doe@digital.hmrc.gov.uk"))
+        Seq(TaxIdentifier("email", "john.doe@digital.hmrc.gov.uk")),
+        ""
       )
       when(
         searchServiceMock.getPreference(ArgumentMatchers.eq(TaxIdentifier("nino", "CE067583D")))(

@@ -204,7 +204,7 @@ case class PreferenceDetails(
   isPaperless: Option[Boolean],
   email: Option[Email],
   entityId: Option[EntityId] = None,
-  eventType: Option[String]
+  eventType: Option[String] = None
 )
 
 object PreferenceDetails {

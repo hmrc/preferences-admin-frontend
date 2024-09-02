@@ -222,7 +222,8 @@ class SearchServiceSpec
             None
           )
         ),
-        taxIdentifiers = Seq(TaxIdentifier("sautr", "123"), TaxIdentifier("nino", "ABC"))
+        taxIdentifiers = Seq(TaxIdentifier("sautr", "123"), TaxIdentifier("nino", "ABC")),
+        ""
       )
       val event = searchService.createSearchEvent("me", TaxIdentifier("sautr", "123"), Some(preference))
 
@@ -406,7 +407,8 @@ trait SearchServiceTestCase extends SpecBase {
     genericPaperless = true,
     genericUpdatedAt = genericUpdatedAt,
     email = Some(verifiedEmail),
-    taxIdentifiers = taxIdentifiers
+    taxIdentifiers = taxIdentifiers,
+    ""
   )
   val optedInPreferenceList = List(
     Preference(
@@ -414,14 +416,16 @@ trait SearchServiceTestCase extends SpecBase {
       genericPaperless = true,
       genericUpdatedAt = genericUpdatedAt,
       email = Some(verifiedEmail),
-      taxIdentifiers = taxIdentifiers
+      taxIdentifiers = taxIdentifiers,
+      ""
     ),
     Preference(
       entityId = None,
       genericPaperless = true,
       genericUpdatedAt = genericUpdatedAt,
       email = Some(verifiedEmail),
-      taxIdentifiers = taxIdentifiers
+      taxIdentifiers = taxIdentifiers,
+      ""
     )
   )
 
@@ -430,7 +434,8 @@ trait SearchServiceTestCase extends SpecBase {
     genericPaperless = false,
     genericUpdatedAt = genericUpdatedAt,
     email = None,
-    taxIdentifiers = taxIdentifiers
+    taxIdentifiers = taxIdentifiers,
+    ""
   )
   val config = Configuration.from(Map("appName" -> "preferences-admin-frontend"))
   val searchService =
