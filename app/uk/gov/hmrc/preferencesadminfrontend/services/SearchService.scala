@@ -56,7 +56,14 @@ class SearchService @Inject() (
     } yield preferenceDetails.map { details =>
       val taxIdentifiers = entityResolverConnector.getTaxIdentifiers(details)
       taxIdentifiers.map { taxIds =>
-        Preference(details.entityId, details.genericPaperless, details.genericUpdatedAt, details.email, taxIds, details.eventType.getOrElse(""))
+        Preference(
+          details.entityId,
+          details.genericPaperless,
+          details.genericUpdatedAt,
+          details.email,
+          taxIds,
+          details.eventType.getOrElse("")
+        )
       }
     }
     preferences.flatMap(Future.sequence(_)).recover { case _ =>

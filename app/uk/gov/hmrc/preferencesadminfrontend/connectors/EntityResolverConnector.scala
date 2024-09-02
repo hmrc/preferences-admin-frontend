@@ -205,7 +205,6 @@ case class PreferenceDetails(
   email: Option[Email],
   entityId: Option[EntityId] = None,
   eventType: Option[String]
-
 )
 
 object PreferenceDetails {
