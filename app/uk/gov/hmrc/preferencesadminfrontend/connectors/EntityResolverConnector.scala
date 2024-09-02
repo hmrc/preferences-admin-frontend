@@ -203,7 +203,8 @@ case class PreferenceDetails(
   genericUpdatedAt: Option[ZonedDateTime],
   isPaperless: Option[Boolean],
   email: Option[Email],
-  entityId: Option[EntityId] = None
+  entityId: Option[EntityId] = None,
+  eventType: Option[String] = None
 )
 
 object PreferenceDetails {
@@ -234,8 +235,9 @@ object PreferenceDetails {
         .readNullable[JsValue]
         .map(_.fold(None: Option[Boolean])(m => (m \ "paperless").asOpt[Boolean])) and
       (JsPath \ "email").readNullable[Email] and
-      (JsPath \ "entityId").readNullable[EntityId]
-  )((genericPaperless, genericUpdatedAt, isPaperless, email, entityId) =>
-    PreferenceDetails(genericPaperless, genericUpdatedAt, isPaperless, email, entityId)
+      (JsPath \ "entityId").readNullable[EntityId] and
+      (JsPath \ "termsAndConditions" \ "generic" \ "eventType").readNullable[String]
+  )((genericPaperless, genericUpdatedAt, isPaperless, email, entityId, eventType) =>
+    PreferenceDetails(genericPaperless, genericUpdatedAt, isPaperless, email, entityId, eventType)
   )
 }

@@ -25,11 +25,12 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
 import uk.gov.hmrc.preferencesadminfrontend.connectors.{ AlreadyOptedOut, OptedOut, PreferenceNotFound }
-import uk.gov.hmrc.preferencesadminfrontend.controllers.model.{ OptOutReasonWithIdentifier, Search }
-import uk.gov.hmrc.preferencesadminfrontend.services._
-import uk.gov.hmrc.preferencesadminfrontend.services.model.TaxIdentifier
+import uk.gov.hmrc.preferencesadminfrontend.controllers.model.{ Event, OptOutReasonWithIdentifier, Search }
+import uk.gov.hmrc.preferencesadminfrontend.services.*
+import uk.gov.hmrc.preferencesadminfrontend.services.model.{ Preference, TaxIdentifier }
 import uk.gov.hmrc.preferencesadminfrontend.views.html.{ confirmed, customer_identification, failed, user_opt_out }
 
+import java.time.ZonedDateTime
 import scala.concurrent.{ ExecutionContext, Future }
 
 @Singleton
@@ -68,7 +69,7 @@ class SearchController @Inject() (
               Ok(
                 customerIdentificationView(Search().bindFromRequest().withError("value", "error.preference_not_found"))
               )
-            case preferenceList =>
+            case preferenceList: Seq[Preference] =>
               Ok(userOptOutView(OptOutReasonWithIdentifier(), preferenceList))
           }
       )

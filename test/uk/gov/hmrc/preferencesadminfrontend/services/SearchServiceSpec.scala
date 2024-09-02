@@ -1,4 +1,20 @@
 /*
+ * Copyright 2024 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/*
  * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,10 +43,12 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditResult
 import uk.gov.hmrc.play.audit.model.DataEvent
 import uk.gov.hmrc.preferencesadminfrontend.connectors.*
+import uk.gov.hmrc.preferencesadminfrontend.controllers.model.Event
 import uk.gov.hmrc.preferencesadminfrontend.services.model.{ Email, EntityId, Preference, TaxIdentifier }
 import uk.gov.hmrc.preferencesadminfrontend.utils.SpecBase
 
 import java.time.{ ZoneOffset, ZonedDateTime }
+import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ ExecutionContext, Future }
 
@@ -38,75 +56,88 @@ class SearchServiceSpec
     extends PlaySpec with SearchServiceTestCase with ScalaFutures with IntegrationPatience with BeforeAndAfterEach {
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
-
+  val entityId = UUID.randomUUID().toString
   override def afterEach(): Unit = reset(auditConnectorMock)
 
   "getPreferences" should {
     "return preference for nino user when it exists" in {
+
       when(entityResolverConnectorMock.getPreferenceDetails(validNino))
-        .thenReturn(Future.successful(optedInPreferenceDetails))
+        .thenReturn(Future.successful(optedInPreferenceDetails(entityId)))
+      when(preferencesConnectorMock.getPreferencesEvents(any[String])(any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future.successful(List.empty[Event]))
       when(entityResolverConnectorMock.getTaxIdentifiers(validNino)).thenReturn(Future.successful(taxIdentifiers))
-      val expectedAuditEvent = searchService.createSearchEvent("me", validNino, Some(optedInPreference))
+      val expectedAuditEvent = searchService.createSearchEvent("me", validNino, Some(optedInPreference(entityId)))
       when(
         auditConnectorMock
           .sendMergedEvent(argThat(isSimilar(expectedAuditEvent)))(any[HeaderCarrier], any[ExecutionContext])
       ).thenReturn(Future.successful(AuditResult.Success))
 
-      searchService.searchPreference(validNino).futureValue mustBe List(optedInPreference)
+      searchService.searchPreference(validNino).futureValue mustBe List(optedInPreference(entityId))
     }
 
     "return preference for itsa user when it exists" in {
       when(entityResolverConnectorMock.getPreferenceDetails(validItsa))
-        .thenReturn(Future.successful(optedInPreferenceDetails))
+        .thenReturn(Future.successful(optedInPreferenceDetails(entityId)))
+      when(preferencesConnectorMock.getPreferencesEvents(any[String])(any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future.successful(List.empty[Event]))
       when(entityResolverConnectorMock.getTaxIdentifiers(validItsa)).thenReturn(Future.successful(taxIdentifiers))
-      val expectedAuditEvent = searchService.createSearchEvent("me", validItsa, Some(optedInPreference))
+      val expectedAuditEvent = searchService.createSearchEvent("me", validItsa, Some(optedInPreference(entityId)))
       when(
         auditConnectorMock
           .sendMergedEvent(argThat(isSimilar(expectedAuditEvent)))(any[HeaderCarrier], any[ExecutionContext])
       ).thenReturn(Future.successful(AuditResult.Success))
 
-      searchService.searchPreference(validItsa).futureValue mustBe List(optedInPreference)
+      searchService.searchPreference(validItsa).futureValue mustBe List(optedInPreference(entityId))
     }
 
     "return preference for utr user when it exists" in {
       when(entityResolverConnectorMock.getPreferenceDetails(validSaUtr))
-        .thenReturn(Future.successful(optedInPreferenceDetails))
+        .thenReturn(Future.successful(optedInPreferenceDetails(entityId)))
+      when(preferencesConnectorMock.getPreferencesEvents(any[String])(any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future.successful(List.empty[Event]))
       when(entityResolverConnectorMock.getTaxIdentifiers(validSaUtr)).thenReturn(Future.successful(taxIdentifiers))
-      val expectedAuditEvent = searchService.createSearchEvent("me", validSaUtr, Some(optedInPreference))
+      val expectedAuditEvent = searchService.createSearchEvent("me", validSaUtr, Some(optedInPreference(entityId)))
       when(
         auditConnectorMock
           .sendMergedEvent(argThat(isSimilar(expectedAuditEvent)))(any[HeaderCarrier], any[ExecutionContext])
       ).thenReturn(Future.successful(AuditResult.Success))
 
-      searchService.searchPreference(validSaUtr).futureValue mustBe List(optedInPreference)
+      searchService.searchPreference(validSaUtr).futureValue mustBe List(optedInPreference(entityId))
     }
 
     "return preference for utr user who has opted out" in {
       when(entityResolverConnectorMock.getPreferenceDetails(validSaUtr))
-        .thenReturn(Future.successful(optedOutPreferenceDetails))
+        .thenReturn(Future.successful(optedOutPreferenceDetails(entityId)))
+      when(preferencesConnectorMock.getPreferencesEvents(any[String])(any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future.successful(List.empty[Event]))
       when(entityResolverConnectorMock.getTaxIdentifiers(validSaUtr)).thenReturn(Future.successful(taxIdentifiers))
-      val expectedAuditEvent = searchService.createSearchEvent("me", validSaUtr, Some(optedOutPreference))
+      val expectedAuditEvent = searchService.createSearchEvent("me", validSaUtr, Some(optedOutPreference(entityId)))
       when(
         auditConnectorMock
           .sendMergedEvent(argThat(isSimilar(expectedAuditEvent)))(any[HeaderCarrier], any[ExecutionContext])
       ).thenReturn(Future.successful(AuditResult.Success))
 
-      searchService.searchPreference(validSaUtr).futureValue mustBe List(optedOutPreference)
+      searchService.searchPreference(validSaUtr).futureValue mustBe List(optedOutPreference(entityId))
     }
 
     "return preference for email address user when it exists" in {
       when(preferencesConnectorMock.getPreferenceDetails(validEmailid.value))
-        .thenReturn(Future.successful(optedInPreferenceDetailsList))
-      when(entityResolverConnectorMock.getTaxIdentifiers(optedInPreferenceDetailsList.head))
+        .thenReturn(Future.successful(optedInPreferenceDetailsList(entityId)))
+      when(preferencesConnectorMock.getPreferencesEvents(any[String])(any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future.successful(List.empty[Event]))
+      when(entityResolverConnectorMock.getTaxIdentifiers(optedInPreferenceDetailsList(entityId).head))
         .thenReturn(Future.successful(taxIdentifiers))
 
-      searchService.searchPreference(validEmailid).futureValue mustBe List(optedInPreference)
+      searchService.searchPreference(validEmailid).futureValue mustBe List(optedInPreference(entityId))
     }
 
     "return None if the saUtr identifier does not exist" in {
       val preferenceDetails = None
       when(entityResolverConnectorMock.getPreferenceDetails(validSaUtr))
         .thenReturn(Future.successful(preferenceDetails))
+      when(preferencesConnectorMock.getPreferencesEvents(any[String])(any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future.successful(List.empty[Event]))
       when(entityResolverConnectorMock.getTaxIdentifiers(validSaUtr)).thenReturn(Future.successful(Seq()))
 
       searchService.searchPreference(validSaUtr).futureValue mustBe Nil
@@ -114,7 +145,7 @@ class SearchServiceSpec
 
     "return None if that nino does not exist" in {
       when(preferencesConnectorMock.getPreferenceDetails(unknownEmailid.value)).thenReturn(Future.successful(Nil))
-      when(entityResolverConnectorMock.getTaxIdentifiers(optedInPreferenceDetailsList.head))
+      when(entityResolverConnectorMock.getTaxIdentifiers(optedInPreferenceDetailsList(entityId).head))
         .thenReturn(Future.successful(taxIdentifiers))
 
       searchService.searchPreference(unknownEmailid).futureValue mustBe Nil
@@ -122,11 +153,11 @@ class SearchServiceSpec
 
     "return multiple preferences for email address user when it exists" in {
       when(preferencesConnectorMock.getPreferenceDetails(validEmailid.value))
-        .thenReturn(Future.successful(optedInPreferenceDetailsList2))
-      when(entityResolverConnectorMock.getTaxIdentifiers(optedInPreferenceDetailsList.head))
+        .thenReturn(Future.successful(optedInPreferenceDetailsList2(entityId)))
+      when(entityResolverConnectorMock.getTaxIdentifiers(optedInPreferenceDetailsList(entityId).head))
         .thenReturn(Future.successful(taxIdentifiers))
 
-      searchService.searchPreference(validEmailid).futureValue mustBe optedInPreferenceList
+      searchService.searchPreference(validEmailid).futureValue mustBe optedInPreferenceList(entityId)
     }
 
   }
@@ -135,7 +166,14 @@ class SearchServiceSpec
 
     "call entity resolver to opt the user out" in {
       when(entityResolverConnectorMock.getPreferenceDetails(validSaUtr))
-        .thenReturn(Future.successful(optedInPreferenceDetails), Future.successful(optedOutPreferenceDetails))
+        .thenReturn(
+          Future.successful(optedInPreferenceDetails(entityId)),
+          Future.successful(optedOutPreferenceDetails(entityId))
+        )
+      when(preferencesConnectorMock.getPreferencesEvents(any[String])(any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future.successful(List.empty[Event]))
+      when(preferencesConnectorMock.getPreferencesEvents(any[String])(any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future.successful(List.empty[Event]))
       when(entityResolverConnectorMock.getTaxIdentifiers(validSaUtr)).thenReturn(Future.successful(taxIdentifiers))
       when(entityResolverConnectorMock.optOut(validSaUtr)).thenReturn(Future.successful(OptedOut))
 
@@ -145,7 +183,14 @@ class SearchServiceSpec
 
     "create an audit event when the user is opted out" in {
       when(entityResolverConnectorMock.getPreferenceDetails(validSaUtr))
-        .thenReturn(Future.successful(optedInPreferenceDetails), Future.successful(optedOutPreferenceDetails))
+        .thenReturn(
+          Future.successful(optedInPreferenceDetails(entityId)),
+          Future.successful(optedOutPreferenceDetails(entityId))
+        )
+      when(preferencesConnectorMock.getPreferencesEvents(any[String])(any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future.successful(List.empty[Event]))
+      when(preferencesConnectorMock.getPreferencesEvents(any[String])(any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future.successful(List.empty[Event]))
       when(entityResolverConnectorMock.getTaxIdentifiers(validSaUtr)).thenReturn(Future.successful(taxIdentifiers))
       when(entityResolverConnectorMock.optOut(validSaUtr)).thenReturn(Future.successful(OptedOut))
       when(auditConnectorMock.sendEvent(any[DataEvent])(any[HeaderCarrier], any[ExecutionContext]))
@@ -157,8 +202,8 @@ class SearchServiceSpec
         searchService.createOptOutEvent(
           "me",
           validSaUtr,
-          Some(optedInPreference),
-          Some(optedOutPreference),
+          Some(optedInPreference(entityId)),
+          Some(optedOutPreference(entityId)),
           OptedOut,
           "my optOut reason"
         )
@@ -184,7 +229,12 @@ class SearchServiceSpec
 
     "create an audit event when the user is already opted out" in {
       when(entityResolverConnectorMock.getPreferenceDetails(validSaUtr))
-        .thenReturn(Future.successful(optedOutPreferenceDetails), Future.successful(optedOutPreferenceDetails))
+        .thenReturn(
+          Future.successful(optedOutPreferenceDetails(entityId)),
+          Future.successful(optedOutPreferenceDetails(entityId))
+        )
+      when(preferencesConnectorMock.getPreferencesEvents(any[String])(any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future.successful(List.empty[Event]))
       when(entityResolverConnectorMock.getTaxIdentifiers(validSaUtr)).thenReturn(Future.successful(taxIdentifiers))
       when(entityResolverConnectorMock.optOut(validSaUtr)).thenReturn(Future.successful(AlreadyOptedOut))
       when(auditConnectorMock.sendEvent(any[DataEvent])(any[HeaderCarrier], any[ExecutionContext]))
@@ -196,8 +246,8 @@ class SearchServiceSpec
         searchService.createOptOutEvent(
           "me",
           validSaUtr,
-          Some(optedOutPreference),
-          Some(optedOutPreference),
+          Some(optedOutPreference(entityId)),
+          Some(optedOutPreference(entityId)),
           AlreadyOptedOut,
           "my optOut reason"
         )
@@ -222,7 +272,9 @@ class SearchServiceSpec
             None
           )
         ),
-        taxIdentifiers = Seq(TaxIdentifier("sautr", "123"), TaxIdentifier("nino", "ABC"))
+        taxIdentifiers = Seq(TaxIdentifier("sautr", "123"), TaxIdentifier("nino", "ABC")),
+        "",
+        List.empty[Event]
       )
       val event = searchService.createSearchEvent("me", TaxIdentifier("sautr", "123"), Some(preference))
 
@@ -261,8 +313,8 @@ class SearchServiceSpec
       val event = searchService.createOptOutEvent(
         "me",
         validSaUtr,
-        Some(optedInPreference),
-        Some(optedOutPreference),
+        Some(optedInPreference(entityId)),
+        Some(optedOutPreference(entityId)),
         OptedOut,
         "my optOut reason"
       )
@@ -272,9 +324,9 @@ class SearchServiceSpec
       event.request.detail mustBe Map(
         "optOutReason"       -> "my optOut reason",
         "query"              -> "{\"name\":\"sautr\",\"value\":\"123456789\"}",
-        "originalPreference" -> s"${Json.toJson(optedInPreference)}",
+        "originalPreference" -> s"${Json.toJson(optedInPreference(entityId))}",
         "DataCallType"       -> "request",
-        "newPreference"      -> s"${Json.toJson(optedOutPreference)}",
+        "newPreference"      -> s"${Json.toJson(optedOutPreference(entityId))}",
         "reasonOfFailure"    -> "Done",
         "user"               -> "me"
       )
@@ -285,8 +337,8 @@ class SearchServiceSpec
       val event = searchService.createOptOutEvent(
         "me",
         validSaUtr,
-        Some(optedOutPreference),
-        Some(optedOutPreference),
+        Some(optedOutPreference(entityId)),
+        Some(optedOutPreference(entityId)),
         AlreadyOptedOut,
         "my optOut reason"
       )
@@ -296,9 +348,9 @@ class SearchServiceSpec
       event.request.detail mustBe Map(
         "optOutReason"       -> "my optOut reason",
         "query"              -> "{\"name\":\"sautr\",\"value\":\"123456789\"}",
-        "originalPreference" -> s"${Json.toJson(optedOutPreference)}",
+        "originalPreference" -> s"${Json.toJson(optedOutPreference(entityId))}",
         "DataCallType"       -> "request",
-        "newPreference"      -> s"${Json.toJson(optedOutPreference)}",
+        "newPreference"      -> s"${Json.toJson(optedOutPreference(entityId))}",
         "reasonOfFailure"    -> "Preference already opted out",
         "user"               -> "me"
       )
@@ -376,61 +428,77 @@ trait SearchServiceTestCase extends SpecBase {
     None
   )
 
-  def preferenceDetails(genericPaperless: Boolean) = {
+  def preferenceDetails(genericPaperless: Boolean, entityId: String) = {
     val email = if (genericPaperless) Some(verifiedEmail) else None
-    Some(PreferenceDetails(genericPaperless, genericUpdatedAt, None, email))
-  }
-
-  def preferenceDetailsList(genericPaperless: Boolean) = {
-    val email = if (genericPaperless) Some(verifiedEmail) else None
-    List(PreferenceDetails(genericPaperless, genericUpdatedAt, None, email))
-  }
-
-  def multiplepreferenceDetails(genericPaperless: Boolean) = {
-    val email = if (genericPaperless) Some(verifiedEmail) else None
-    List(
-      PreferenceDetails(genericPaperless, genericUpdatedAt, None, email),
-      PreferenceDetails(genericPaperless, genericUpdatedAt, None, email)
+    Some(
+      PreferenceDetails(
+        genericPaperless,
+        genericUpdatedAt,
+        None,
+        email,
+        entityId = Some(EntityId(entityId))
+      )
     )
   }
 
-  val optedInPreferenceDetails = preferenceDetails(genericPaperless = true)
-  val optedOutPreferenceDetails = preferenceDetails(genericPaperless = false)
-  val optedInPreferenceDetailsList = preferenceDetailsList(genericPaperless = true)
-  val optedInPreferenceDetailsList2 = multiplepreferenceDetails(genericPaperless = true)
+  def preferenceDetailsList(genericPaperless: Boolean, entityId: String) = {
+    val email = if (genericPaperless) Some(verifiedEmail) else None
+    List(PreferenceDetails(genericPaperless, genericUpdatedAt, None, email, entityId = Some(EntityId(entityId))))
+  }
+
+  def multiplepreferenceDetails(genericPaperless: Boolean, entityId: String) = {
+    val email = if (genericPaperless) Some(verifiedEmail) else None
+    List(
+      PreferenceDetails(genericPaperless, genericUpdatedAt, None, email, entityId = Some(EntityId(entityId))),
+      PreferenceDetails(genericPaperless, genericUpdatedAt, None, email, entityId = Some(EntityId(entityId)))
+    )
+  }
+
+  val optedInPreferenceDetails = (entityId: String) => preferenceDetails(genericPaperless = true, entityId)
+  val optedOutPreferenceDetails = (entityId: String) => preferenceDetails(genericPaperless = false, entityId)
+  val optedInPreferenceDetailsList = (entityId: String) => preferenceDetailsList(genericPaperless = true, entityId)
+  val optedInPreferenceDetailsList2 = (entityId: String) => multiplepreferenceDetails(genericPaperless = true, entityId)
 
   val taxIdentifiers = Seq(validSaUtr, validNino, validItsa)
 
-  val optedInPreference = Preference(
-    entityId = None,
+  def optedInPreference(entityId: String) = Preference(
+    entityId = Some(EntityId(entityId)),
     genericPaperless = true,
     genericUpdatedAt = genericUpdatedAt,
     email = Some(verifiedEmail),
-    taxIdentifiers = taxIdentifiers
+    taxIdentifiers = taxIdentifiers,
+    "",
+    List.empty[Event]
   )
-  val optedInPreferenceList = List(
+  def optedInPreferenceList(entityId: String) = List(
     Preference(
-      entityId = None,
+      entityId = Some(EntityId(entityId)),
       genericPaperless = true,
       genericUpdatedAt = genericUpdatedAt,
       email = Some(verifiedEmail),
-      taxIdentifiers = taxIdentifiers
+      taxIdentifiers = taxIdentifiers,
+      "",
+      List.empty[Event]
     ),
     Preference(
-      entityId = None,
+      entityId = Some(EntityId(entityId)),
       genericPaperless = true,
       genericUpdatedAt = genericUpdatedAt,
       email = Some(verifiedEmail),
-      taxIdentifiers = taxIdentifiers
+      taxIdentifiers = taxIdentifiers,
+      "",
+      List.empty[Event]
     )
   )
 
-  val optedOutPreference = Preference(
-    entityId = None,
+  def optedOutPreference(entityId: String) = Preference(
+    entityId = Some(EntityId(entityId)),
     genericPaperless = false,
     genericUpdatedAt = genericUpdatedAt,
     email = None,
-    taxIdentifiers = taxIdentifiers
+    taxIdentifiers = taxIdentifiers,
+    "",
+    List.empty[Event]
   )
   val config = Configuration.from(Map("appName" -> "preferences-admin-frontend"))
   val searchService =
