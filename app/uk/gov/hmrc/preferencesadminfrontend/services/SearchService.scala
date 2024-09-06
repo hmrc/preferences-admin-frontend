@@ -92,7 +92,6 @@ class SearchService @Inject() (
         events
       )
     )
-
     preferenceDetail map {
       case Some(preference) => List(preference)
       case None             => Nil
