@@ -16,7 +16,8 @@
 
 package uk.gov.hmrc.preferencesadminfrontend.services.model
 
-import play.api.libs.json._
+import play.api.libs.json.*
+import uk.gov.hmrc.preferencesadminfrontend.controllers.model.Event
 
 import java.time.ZonedDateTime
 
@@ -26,7 +27,8 @@ case class Preference(
   genericUpdatedAt: Option[ZonedDateTime],
   email: Option[Email],
   taxIdentifiers: Seq[TaxIdentifier],
-  eventType: String
+  eventType: String,
+  events: List[Event]
 )
 
 object Preference {

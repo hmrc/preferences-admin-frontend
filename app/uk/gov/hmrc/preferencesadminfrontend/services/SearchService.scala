@@ -24,9 +24,9 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.{ DataCall, MergedDataEvent }
 import uk.gov.hmrc.play.bootstrap.config.AppName
-import uk.gov.hmrc.preferencesadminfrontend.connectors._
-import uk.gov.hmrc.preferencesadminfrontend.controllers.model.User
-import uk.gov.hmrc.preferencesadminfrontend.services.model.{ Preference, TaxIdentifier }
+import uk.gov.hmrc.preferencesadminfrontend.connectors.*
+import uk.gov.hmrc.preferencesadminfrontend.controllers.model.{ Event, User }
+import uk.gov.hmrc.preferencesadminfrontend.services.model.{ EntityId, Preference, TaxIdentifier }
 
 import scala.concurrent.{ ExecutionContext, Future }
 
@@ -54,17 +54,20 @@ class SearchService @Inject() (
     val preferences = for {
       preferenceDetails <- preferencesConnector.getPreferenceDetails(taxId.value)
     } yield preferenceDetails.map { details =>
-      val taxIdentifiers = entityResolverConnector.getTaxIdentifiers(details)
-      taxIdentifiers.map { taxIds =>
-        Preference(
-          details.entityId,
-          details.genericPaperless,
-          details.genericUpdatedAt,
-          details.email,
-          taxIds,
-          details.eventType.getOrElse("")
-        )
-      }
+      for {
+        taxIdentifiers <- Future.successful(
+                            Seq(TaxIdentifier("sautr", "123456789"))
+                          ) // entityResolverConnector.getTaxIdentifiers(details)
+        events <- getEvents(details.entityId)
+      } yield Preference(
+        details.entityId,
+        details.genericPaperless,
+        details.genericUpdatedAt,
+        details.email,
+        taxIdentifiers,
+        details.eventType.getOrElse(""),
+        events
+      )
     }
     preferences.flatMap(Future.sequence(_)).recover { case _ =>
       Nil
@@ -77,6 +80,7 @@ class SearchService @Inject() (
     val preferenceDetail = for {
       preferenceDetail <- entityResolverConnector.getPreferenceDetails(taxId)
       taxIdentifiers   <- entityResolverConnector.getTaxIdentifiers(taxId)
+      events           <- getEvents(preferenceDetail.flatMap(_.entityId))
     } yield preferenceDetail.map(details =>
       Preference(
         details.entityId,
@@ -84,7 +88,8 @@ class SearchService @Inject() (
         details.genericUpdatedAt,
         details.email,
         taxIdentifiers,
-        details.eventType.getOrElse("")
+        details.eventType.getOrElse(""),
+        events
       )
     )
 
@@ -93,6 +98,12 @@ class SearchService @Inject() (
       case None             => Nil
     }
   }
+
+  def getEvents(entityId: Option[EntityId])(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[List[Event]] =
+    entityId match {
+      case Some(id) => preferencesConnector.getPreferencesEvents(id.value)
+      case None     => throw new RuntimeException("EntityId cannot be empty")
+    }
 
   def optOut(taxId: TaxIdentifier, reason: String)(implicit
     user: User,

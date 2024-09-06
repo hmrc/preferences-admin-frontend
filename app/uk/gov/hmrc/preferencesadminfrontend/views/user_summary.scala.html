@@ -98,5 +98,23 @@
                         )
             )
         )
+
+
+    <h2 class="govuk-heading-m">Preference Actions</h2>
+
+    @govukSummaryList(SummaryList(
+    rows = preference.events.map { event =>
+    SummaryListRow(
+    key = Key(content = Text(event.eventType)),
+    value = Value(
+    content = Text(DateTimeFormatter.ofPattern("d MMMM yyyy hh:mm:ss a").withLocale(Locale.ENGLISH).format(event.timestamp))
+    )
+    )
     }
+    ))
+
+    }
+
+
+
 </div>
