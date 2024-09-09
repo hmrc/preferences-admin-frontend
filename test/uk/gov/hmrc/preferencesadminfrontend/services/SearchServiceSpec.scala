@@ -163,43 +163,50 @@ class SearchServiceSpec
   }
 
   "optOut" should {
-//
-//    "call entity resolver to opt the user out" in {
-//      when(entityResolverConnectorMock.getPreferenceDetails(validSaUtr))
-//        .thenReturn(Future.successful(optedInPreferenceDetails(entityId)), Future.successful(optedOutPreferenceDetails(entityId)))
-//      when(preferencesConnectorMock.getPreferencesEvents(any[String])(any[HeaderCarrier], any[ExecutionContext]))
-//        .thenReturn(Future.successful(List.empty[Event]))
-//      when(entityResolverConnectorMock.getTaxIdentifiers(validSaUtr)).thenReturn(Future.successful(taxIdentifiers))
-//      when(entityResolverConnectorMock.optOut(validSaUtr)).thenReturn(Future.successful(OptedOut))
-//
-//      searchService.optOut(validSaUtr, "my optOut reason").futureValue mustBe OptedOut
-//      verify(entityResolverConnectorMock, times(1)).optOut(validSaUtr)
-//    }
 
-//    "create an audit event when the user is opted out" in {
-//      when(entityResolverConnectorMock.getPreferenceDetails(validSaUtr))
-//        .thenReturn(Future.successful(optedInPreferenceDetails), Future.successful(optedOutPreferenceDetails(entityId)))
-//      when(preferencesConnectorMock.getPreferencesEvents(any[String])(any[HeaderCarrier], any[ExecutionContext]))
-//        .thenReturn(Future.successful(List.empty[Event]))
-//      when(entityResolverConnectorMock.getTaxIdentifiers(validSaUtr)).thenReturn(Future.successful(taxIdentifiers))
-//      when(entityResolverConnectorMock.optOut(validSaUtr)).thenReturn(Future.successful(OptedOut))
-//      when(auditConnectorMock.sendEvent(any[DataEvent])(any[HeaderCarrier], any[ExecutionContext]))
-//        .thenReturn(Future.successful(AuditResult.Success))
-//
-//      searchService.optOut(validSaUtr, "my optOut reason").futureValue mustBe OptedOut
-//
-//      val expectedAuditEvent =
-//        searchService.createOptOutEvent(
-//          "me",
-//          validSaUtr,
-//          Some(optedInPreference(entityId)),
-//          Some(optedOutPreference(entityId)),
-//          OptedOut,
-//          "my optOut reason"
-//        )
-//      verify(auditConnectorMock)
-//        .sendMergedEvent(argThat(isSimilar(expectedAuditEvent)))(any[HeaderCarrier], any[ExecutionContext])
-//    }
+    "call entity resolver to opt the user out" in {
+      when(entityResolverConnectorMock.getPreferenceDetails(validSaUtr))
+        .thenReturn(
+          Future.successful(optedInPreferenceDetails(entityId)),
+          Future.successful(optedOutPreferenceDetails(entityId))
+        )
+      when(preferencesConnectorMock.getPreferencesEvents(any[String])(any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future.successful(List.empty[Event]))
+      when(preferencesConnectorMock.getPreferencesEvents(any[String])(any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future.successful(List.empty[Event]))
+      when(entityResolverConnectorMock.getTaxIdentifiers(validSaUtr)).thenReturn(Future.successful(taxIdentifiers))
+      when(entityResolverConnectorMock.optOut(validSaUtr)).thenReturn(Future.successful(OptedOut))
+
+      searchService.optOut(validSaUtr, "my optOut reason").futureValue mustBe OptedOut
+      verify(entityResolverConnectorMock, times(1)).optOut(validSaUtr)
+    }
+
+    "create an audit event when the user is opted out" in {
+      when(entityResolverConnectorMock.getPreferenceDetails(validSaUtr))
+        .thenReturn(Future.successful(optedInPreferenceDetails), Future.successful(optedOutPreferenceDetails(entityId)))
+      when(preferencesConnectorMock.getPreferencesEvents(any[String])(any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future.successful(List.empty[Event]))
+      when(preferencesConnectorMock.getPreferencesEvents(any[String])(any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future.successful(List.empty[Event]))
+      when(entityResolverConnectorMock.getTaxIdentifiers(validSaUtr)).thenReturn(Future.successful(taxIdentifiers))
+      when(entityResolverConnectorMock.optOut(validSaUtr)).thenReturn(Future.successful(OptedOut))
+      when(auditConnectorMock.sendEvent(any[DataEvent])(any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future.successful(AuditResult.Success))
+
+      searchService.optOut(validSaUtr, "my optOut reason").futureValue mustBe OptedOut
+
+      val expectedAuditEvent =
+        searchService.createOptOutEvent(
+          "me",
+          validSaUtr,
+          Some(optedInPreference(entityId)),
+          Some(optedOutPreference(entityId)),
+          OptedOut,
+          "my optOut reason"
+        )
+      verify(auditConnectorMock)
+        .sendMergedEvent(argThat(isSimilar(expectedAuditEvent)))(any[HeaderCarrier], any[ExecutionContext])
+    }
 
     "create an audit event when the user is not opted out as it is not found" in {
       when(entityResolverConnectorMock.getPreferenceDetails(validSaUtr))
@@ -217,28 +224,33 @@ class SearchServiceSpec
         .sendMergedEvent(argThat(isSimilar(expectedAuditEvent)))(any[HeaderCarrier], any[ExecutionContext])
     }
 
-//    "create an audit event when the user is already opted out" in {
-//      when(entityResolverConnectorMock.getPreferenceDetails(validSaUtr))
-//        .thenReturn(Future.successful(optedOutPreferenceDetails), Future.successful(optedOutPreferenceDetails))
-//      when(entityResolverConnectorMock.getTaxIdentifiers(validSaUtr)).thenReturn(Future.successful(taxIdentifiers))
-//      when(entityResolverConnectorMock.optOut(validSaUtr)).thenReturn(Future.successful(AlreadyOptedOut))
-//      when(auditConnectorMock.sendEvent(any[DataEvent])(any[HeaderCarrier], any[ExecutionContext]))
-//        .thenReturn(Future.successful(AuditResult.Success))
-//
-//      searchService.optOut(validSaUtr, "my optOut reason").futureValue mustBe AlreadyOptedOut
-//
-//      val expectedAuditEvent =
-//        searchService.createOptOutEvent(
-//          "me",
-//          validSaUtr,
-//          Some(optedOutPreference(entityId)),
-//          Some(optedOutPreference(entityId)),
-//          AlreadyOptedOut,
-//          "my optOut reason"
-//        )
-//      verify(auditConnectorMock)
-//        .sendMergedEvent(argThat(isSimilar(expectedAuditEvent)))(any[HeaderCarrier], any[ExecutionContext])
-//    }
+    "create an audit event when the user is already opted out" in {
+      when(entityResolverConnectorMock.getPreferenceDetails(validSaUtr))
+        .thenReturn(
+          Future.successful(optedOutPreferenceDetails(entityId)),
+          Future.successful(optedOutPreferenceDetails(entityId))
+        )
+      when(preferencesConnectorMock.getPreferencesEvents(any[String])(any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future.successful(List.empty[Event]))
+      when(entityResolverConnectorMock.getTaxIdentifiers(validSaUtr)).thenReturn(Future.successful(taxIdentifiers))
+      when(entityResolverConnectorMock.optOut(validSaUtr)).thenReturn(Future.successful(AlreadyOptedOut))
+      when(auditConnectorMock.sendEvent(any[DataEvent])(any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future.successful(AuditResult.Success))
+
+      searchService.optOut(validSaUtr, "my optOut reason").futureValue mustBe AlreadyOptedOut
+
+      val expectedAuditEvent =
+        searchService.createOptOutEvent(
+          "me",
+          validSaUtr,
+          Some(optedOutPreference(entityId)),
+          Some(optedOutPreference(entityId)),
+          AlreadyOptedOut,
+          "my optOut reason"
+        )
+      verify(auditConnectorMock)
+        .sendMergedEvent(argThat(isSimilar(expectedAuditEvent)))(any[HeaderCarrier], any[ExecutionContext])
+    }
   }
 
   "createSearchEvent" should {
