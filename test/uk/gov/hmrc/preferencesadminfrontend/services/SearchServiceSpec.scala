@@ -183,7 +183,10 @@ class SearchServiceSpec
 
     "create an audit event when the user is opted out" in {
       when(entityResolverConnectorMock.getPreferenceDetails(validSaUtr))
-        .thenReturn(Future.successful(optedInPreferenceDetails), Future.successful(optedOutPreferenceDetails(entityId)))
+        .thenReturn(
+          Future.successful(optedInPreferenceDetails(entityId)),
+          Future.successful(optedOutPreferenceDetails(entityId))
+        )
       when(preferencesConnectorMock.getPreferencesEvents(any[String])(any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.successful(List.empty[Event]))
       when(preferencesConnectorMock.getPreferencesEvents(any[String])(any[HeaderCarrier], any[ExecutionContext]))
