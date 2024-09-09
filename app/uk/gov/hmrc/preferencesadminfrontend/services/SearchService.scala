@@ -55,10 +55,8 @@ class SearchService @Inject() (
       preferenceDetails <- preferencesConnector.getPreferenceDetails(taxId.value)
     } yield preferenceDetails.map { details =>
       for {
-        taxIdentifiers <- Future.successful(
-                            Seq(TaxIdentifier("sautr", "123456789"))
-                          ) // entityResolverConnector.getTaxIdentifiers(details)
-        events <- getEvents(details.entityId)
+        taxIdentifiers <- entityResolverConnector.getTaxIdentifiers(details)
+        events         <- getEvents(details.entityId)
       } yield Preference(
         details.entityId,
         details.genericPaperless,
@@ -89,7 +87,8 @@ class SearchService @Inject() (
         details.email,
         taxIdentifiers,
         details.eventType.getOrElse(""),
-        events
+        List.empty[Event]
+        // events
       )
     )
     preferenceDetail map {
@@ -101,7 +100,7 @@ class SearchService @Inject() (
   def getEvents(entityId: Option[EntityId])(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[List[Event]] =
     entityId match {
       case Some(id) => preferencesConnector.getPreferencesEvents(id.value)
-      case None     => throw new RuntimeException("EntityId cannot be empty")
+      case None     => Future.successful(List.empty[Event])
     }
 
   def optOut(taxId: TaxIdentifier, reason: String)(implicit
