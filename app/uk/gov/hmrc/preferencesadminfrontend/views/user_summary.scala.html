@@ -64,7 +64,7 @@
                 SummaryListRow(
                    key = Key(
                    content = Text(
-                  s"Opted ${if (preference.genericPaperless) "In" else if (preference.genericUpdatedAt.isEmpty) "In" else "Out"} ${if (preference.genericPaperless) "to" else if (preference.genericUpdatedAt.isEmpty) "to" else "of"} paperless for generic terms and conditions"
+    s"${if (preference.eventType == "re-opt-in") "Re Opted In" else s"Opted ${if (preference.genericPaperless) "In" else if (preference.genericUpdatedAt.isEmpty) "In" else "Out"} ${if (preference.genericPaperless) "to" else if (preference.genericUpdatedAt.isEmpty) "to" else "of"} paperless for generic terms and conditions"}"
                     )
                       ),
                   value = Value(
@@ -92,39 +92,41 @@
         )
 
 
-    @if(preference.eventType == "re-opt-in") {
-
-    @govukSummaryList(SummaryList(
-    rows = Seq(
-    SummaryListRow(
-    key = Key(content = Text("Re-opt-in")),
-    value = Value(
-    content = Text(preference.genericUpdatedAt.fold("Not available")(date => DateTimeFormatter.ofPattern("d MMMM yyyy hh:mm:ss a").format(date)))
-    )
-    ))
-))
-
-
-   }
 
 
 
 
-    <h2 class="govuk-heading-m">Preference Actions</h2>
 
-    @govukSummaryList(SummaryList(
-    rows = preference.events.map { event =>
-    SummaryListRow(
-    key = Key(content = Text(event.eventType)),
-    value = Value(
-    content = Text(DateTimeFormatter.ofPattern("d MMMM yyyy hh:mm:ss a").withLocale(Locale.ENGLISH).format(event.timestamp))
-    )
-    )
-    }
-    ))
 
-    }
 
+
+
+
+
+
+
+        <h2 class="govuk-heading-m"></h2>
+
+    <table class="govuk-table">
+        <caption class="govuk-table__caption govuk-table__caption--m">Preference History</caption>
+        <thead class="govuk-table__head">
+
+        </thead>
+        <tbody class="govuk-table__body">
+        @for(event <- preference.events) {
+        <tr class="govuk-table__row">
+            <th scope="row" class="govuk-table__header">@{event.eventType}</th>
+            <td class="govuk-table__cell govuk-table__cell--numeric">@{event.emailAddress}</td>
+            <td class="govuk-table__cell govuk-table__cell--numeric">@{DateTimeFormatter.ofPattern("d MMMM yyyy hh:mm:ss a").withLocale(Locale.ENGLISH).format(event.timestamp)}</td>
+        </tr>
+        }
+
+        </tbody>
+    </table>
+
+
+
+}
 
 
 </div>
