@@ -55,8 +55,10 @@ class SearchService @Inject() (
       preferenceDetails <- preferencesConnector.getPreferenceDetails(taxId.value)
     } yield preferenceDetails.map { details =>
       for {
-        taxIdentifiers <- entityResolverConnector.getTaxIdentifiers(details)
-        events         <- getEvents(details.entityId)
+        taxIdentifiers <- Future.successful(
+                            Seq(TaxIdentifier("sautr", "123456789"))
+                          ) // entityResolverConnector.getTaxIdentifiers(details)
+        events <- getEvents(details.entityId)
       } yield Preference(
         details.entityId,
         details.genericPaperless,

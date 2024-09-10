@@ -61,18 +61,10 @@
                         content = Text(preference.taxIdentifiers.find(id => id.name == "HMRC-MTD-IT").fold("Not available")(_.value))
                     )
                 ),
-
-                  SummaryListRow(
-                       key = Key(content = Text(s"${if(preference.eventType == "re-opt-in") "First Opted In" else ""}")),
-                       value = Value(
-                       content = Text(s"${if(preference.eventType == "re-opt-in") preference.email.fold("Not available")(email =>
-                        email.verifiedOn.fold("Not available")(date => DateTimeFormatter.ofPattern("d MMMM yyyy hh:mm:ss a").withLocale(Locale.ENGLISH).format(date))) else ""}" )
-                        )
-                  ),
                 SummaryListRow(
                    key = Key(
                    content = Text(
-                   s"${if (preference.eventType == "re-opt-in") "Re Opted In" else s"Opted ${if (preference.genericPaperless) "In" else if (preference.genericUpdatedAt.isEmpty) "In" else "Out"} ${if (preference.genericPaperless) "to" else if (preference.genericUpdatedAt.isEmpty) "to" else "of"} paperless for generic terms and conditions"}"
+                  s"Opted ${if (preference.genericPaperless) "In" else if (preference.genericUpdatedAt.isEmpty) "In" else "Out"} ${if (preference.genericPaperless) "to" else if (preference.genericUpdatedAt.isEmpty) "to" else "of"} paperless for generic terms and conditions"
                     )
                       ),
                   value = Value(
@@ -98,6 +90,24 @@
                         )
             )
         )
+
+
+    @if(preference.eventType == "re-opt-in") {
+
+    @govukSummaryList(SummaryList(
+    rows = Seq(
+    SummaryListRow(
+    key = Key(content = Text("Re-opt-in")),
+    value = Value(
+    content = Text(preference.genericUpdatedAt.fold("Not available")(date => DateTimeFormatter.ofPattern("d MMMM yyyy hh:mm:ss a").format(date)))
+    )
+    ))
+))
+
+
+   }
+
+
 
 
     <h2 class="govuk-heading-m">Preference Actions</h2>
