@@ -121,16 +121,16 @@ class SearchServiceSpec
       searchService.searchPreference(validSaUtr).futureValue mustBe List(optedOutPreference(entityId))
     }
 
-//    "return preference for email address user when it exists" in {
-//      when(preferencesConnectorMock.getPreferenceDetails(validEmailid.value))
-//        .thenReturn(Future.successful(optedInPreferenceDetailsList(entityId)))
-//      when(preferencesConnectorMock.getPreferencesEvents(any[String])(any[HeaderCarrier], any[ExecutionContext]))
-//        .thenReturn(Future.successful(List.empty[Event]))
-//      when(entityResolverConnectorMock.getTaxIdentifiers(optedInPreferenceDetailsList(entityId).head))
-//        .thenReturn(Future.successful(taxIdentifiers))
-//
-//      searchService.searchPreference(validEmailid).futureValue mustBe List(optedInPreference(entityId))
-//    }
+    "return preference for email address user when it exists" in {
+      when(preferencesConnectorMock.getPreferenceDetails(validEmailid.value))
+        .thenReturn(Future.successful(optedInPreferenceDetailsList(entityId)))
+      when(preferencesConnectorMock.getPreferencesEvents(any[String])(any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future.successful(List.empty[Event]))
+      when(entityResolverConnectorMock.getTaxIdentifiers(optedInPreferenceDetailsList(entityId).head))
+        .thenReturn(Future.successful(taxIdentifiers))
+
+      searchService.searchPreference(validEmailid).futureValue mustBe List(optedInPreference(entityId))
+    }
 
     "return None if the saUtr identifier does not exist" in {
       val preferenceDetails = None
@@ -151,14 +151,14 @@ class SearchServiceSpec
       searchService.searchPreference(unknownEmailid).futureValue mustBe Nil
     }
 
-//    "return multiple preferences for email address user when it exists" in {
-//      when(preferencesConnectorMock.getPreferenceDetails(validEmailid.value))
-//        .thenReturn(Future.successful(optedInPreferenceDetailsList2(entityId)))
-//      when(entityResolverConnectorMock.getTaxIdentifiers(optedInPreferenceDetailsList(entityId).head))
-//        .thenReturn(Future.successful(taxIdentifiers))
-//
-//      searchService.searchPreference(validEmailid).futureValue mustBe optedInPreferenceList(entityId)
-//    }
+    "return multiple preferences for email address user when it exists" in {
+      when(preferencesConnectorMock.getPreferenceDetails(validEmailid.value))
+        .thenReturn(Future.successful(optedInPreferenceDetailsList2(entityId)))
+      when(entityResolverConnectorMock.getTaxIdentifiers(optedInPreferenceDetailsList(entityId).head))
+        .thenReturn(Future.successful(taxIdentifiers))
+
+      searchService.searchPreference(validEmailid).futureValue mustBe optedInPreferenceList(entityId)
+    }
 
   }
 
