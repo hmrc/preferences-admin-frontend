@@ -69,7 +69,7 @@ class SearchController @Inject() (
               Ok(
                 customerIdentificationView(Search().bindFromRequest().withError("value", "error.preference_not_found"))
               )
-            case preferenceList: Seq[Preference] =>
+            case preferenceList =>
               Ok(userOptOutView(OptOutReasonWithIdentifier(), preferenceList))
           }
       )

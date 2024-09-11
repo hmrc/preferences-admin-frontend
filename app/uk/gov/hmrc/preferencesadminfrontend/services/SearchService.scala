@@ -87,8 +87,7 @@ class SearchService @Inject() (
         details.email,
         taxIdentifiers,
         details.eventType.getOrElse(""),
-        List.empty[Event]
-        // events
+        events
       )
     )
     preferenceDetail map {

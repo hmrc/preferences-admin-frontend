@@ -74,8 +74,8 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
 
   "search(taxIdentifier)" should {
 
-    "return a preference if tax identifier exists" in new SearchControllerTestCase {
-
+    "return a preference with events if tax identifier exists" in new SearchControllerTestCase {
+      val timeStamp = ZonedDateTime.of(2018, 2, 15, 0, 0, 0, 0, ZoneOffset.UTC)
       val preference = Preference(
         entityId = Some(EntityId.generate()),
         genericPaperless = true,
@@ -92,7 +92,7 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
         ),
         Seq(TaxIdentifier("email", "john.doe@digital.hmrc.gov.uk")),
         "",
-        List.empty[Event]
+        List(Event("opt-in", Some("test@test.com"), timeStamp))
       )
       when(searchServiceMock.searchPreference(any[TaxIdentifier])(any[User], any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.successful(List(preference)))
@@ -106,9 +106,14 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
       val body: String = contentAsString(result)
       body must include("john.doe@digital.hmrc.gov.uk")
       body must include("15 February 2018 12:00:00 AM")
+      body must include("Preference History")
+      body must include("opt-in")
+      body must include("test@test.com")
+      body must include("15 February 2018 12:00:00 AM")
     }
 
-    "return a preference if email address exists" in new SearchControllerTestCase {
+    "return a preference with events history if email address exists" in new SearchControllerTestCase {
+      val timeStamp = ZonedDateTime.of(2018, 2, 15, 0, 0, 0, 0, ZoneOffset.UTC)
       val preference = Preference(
         entityId = Some(EntityId.generate()),
         genericPaperless = true,
@@ -116,7 +121,7 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
         Some(Email("test@test.com", verified = true, verifiedOn = verifiedOn, language = None, false, None)),
         Seq(TaxIdentifier("email", "test@test.com")),
         "",
-        List.empty[Event]
+        List(Event("opt-in", Some("test@gmal.com"), timeStamp))
       )
       when(searchServiceMock.searchPreference(any[TaxIdentifier])(any[User], any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.successful(List(preference)))
@@ -129,6 +134,40 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
       status(result) mustBe Status.OK
       val body: String = contentAsString(result)
       body must include("test@test.com")
+      body must include("15 February 2018 12:00:00 AM")
+      body must include("Preference History")
+      body must include("opt-in")
+      body must include("test@test.com")
+      body must include("15 February 2018 12:00:00 AM")
+    }
+
+    "return a preference with multiple events history if email address exists" in new SearchControllerTestCase {
+      val timeStamp = ZonedDateTime.of(2018, 2, 15, 0, 0, 0, 0, ZoneOffset.UTC)
+      val preference = Preference(
+        entityId = Some(EntityId.generate()),
+        genericPaperless = true,
+        genericUpdatedAt = genericUpdatedAt,
+        Some(Email("test@test.com", verified = true, verifiedOn = verifiedOn, language = None, false, None)),
+        Seq(TaxIdentifier("email", "test@test.com")),
+        "",
+        List(Event("opt-in", Some("test@gmail.com"), timeStamp), Event("opt-out", None, timeStamp))
+      )
+      when(searchServiceMock.searchPreference(any[TaxIdentifier])(any[User], any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future.successful(List(preference)))
+
+      val postRequest = FakeRequest("POST", "/search/q")
+        .withFormUrlEncodedBody(Seq(("name", "email"), ("value", "test@test.com")): _*)
+
+      val result = searchController.search()(postRequest.withSession(User.sessionKey -> "user").withCSRFToken)
+
+      status(result) mustBe Status.OK
+      val body: String = contentAsString(result)
+      body must include("test@test.com")
+      body must include("15 February 2018 12:00:00 AM")
+      body must include("Preference History")
+      body must include("opt-in")
+      body must include("opt-out")
+      body must include("test@gmail.com")
       body must include("15 February 2018 12:00:00 AM")
     }
 
