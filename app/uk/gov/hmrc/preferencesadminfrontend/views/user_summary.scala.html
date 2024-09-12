@@ -62,8 +62,12 @@
                     )
                 ),
                 SummaryListRow(
-                    key = Key(content = Text(s"Opted ${if(preference.genericPaperless) "In" else if(preference.genericUpdatedAt.isEmpty) "In" else "Out"} ${if(preference.genericPaperless) "to" else if(preference.genericUpdatedAt.isEmpty) "to" else "of"} paperless for generic terms and conditions")),
-                    value = Value(
+                   key = Key(
+                   content = Text(
+    s"${if (preference.eventType == "re-opt-in") "Re Opted In" else s"Opted ${if (preference.genericPaperless) "In" else if (preference.genericUpdatedAt.isEmpty) "In" else "Out"} ${if (preference.genericPaperless) "to" else if (preference.genericUpdatedAt.isEmpty) "to" else "of"} paperless for generic terms and conditions"}"
+                    )
+                      ),
+                  value = Value(
                         content = Text(preference.genericUpdatedAt.fold("Not available")(date => DateTimeFormatter.ofPattern("d MMMM yyyy hh:mm:ss a").format(date)))
                     )
                 ),
@@ -73,17 +77,40 @@
                         content = Text(preference.email.fold("Not available")(_.address))
                     )
                 ),
-                SummaryListRow(
-                    key = Key(content = Text("Date time Email Verified")),
-                    value = Value(
-                        content = Text(
-                            preference.email.fold("Not available")(email =>
-                                email.verifiedOn.fold("Not available")(date => DateTimeFormatter.ofPattern("d MMMM yyyy hh:mm:ss a").withLocale(Locale.ENGLISH).format(date)))
-                            )
+               SummaryListRow(
+                      key = Key(content = Text("Date time Email Verified")),
+                       value = Value(
+                       content = Text(
+                         preference.email.fold("Not available")(email =>
+                        email.verifiedOn.fold("Not available")(date => DateTimeFormatter.ofPattern("d MMMM yyyy hh:mm:ss a").withLocale(Locale.ENGLISH).format(date)))
+                          )
+                      )
+                     )
+
                         )
-                    )
-                )
             )
         )
-    }
+
+        <h2 class="govuk-heading-m"></h2>
+
+    <table class="govuk-table">
+        <caption class="govuk-table__caption govuk-table__caption--m">Preference History</caption>
+        <thead class="govuk-table__head">
+
+        </thead>
+        <tbody class="govuk-table__body">
+        @for(event <- preference.events) {
+        <tr class="govuk-table__row">
+            <th scope="row" class="govuk-table__header">@{event.eventType}</th>
+            <td class="govuk-table__cell govuk-table__cell--numeric">@{event.emailAddress}</td>
+            <td class="govuk-table__cell govuk-table__cell--numeric">@{DateTimeFormatter.ofPattern("d MMMM yyyy hh:mm:ss a").withLocale(Locale.ENGLISH).format(event.timestamp)}</td>
+        </tr>
+        }
+
+        </tbody>
+    </table>
+
+}
+
+
 </div>

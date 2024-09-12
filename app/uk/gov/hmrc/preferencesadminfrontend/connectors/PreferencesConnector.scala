@@ -22,12 +22,11 @@ import javax.inject.{ Inject, Singleton }
 import play.api.Configuration
 import play.api.libs.json.{ Format, Json }
 import play.api.libs.ws.writeableOf_JsValue
-import uk.gov.hmrc.http._
+import uk.gov.hmrc.http.*
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-import uk.gov.hmrc.http.HttpReads.Implicits._
+import uk.gov.hmrc.http.HttpReads.Implicits.*
 import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.preferencesadminfrontend.controllers.model.EmailRequest
-
+import uk.gov.hmrc.preferencesadminfrontend.controllers.model.{ EmailRequest, Event }
 import java.net.URI
 import scala.concurrent.{ ExecutionContext, Future }
 
@@ -53,4 +52,12 @@ class PreferencesConnector @Inject() (
       .recover { case _: BadRequestException =>
         Nil
       }
+
+  def getPreferencesEvents(
+    eventId: String
+  )(implicit headerCarrier: HeaderCarrier, executionContext: ExecutionContext): Future[List[Event]] =
+    httpClient
+      .get(new URI(s"$serviceUrl/preferences-admin/events/$eventId").toURL)
+      .execute[List[Event]]
+
 }
