@@ -100,7 +100,7 @@
         </thead>
         <tbody class="govuk-table__body">
         @for(event <- preference.events) {
-        <tr class="govuk-table__row">
+        <tr class="govuk-table__row" style="white-space: nowrap">
             <th scope="row" class="govuk-table__header">@{event.eventType}</th>
             <td class="govuk-table__cell govuk-table__cell--numeric">@{event.emailAddress}</td>
             <td class="govuk-table__cell govuk-table__cell--numeric">@{DateTimeFormatter.ofPattern("d MMMM yyyy hh:mm:ss a").withLocale(Locale.ENGLISH).format(event.timestamp)}</td>
