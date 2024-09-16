@@ -31,31 +31,6 @@ import uk.gov.hmrc.templates.views.html.penaltyChargeApologies
 class MessageService @Inject() (messageConnector: MessageConnector) {
 
   def getGmcBatches()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[Seq[GmcBatch], String]] =
-    Future.reduceLeft(List(getGmcBatchesV3(), getGmcBatchesV4()))(partialF)
-
-  private def partialF
-    : (Either[Seq[GmcBatch], String], Either[Seq[GmcBatch], String]) => Either[Seq[GmcBatch], String] = {
-    case (Left(v3Batch), Left(v4Batch))   => Left(v3Batch ++ v4Batch)
-    case (Left(v3Batch), Right(_))        => Left(v3Batch)
-    case (Right(_), Left(v4Batch))        => Left(v4Batch)
-    case (Right(v3Batch), Right(v4Batch)) => Right(v3Batch ++ v4Batch)
-  }
-
-  def getGmcBatchesV3()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[Seq[GmcBatch], String]] =
-    messageConnector
-      .getGmcBatches("v3")
-      .map(response =>
-        response.status match {
-          case OK =>
-            Json.parse(response.body).validate[Seq[GmcBatch]].asOpt match {
-              case Some(batches) => Left(batches)
-              case None          => Right("The GMC batches retrieved do not appear to be valid.")
-            }
-          case _ => Right(response.body)
-        }
-      )
-
-  def getGmcBatchesV4()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[Seq[GmcBatch], String]] =
     messageConnector
       .getGmcBatches("v4")
       .map(response =>
