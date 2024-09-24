@@ -96,15 +96,4 @@ class MessageConnector @Inject() (httpClient: HttpClientV2, val servicesConfig: 
       .recover { case e: Exception =>
         HttpResponse(BAD_GATEWAY, e.getMessage)
       }
-
-  // deprecated
-  def sendMessage(body: JsValue)(implicit hc: HeaderCarrier): Future[HttpResponse] =
-    httpClient
-      .post(new URI(s"$serviceUrl/messages").toURL)
-      .withBody(Json.toJson(body))
-      .execute[HttpResponse]
-      .recover { case e: Exception =>
-        HttpResponse(BAD_GATEWAY, e.getMessage)
-      }
-
 }
