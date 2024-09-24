@@ -58,8 +58,7 @@ class MessageBrakeControllerSpec extends PlaySpec with GuiceOneAppPerSuite with 
     "SA359",
     "2017-03-16",
     "newMessageAlert_SA359",
-    Some(15778),
-    None
+    Some(15778)
   )
 
   val gmcBatchApproval = GmcBatchApproval(
@@ -67,8 +66,7 @@ class MessageBrakeControllerSpec extends PlaySpec with GuiceOneAppPerSuite with 
     "SA359",
     "2017-03-16",
     "newMessageAlert_SA359",
-    "some reason",
-    None
+    "some reason"
   )
 
   val mockMessagePreview = MessagePreview(

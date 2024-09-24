@@ -37,14 +37,14 @@ class MessageServiceSpec extends PlaySpec with ScalaFutures with IntegrationPati
 
     "return a valid update result" in new MessageServiceTestCase {
       val response = HttpResponse(Status.OK, validGmcBatchSeqResponseJson, Map.empty)
-      when(messageConnectorMock.getGmcBatches("v4")).thenReturn(Future.successful(response))
-      messageService.getGmcBatches().futureValue mustBe Left(Seq(gmcBatch.copy(version = Some("v4"))))
+      when(messageConnectorMock.getGmcBatches()).thenReturn(Future.successful(response))
+      messageService.getGmcBatches().futureValue mustBe Left(Seq(gmcBatch))
     }
 
     "return an error message if status is 200 but there no valid batches returned" in new MessageServiceTestCase {
       val responseJson = Json.parse("""[{"blah": "test"}]""".stripMargin)
       val response = HttpResponse(Status.OK, responseJson, Map.empty)
-      when(messageConnectorMock.getGmcBatches("v4")).thenReturn(Future.successful(response))
+      when(messageConnectorMock.getGmcBatches()).thenReturn(Future.successful(response))
       messageService.getGmcBatches().futureValue mustBe
         Right(
           "The GMC batches retrieved for version v4 do not appear to be valid."
@@ -53,7 +53,7 @@ class MessageServiceSpec extends PlaySpec with ScalaFutures with IntegrationPati
 
     "return a response body if status isn't 200" in new MessageServiceTestCase {
       val responseForV4 = HttpResponse(Status.NOT_FOUND, validGmcBatchSeqResponseJson, Map.empty)
-      when(messageConnectorMock.getGmcBatches("v4")).thenReturn(Future.successful(responseForV4))
+      when(messageConnectorMock.getGmcBatches()).thenReturn(Future.successful(responseForV4))
       messageService.getGmcBatches().futureValue mustBe
         Right("""[ {
                 |  "formId" : "SA359",
@@ -64,10 +64,10 @@ class MessageServiceSpec extends PlaySpec with ScalaFutures with IntegrationPati
                 |} ]""".stripMargin)
     }
 
-    "return a response body if status isn't 200 for v3 and v4 batch is returned" in new MessageServiceTestCase {
+    "return a response body if status isn't 200 for v4 batch is returned" in new MessageServiceTestCase {
       val responseForV4 = HttpResponse(Status.OK, validGmcBatchSeqResponseJson, Map.empty)
-      when(messageConnectorMock.getGmcBatches("v4")).thenReturn(Future.successful(responseForV4))
-      messageService.getGmcBatches().futureValue mustBe Left(Seq(gmcBatch.copy(version = Some("v4"))))
+      when(messageConnectorMock.getGmcBatches()).thenReturn(Future.successful(responseForV4))
+      messageService.getGmcBatches().futureValue mustBe Left(Seq(gmcBatch))
     }
   }
 
@@ -118,32 +118,13 @@ class MessageServiceSpec extends PlaySpec with ScalaFutures with IntegrationPati
     }
   }
 
-  "sendAddHocMessage" should {
-    "return a message id if successfully created" in new MessageServiceTestCase {
-      val response = HttpResponse(Status.CREATED, Json.obj("id" -> "messageid"), Map.empty)
-      when(messageConnectorMock.sendMessage(any[JsValue])(any[HeaderCarrier])).thenReturn(Future.successful(response))
-      messageService.sendPenalyChargeApologyMessage("foo@test.com", "1234567890").futureValue mustBe Right(
-        """"messageid""""
-      )
-    }
-    "return error on message creation failure" in new MessageServiceTestCase {
-      val errorMessage = "error message"
-      val response = HttpResponse(Status.BAD_REQUEST, errorMessage)
-      when(messageConnectorMock.sendMessage(any[JsValue])(any[HeaderCarrier])).thenReturn(Future.successful(response))
-      messageService.sendPenalyChargeApologyMessage("foo@test.com", "1234567890").futureValue mustBe (Left(
-        (Status.BAD_REQUEST, errorMessage)
-      ))
-    }
-  }
-
   trait MessageServiceTestCase extends SpecBase {
     val gmcBatch = GmcBatch(
       "123456789",
       "SA359",
       "2017-03-16",
       "newMessageAlert_SA359",
-      Some(15778),
-      None
+      Some(15778)
     )
 
     val validGmcBatchSeqResponseJson = Json.parse("""

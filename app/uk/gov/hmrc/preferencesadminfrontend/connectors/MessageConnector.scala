@@ -34,11 +34,7 @@ class MessageConnector @Inject() (httpClient: HttpClientV2, val servicesConfig: 
   ec: ExecutionContext
 ) {
 
-  private def serviceUrl(version: Option[String]): String =
-    if (version.contains("v4")) s"${servicesConfig.baseUrl("secure-message")}/secure-messaging"
-    else servicesConfig.baseUrl("message")
-
-  val serviceUrl: String = serviceUrl(Some("v3"))
+  private val serviceUrl: String = s"${servicesConfig.baseUrl("secure-message")}/secure-messaging"
 
   def getAllowlist()(implicit hc: HeaderCarrier): Future[HttpResponse] =
     httpClient
@@ -66,9 +62,9 @@ class MessageConnector @Inject() (httpClient: HttpClientV2, val servicesConfig: 
         HttpResponse(BAD_GATEWAY, e.getMessage)
       }
 
-  def getGmcBatches(version: String)(implicit hc: HeaderCarrier): Future[HttpResponse] =
+  def getGmcBatches()(implicit hc: HeaderCarrier): Future[HttpResponse] =
     httpClient
-      .get(new URI(s"${serviceUrl(Some(version))}/admin/message/brake/gmc/batches").toURL)
+      .get(new URI(s"$serviceUrl/admin/message/brake/gmc/batches").toURL)
       .execute[HttpResponse]
       .recover { case e: Exception =>
         HttpResponse(BAD_GATEWAY, e.getMessage)
@@ -76,7 +72,7 @@ class MessageConnector @Inject() (httpClient: HttpClientV2, val servicesConfig: 
 
   def getRandomMessagePreview(batch: GmcBatch)(implicit hc: HeaderCarrier): Future[HttpResponse] =
     httpClient
-      .post(new URI(s"${serviceUrl(batch.version)}/admin/message/brake/random").toURL)
+      .post(new URI(s"$serviceUrl/admin/message/brake/random").toURL)
       .withBody(Json.toJson(batch))
       .execute[HttpResponse]
       .recover { case e: Exception =>
@@ -85,7 +81,7 @@ class MessageConnector @Inject() (httpClient: HttpClientV2, val servicesConfig: 
 
   def approveGmcBatch(batch: GmcBatchApproval)(implicit hc: HeaderCarrier): Future[HttpResponse] =
     httpClient
-      .post(new URI(s"${serviceUrl(batch.version)}/admin/message/brake/accept").toURL)
+      .post(new URI(s"$serviceUrl/admin/message/brake/accept").toURL)
       .withBody(Json.toJson(batch))
       .execute[HttpResponse]
       .recover { case e: Exception =>
@@ -94,20 +90,10 @@ class MessageConnector @Inject() (httpClient: HttpClientV2, val servicesConfig: 
 
   def rejectGmcBatch(batch: GmcBatchApproval)(implicit hc: HeaderCarrier): Future[HttpResponse] =
     httpClient
-      .post(new URI(s"${serviceUrl(batch.version)}/admin/message/brake/reject").toURL)
+      .post(new URI(s"$serviceUrl/admin/message/brake/reject").toURL)
       .withBody(Json.toJson(batch))
       .execute[HttpResponse]
       .recover { case e: Exception =>
         HttpResponse(BAD_GATEWAY, e.getMessage)
       }
-
-  def sendMessage(body: JsValue)(implicit hc: HeaderCarrier): Future[HttpResponse] =
-    httpClient
-      .post(new URI(s"$serviceUrl/messages").toURL)
-      .withBody(Json.toJson(body))
-      .execute[HttpResponse]
-      .recover { case e: Exception =>
-        HttpResponse(BAD_GATEWAY, e.getMessage)
-      }
-
 }

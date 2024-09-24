@@ -26,8 +26,7 @@ case class GmcBatchApproval(
   formId: String,
   issueDate: String,
   templateId: String,
-  reasonText: String,
-  version: Option[String]
+  reasonText: String
 )
 
 object GmcBatchApproval {
@@ -50,8 +49,7 @@ object GmcBatchApproval {
       "formId"     -> text,
       "issueDate"  -> text,
       "templateId" -> text,
-      "reasonText" -> text.verifying(reasonTextConstraint),
-      "version"    -> optional(text)
+      "reasonText" -> text.verifying(reasonTextConstraint)
     )(GmcBatchApproval.apply)(g => Some(Tuple.fromProductTyped(g)))
   )
 
@@ -60,7 +58,6 @@ object GmcBatchApproval {
     gmcBatch.formId,
     gmcBatch.issueDate,
     gmcBatch.templateId,
-    reason,
-    gmcBatch.version
+    reason
   )
 }

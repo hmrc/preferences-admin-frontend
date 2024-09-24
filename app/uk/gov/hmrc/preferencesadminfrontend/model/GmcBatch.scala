@@ -25,8 +25,7 @@ case class GmcBatch(
   formId: String,
   issueDate: String,
   templateId: String,
-  count: Option[Int],
-  version: Option[String]
+  count: Option[Int]
 )
 
 object GmcBatch {
@@ -38,8 +37,7 @@ object GmcBatch {
       "formId"     -> nonEmptyText,
       "issueDate"  -> nonEmptyText,
       "templateId" -> nonEmptyText,
-      "count"      -> optional(number),
-      "version"    -> optional(text)
+      "count"      -> optional(number)
     )(GmcBatch.apply)(g => Some(Tuple.fromProductTyped(g)))
   )
 }

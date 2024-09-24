@@ -16,28 +16,24 @@
 
 package uk.gov.hmrc.preferencesadminfrontend.services
 
-import java.util.{ Base64, UUID }
-import javax.inject.Inject
-import play.api.http.Status._
-import play.api.libs.json.{ JsError, JsObject, JsSuccess, Json, __ }
+import play.api.http.Status.*
+import play.api.libs.json.*
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.preferencesadminfrontend.connectors.MessageConnector
 import uk.gov.hmrc.preferencesadminfrontend.model.{ BatchMessagePreview, GmcBatch, MessagePreview }
-
+import javax.inject.Inject
 import scala.concurrent.{ ExecutionContext, Future }
-import scala.io.Source
-import uk.gov.hmrc.templates.views.html.penaltyChargeApologies
 
 class MessageService @Inject() (messageConnector: MessageConnector) {
 
   def getGmcBatches()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[Seq[GmcBatch], String]] =
     messageConnector
-      .getGmcBatches("v4")
+      .getGmcBatches()
       .map(response =>
         response.status match {
           case OK =>
             Json.parse(response.body).validate[Seq[GmcBatch]].asOpt match {
-              case Some(batches) => Left(batches.map(_.copy(version = Some("v4"))))
+              case Some(batches) => Left(batches)
               case None          => Right("The GMC batches retrieved for version v4 do not appear to be valid.")
             }
           case _ => Right(response.body)
@@ -59,39 +55,4 @@ class MessageService @Inject() (messageConnector: MessageConnector) {
           case _ => Right(response.body)
         }
       )
-
-  type ResponseStatus = Int
-  type ResponseBody = String
-  type MessageId = String
-
-  val messageContent = Base64.getEncoder.encode(penaltyChargeApologies().toString().getBytes("UTF-8"))
-
-  def sendPenalyChargeApologyMessage(email: String, sautr: String)(implicit
-    hc: HeaderCarrier,
-    ec: ExecutionContext
-  ): Future[Either[(ResponseStatus, ResponseBody), String]] = {
-    val aMessage: JsObject = Json
-      .parse(
-        Source.fromURL(getClass.getResource("/message.json")).mkString
-      )
-      .as[JsObject]
-      .deepMerge(Json.obj("content" -> messageContent))
-      .deepMerge(Json.obj("recipient" -> Map("taxIdentifier" -> Map("value" -> sautr))))
-      .deepMerge(Json.obj("recipient" -> Map("email" -> email)))
-      .deepMerge(Json.obj("externalRef" -> Map("id" -> UUID.randomUUID().toString)))
-
-    messageConnector
-      .sendMessage(aMessage)
-      .map(response =>
-        response.status match {
-          case CREATED =>
-            response.json.validate((__ \ "id").json.pick) match {
-              case JsSuccess(value, _) => Right(Json.stringify(value))
-              case JsError(_)          => Left((response.status, response.body))
-            }
-          case _ => Left((response.status, response.body))
-        }
-      )
-  }
-
 }
