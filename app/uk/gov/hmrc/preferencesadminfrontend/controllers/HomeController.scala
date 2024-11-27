@@ -20,19 +20,32 @@ import play.api.Logging
 
 import javax.inject.{ Inject, Singleton }
 import play.api.i18n.I18nSupport
-import play.api.mvc._
+import play.api.mvc.*
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
+import uk.gov.hmrc.preferencesadminfrontend.controllers.model.Role.Admin
+import uk.gov.hmrc.preferencesadminfrontend.controllers.model.User
+import uk.gov.hmrc.preferencesadminfrontend.services.LoginService
 import uk.gov.hmrc.preferencesadminfrontend.views.html.{ decode, home }
+
 import scala.concurrent.Future
 
 @Singleton
-class HomeController @Inject() (homeView: home, decoderView: decode, val mcc: MessagesControllerComponents)(implicit
+class HomeController @Inject() (
+  homeView: home,
+  loginService: LoginService,
+  decoderView: decode,
+  val mcc: MessagesControllerComponents
+)(implicit
   appConfig: AppConfig
 ) extends FrontendController(mcc) with I18nSupport with Logging {
 
   val showHomePage = Action.async { implicit request =>
-    Future.successful(Ok(homeView()))
+    val isAdmin = request.session.get(User.sessionKey).map(name => User(name, "")) match {
+      case Some(user) => loginService.hasRequiredRole(user, Admin)
+      case _          => false
+    }
+    Future.successful(Ok(homeView(isAdmin)))
   }
 
   val showDecodePage = Action.async { implicit request =>

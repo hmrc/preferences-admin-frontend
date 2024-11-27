@@ -18,13 +18,18 @@ package uk.gov.hmrc.preferencesadminfrontend.services
 
 import com.google.common.io.BaseEncoding
 import com.typesafe.config.ConfigException.Missing
+
 import javax.inject.Inject
 import play.api.Configuration
-import uk.gov.hmrc.preferencesadminfrontend.controllers.model.User
+import uk.gov.hmrc.preferencesadminfrontend.controllers.model.{ Role, User }
 
 class LoginService @Inject() (loginServiceConfig: LoginServiceConfiguration) {
 
-  def isAuthorised(user: User): Boolean = loginServiceConfig.authorisedUsers.contains(user)
+  def isAuthorised(user: User): Boolean =
+    loginServiceConfig.authorisedUsers.exists(u => u.username == user.username && u.password == user.password)
+
+  def hasRequiredRole(user: User, role: Role): Boolean =
+    loginServiceConfig.authorisedUsers.exists(u => u.username == user.username && u.roles.contains(role))
 }
 
 class LoginServiceConfiguration @Inject() (val configuration: Configuration) {
@@ -41,7 +46,8 @@ class LoginServiceConfiguration @Inject() (val configuration: Configuration) {
         val decodedPwd = new String(BaseEncoding.base64().decode(encodedPwd))
         User(
           userConfig.getOptional[String]("username").getOrElse(throw new Missing("Property username missing")),
-          decodedPwd
+          decodedPwd,
+          userConfig.getOptional[String]("roles").getOrElse("Generic").split(",").map(Role.fromString(_)).toList
         )
       }
 }

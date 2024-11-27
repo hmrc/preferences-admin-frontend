@@ -25,7 +25,8 @@ import play.api.mvc.{ Action, AnyContent, MessagesControllerComponents }
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
 import uk.gov.hmrc.preferencesadminfrontend.connectors.MessageConnector
-import uk.gov.hmrc.preferencesadminfrontend.model.Allowlist._
+import uk.gov.hmrc.preferencesadminfrontend.controllers.model.Role.Admin
+import uk.gov.hmrc.preferencesadminfrontend.model.Allowlist.*
 import uk.gov.hmrc.preferencesadminfrontend.model.{ Allowlist, AllowlistEntry }
 import uk.gov.hmrc.preferencesadminfrontend.views.html.{ ErrorTemplate, allowlist_add, allowlist_delete, allowlist_show }
 
@@ -42,7 +43,7 @@ class AllowlistController @Inject() (
 )(implicit appConfig: AppConfig, ec: ExecutionContext)
     extends FrontendController(mcc) with I18nSupport with Logging {
 
-  def showAllowlistPage(): Action[AnyContent] = authorisedAction.async { implicit request => _ =>
+  def showAllowlistPage(): Action[AnyContent] = authorisedAction.async(Admin) { implicit request => _ =>
     messageConnector
       .getAllowlist()
       .map(response =>
