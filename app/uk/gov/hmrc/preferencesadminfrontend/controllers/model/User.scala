@@ -16,26 +16,12 @@
 
 package uk.gov.hmrc.preferencesadminfrontend.controllers.model
 
-enum Role {
-  case Admin, Generic
-}
+import uk.gov.hmrc.preferencesadminfrontend.controllers.Role
 
-object Role {
-  def fromString(role: String): Role = role.trim.toLowerCase match {
-    case "admin"   => Role.Admin
-    case "generic" => Role.Generic
-    case _         => throw IllegalArgumentException(s"Invalid argument for the role $role")
-  }
-}
+case class User(username: String, password: String)
 
-case class User(username: String, password: String, roles: List[Role] = List.empty[Role])
+case class UserConfig(username: String, password: String, roles: List[Role] = List(Role.Generic))
 
 object User {
   val sessionKey = "userId"
-  def apply(username: String, password: String): User = User(username, password)
-
-  def apply(username: String, password: String, roles: List[Role]): User = User(username, password, roles)
-
-  def unapply(u: User): Option[(String, String)] = Some(u.username, u.password)
-
 }

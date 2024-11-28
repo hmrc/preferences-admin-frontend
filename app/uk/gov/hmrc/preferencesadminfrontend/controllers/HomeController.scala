@@ -23,7 +23,7 @@ import play.api.i18n.I18nSupport
 import play.api.mvc.*
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
-import uk.gov.hmrc.preferencesadminfrontend.controllers.model.Role.Admin
+import uk.gov.hmrc.preferencesadminfrontend.controllers.Role.Admin
 import uk.gov.hmrc.preferencesadminfrontend.controllers.model.User
 import uk.gov.hmrc.preferencesadminfrontend.services.LoginService
 import uk.gov.hmrc.preferencesadminfrontend.views.html.{ decode, home }

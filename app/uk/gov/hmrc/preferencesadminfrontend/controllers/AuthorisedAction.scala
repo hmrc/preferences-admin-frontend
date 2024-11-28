@@ -17,8 +17,8 @@
 package uk.gov.hmrc.preferencesadminfrontend.controllers
 
 import play.api.mvc.{ Action, AnyContent, MessagesBaseController, MessagesControllerComponents, Request, Result }
-import uk.gov.hmrc.preferencesadminfrontend.controllers.model.Role.Generic
-import uk.gov.hmrc.preferencesadminfrontend.controllers.model.{ Role, User }
+import uk.gov.hmrc.preferencesadminfrontend.controllers.Role.Generic
+import uk.gov.hmrc.preferencesadminfrontend.controllers.model.User
 import uk.gov.hmrc.preferencesadminfrontend.services.LoginService
 
 import javax.inject.Inject
@@ -37,6 +37,5 @@ class AuthorisedAction @Inject() (loginService: LoginService, val controllerComp
         case Some(user) if loginService.hasRequiredRole(user, role) => block(request)(user)
         case _ => Future.successful(play.api.mvc.Results.Redirect(routes.LoginController.showLoginPage()))
       }
-
     }
 }
