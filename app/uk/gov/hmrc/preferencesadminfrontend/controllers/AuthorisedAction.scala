@@ -17,23 +17,25 @@
 package uk.gov.hmrc.preferencesadminfrontend.controllers
 
 import play.api.mvc.{ Action, AnyContent, MessagesBaseController, MessagesControllerComponents, Request, Result }
+import uk.gov.hmrc.preferencesadminfrontend.controllers.Role.Generic
 import uk.gov.hmrc.preferencesadminfrontend.controllers.model.User
+import uk.gov.hmrc.preferencesadminfrontend.services.LoginService
 
 import javax.inject.Inject
-
 import scala.concurrent.Future
 
-class AuthorisedAction @Inject() (val controllerComponents: MessagesControllerComponents)
+class AuthorisedAction @Inject() (loginService: LoginService, val controllerComponents: MessagesControllerComponents)
     extends MessagesBaseController {
 
-  def async(block: Request[AnyContent] => User => Future[Result]): Action[AnyContent] =
+  def async(block: Request[AnyContent] => User => Future[Result]): Action[AnyContent] = async(Generic)(block)
+
+  def async(role: Role)(block: Request[AnyContent] => User => Future[Result]): Action[AnyContent] =
     Action.async { implicit request =>
       val user = request.session.get(User.sessionKey).map(name => User(name, ""))
 
       user match {
-        case Some(user) => block(request)(user)
-        case _          => Future.successful(play.api.mvc.Results.Redirect(routes.LoginController.showLoginPage()))
+        case Some(user) if loginService.hasRequiredRole(user, role) => block(request)(user)
+        case _ => Future.successful(play.api.mvc.Results.Redirect(routes.LoginController.showLoginPage()))
       }
-
     }
 }

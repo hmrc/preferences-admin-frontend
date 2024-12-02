@@ -19,7 +19,7 @@ package uk.gov.hmrc.preferencesadminfrontend.controllers
 import org.apache.pekko.stream.Materializer
 import org.jsoup.Jsoup
 import org.mockito.ArgumentMatchers
-import org.mockito.ArgumentMatchers._
+import org.mockito.ArgumentMatchers.*
 import org.mockito.Mockito.when
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.mockito.MockitoSugar.mock
@@ -27,15 +27,15 @@ import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.Status
 import play.api.i18n.MessagesApi
-import play.api.mvc.{ AnyContentAsEmpty, AnyContentAsFormUrlEncoded, Call }
-import play.api.test.CSRFTokenHelper._
+import play.api.mvc.{ AnyContentAsEmpty, AnyContentAsFormUrlEncoded, Call, MessagesControllerComponents }
+import play.api.test.CSRFTokenHelper.*
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{ contentAsString, defaultAwaitTimeout, status }
 import uk.gov.hmrc.http.{ HeaderCarrier, HttpResponse }
 import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
 import uk.gov.hmrc.preferencesadminfrontend.controllers.model.User
 import uk.gov.hmrc.preferencesadminfrontend.model.{ BatchMessagePreview, GmcBatch, GmcBatchApproval, MessagePreview }
-import uk.gov.hmrc.preferencesadminfrontend.services.MessageService
+import uk.gov.hmrc.preferencesadminfrontend.services.{ LoginService, MessageService }
 import uk.gov.hmrc.preferencesadminfrontend.utils.SpecBase
 import uk.gov.hmrc.preferencesadminfrontend.views.html.{ ErrorTemplate, batch_approval, batch_rejection, message_brake_admin }
 
@@ -272,13 +272,16 @@ class MessageBrakeControllerSpec extends PlaySpec with GuiceOneAppPerSuite with 
     implicit val ecc: ExecutionContext = stubbedMCC.executionContext
 
     val errorTemplateView: ErrorTemplate = app.injector.instanceOf[ErrorTemplate]
-    val authorisedAction: AuthorisedAction = app.injector.instanceOf[AuthorisedAction]
+    val mockLoginService: LoginService = mock[LoginService]
+    val controllerComponents: MessagesControllerComponents = app.injector.instanceOf[MessagesControllerComponents]
+    val authorisedAction: AuthorisedAction = new AuthorisedAction(mockLoginService, controllerComponents)
     val batchApprovalView: batch_approval = app.injector.instanceOf[batch_approval]
     val batchRejectionView: batch_rejection = app.injector.instanceOf[batch_rejection]
     val messageBrakeAdminView: message_brake_admin = app.injector.instanceOf[message_brake_admin]
 
     val messageServiceMock: MessageService = mock[MessageService]
 
+    when(mockLoginService.hasRequiredRole(any, any)).thenReturn(true)
     def messageBrakeController()(implicit appConfig: AppConfig): MessageBrakeController =
       new MessageBrakeController(
         authorisedAction,

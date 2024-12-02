@@ -43,7 +43,9 @@ class SearchController @Inject() (
   failedView: failed,
   userOptOutView: user_opt_out
 )(implicit appConfig: AppConfig, ec: ExecutionContext)
-    extends FrontendController(mcc) with I18nSupport with Logging {
+    extends FrontendController(mcc) with I18nSupport with Logging with RoleAuthorisedAction(authorisedAction) {
+
+  override def role: Role = Role.Generic
 
   def showSearchPage(): Action[AnyContent] =
     authorisedAction.async { implicit request => _ =>
@@ -58,7 +60,7 @@ class SearchController @Inject() (
       )
     }
 
-  def search(): Action[AnyContent] = authorisedAction.async { implicit request => implicit user =>
+  def search(): Action[AnyContent] = authorisedAction { implicit request => implicit user =>
     Search()
       .bindFromRequest()
       .fold(
@@ -75,7 +77,7 @@ class SearchController @Inject() (
       )
   }
 
-  def optOut(): Action[AnyContent] = authorisedAction.async { implicit request => implicit user =>
+  def optOut(): Action[AnyContent] = authorisedAction { implicit request => implicit user =>
     OptOutReasonWithIdentifier()
       .bindFromRequest()
       .fold(

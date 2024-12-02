@@ -18,20 +18,28 @@ package uk.gov.hmrc.preferencesadminfrontend.services
 
 import com.google.common.io.BaseEncoding
 import com.typesafe.config.ConfigException.Missing
+
 import javax.inject.Inject
 import play.api.Configuration
-import uk.gov.hmrc.preferencesadminfrontend.controllers.model.User
+import uk.gov.hmrc.preferencesadminfrontend.controllers.Role
+import uk.gov.hmrc.preferencesadminfrontend.controllers.model.{ User, UserConfig }
 
 class LoginService @Inject() (loginServiceConfig: LoginServiceConfiguration) {
 
-  def isAuthorised(user: User): Boolean = loginServiceConfig.authorisedUsers.contains(user)
+  def isAuthorised(user: User): Boolean =
+    loginServiceConfig.authorisedUsers.exists(u => u.username == user.username && u.password == user.password)
+
+  def hasRequiredRole(user: User, role: Role): Boolean =
+    loginServiceConfig.authorisedUsers.exists(u =>
+      u.username == user.username && (u.roles.contains(role) || u.roles.contains(Role.Admin))
+    )
 }
 
 class LoginServiceConfiguration @Inject() (val configuration: Configuration) {
 
   def verifyConfiguration() = if (authorisedUsers.isEmpty) throw new Missing("Property users is empty")
 
-  lazy val authorisedUsers: Seq[User] =
+  lazy val authorisedUsers: Seq[UserConfig] =
     configuration
       .getOptional[Seq[Configuration]](s"users")
       .getOrElse(throw new Missing("Property users missing"))
@@ -39,9 +47,10 @@ class LoginServiceConfiguration @Inject() (val configuration: Configuration) {
         val encodedPwd =
           userConfig.getOptional[String]("password").getOrElse(throw new Missing("Property password missing"))
         val decodedPwd = new String(BaseEncoding.base64().decode(encodedPwd))
-        User(
+        UserConfig(
           userConfig.getOptional[String]("username").getOrElse(throw new Missing("Property username missing")),
-          decodedPwd
+          decodedPwd,
+          userConfig.getOptional[String]("roles").getOrElse("Generic").split(",").map(Role.fromString(_)).toList
         )
       }
 }

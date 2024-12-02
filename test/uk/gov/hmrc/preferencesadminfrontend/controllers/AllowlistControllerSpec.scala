@@ -17,7 +17,7 @@
 package uk.gov.hmrc.preferencesadminfrontend.controllers
 
 import org.apache.pekko.stream.Materializer
-import org.mockito.ArgumentMatchers._
+import org.mockito.ArgumentMatchers.*
 import org.mockito.Mockito.when
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
@@ -26,9 +26,10 @@ import play.api.Configuration
 import play.api.http.Status
 import play.api.i18n.MessagesApi
 import play.api.libs.json.Json
-import play.api.test.CSRFTokenHelper._
+import play.api.mvc.MessagesControllerComponents
+import play.api.test.CSRFTokenHelper.*
 import play.api.test.FakeRequest
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import play.mvc.Http
 import uk.gov.hmrc.http.{ HeaderCarrier, HttpResponse }
 import uk.gov.hmrc.play.bootstrap.config.ControllerConfig
@@ -36,6 +37,7 @@ import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
 import uk.gov.hmrc.preferencesadminfrontend.connectors.MessageConnector
 import uk.gov.hmrc.preferencesadminfrontend.controllers.model.User
 import uk.gov.hmrc.preferencesadminfrontend.model.AllowlistEntry
+import uk.gov.hmrc.preferencesadminfrontend.services.LoginService
 import uk.gov.hmrc.preferencesadminfrontend.utils.SpecBase
 import uk.gov.hmrc.preferencesadminfrontend.views.html.{ ErrorTemplate, allowlist_add, allowlist_delete, allowlist_show }
 
@@ -215,11 +217,15 @@ class AllowlistControllerSpec extends PlaySpec with GuiceOneAppPerSuite with Spe
     implicit val ecc: ExecutionContext = stubbedMCC.executionContext
     implicit val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
     val errorTemplateView: ErrorTemplate = app.injector.instanceOf[ErrorTemplate]
-    val authorisedAction: AuthorisedAction = app.injector.instanceOf[AuthorisedAction]
+    val mockLoginService: LoginService = mock[LoginService]
+    val controllerComponents: MessagesControllerComponents = app.injector.instanceOf[MessagesControllerComponents]
+    val authorisedAction: AuthorisedAction = new AuthorisedAction(mockLoginService, controllerComponents)
     val allowlistAddView: allowlist_add = app.injector.instanceOf[allowlist_add]
     val allowlistShowView: allowlist_show = app.injector.instanceOf[allowlist_show]
     val allowlistDeleteView: allowlist_delete = app.injector.instanceOf[allowlist_delete]
     val mockMessageConnector: MessageConnector = mock[MessageConnector]
+
+    when(mockLoginService.hasRequiredRole(any, any)).thenReturn(true)
 
     val allowlistController: AllowlistController =
       new AllowlistController(
