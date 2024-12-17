@@ -73,7 +73,7 @@ class LoginController @Inject() (
       )
   }
 
-  val logoutAction = authorisedAction.async { implicit request => user =>
+  def logoutAction() = authorisedAction.async { implicit request => user =>
     implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequestAndSession(request, request.session)
     auditConnector.sendEvent(createLogoutEvent(user.username))
     Future.successful(Redirect(routes.LoginController.showLoginPage()).withSession(Session()))
