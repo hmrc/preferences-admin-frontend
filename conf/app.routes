@@ -4,7 +4,7 @@
 GET         /assets/*file                               controllers.Assets.versioned(path = "/public", file: Asset)
 
 POST        /login                                      uk.gov.hmrc.preferencesadminfrontend.controllers.LoginController.loginAction()
-POST        /logout                                     uk.gov.hmrc.preferencesadminfrontend.controllers.LoginController.logoutAction()
+GET         /logout                                     uk.gov.hmrc.preferencesadminfrontend.controllers.LoginController.logoutAction()
 GET         /                                           uk.gov.hmrc.preferencesadminfrontend.controllers.LoginController.showLoginPage()
 GET         /home                                       uk.gov.hmrc.preferencesadminfrontend.controllers.HomeController.showHomePage()
 GET         /decode                                     uk.gov.hmrc.preferencesadminfrontend.controllers.HomeController.showDecodePage()

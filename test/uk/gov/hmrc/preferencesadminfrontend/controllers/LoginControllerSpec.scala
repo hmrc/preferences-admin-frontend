@@ -91,7 +91,7 @@ class LoginControllerSpec extends PlaySpec with GuiceOneAppPerSuite with SpecBas
 
   "POST to logout" should {
     "Destroy existing session and redirect to login page" in new MessageBrakeControllerTestCase {
-      val result = loginController.logoutAction(FakeRequest().withSession("userId" -> "user").withCSRFToken)
+      val result = loginController.logoutAction()(FakeRequest().withSession("userId" -> "user").withCSRFToken)
 
       session(result).data must not contain ("userId" -> "user")
       status(result) mustBe Status.SEE_OTHER
