@@ -32,6 +32,7 @@ import scala.concurrent.Future
 
 @Singleton
 class HomeController @Inject() (
+  authorisedAction: AuthorisedAction,
   homeView: home,
   loginService: LoginService,
   decoderView: decode,
@@ -40,7 +41,7 @@ class HomeController @Inject() (
   appConfig: AppConfig
 ) extends FrontendController(mcc) with I18nSupport with Logging {
 
-  val showHomePage = Action.async { implicit request =>
+  val showHomePage: Action[AnyContent] = authorisedAction.async { implicit request => _ =>
     val isAdmin = request.session.get(User.sessionKey).map(name => User(name, "")) match {
       case Some(user) => loginService.hasRequiredRole(user, Admin)
       case _          => false
@@ -48,7 +49,7 @@ class HomeController @Inject() (
     Future.successful(Ok(homeView(isAdmin)))
   }
 
-  val showDecodePage = Action.async { implicit request =>
+  val showDecodePage: Action[AnyContent] = authorisedAction.async { implicit request => _ =>
     Future.successful(Ok(decoderView()))
   }
 }
