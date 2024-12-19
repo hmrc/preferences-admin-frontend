@@ -42,11 +42,7 @@ class HomeController @Inject() (
 ) extends FrontendController(mcc) with I18nSupport with Logging {
 
   val showHomePage: Action[AnyContent] = authorisedAction.async { implicit request => _ =>
-    val isAdmin = request.session.get(User.sessionKey).map(name => User(name, "")) match {
-      case Some(user) => loginService.hasRequiredRole(user, Admin)
-      case _          => false
-    }
-    Future.successful(Ok(homeView(isAdmin)))
+    Future.successful(Ok(homeView()))
   }
 
   val showDecodePage: Action[AnyContent] = authorisedAction.async { implicit request => _ =>

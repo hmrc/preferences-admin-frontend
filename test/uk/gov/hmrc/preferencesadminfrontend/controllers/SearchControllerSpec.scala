@@ -100,7 +100,8 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
       val postRequest = FakeRequest("POST", "/search/q")
         .withFormUrlEncodedBody(Seq(("name", "nino"), ("value", "CE067583D")): _*)
 
-      val result = searchController.search()(postRequest.withSession(User.sessionKey -> "user").withCSRFToken)
+      val result =
+        searchController.search()(postRequest.withSession(User.sessionKey -> "user", "isAdmin" -> "true").withCSRFToken)
 
       status(result) mustBe Status.OK
       val body: String = contentAsString(result)
@@ -129,7 +130,8 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
       val postRequest = FakeRequest("POST", "/search/q")
         .withFormUrlEncodedBody(Seq(("name", "email"), ("value", "test@test.com")): _*)
 
-      val result = searchController.search()(postRequest.withSession(User.sessionKey -> "user").withCSRFToken)
+      val result =
+        searchController.search()(postRequest.withSession(User.sessionKey -> "user", "isAdmin" -> "true").withCSRFToken)
 
       status(result) mustBe Status.OK
       val body: String = contentAsString(result)
@@ -158,7 +160,8 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
       val postRequest = FakeRequest("POST", "/search/q")
         .withFormUrlEncodedBody(Seq(("name", "email"), ("value", "test@test.com")): _*)
 
-      val result = searchController.search()(postRequest.withSession(User.sessionKey -> "user").withCSRFToken)
+      val result =
+        searchController.search()(postRequest.withSession(User.sessionKey -> "user", "isAdmin" -> "true").withCSRFToken)
 
       status(result) mustBe Status.OK
       val body: String = contentAsString(result)
@@ -178,7 +181,8 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
       val postRequest = FakeRequest("POST", "/search/q")
         .withFormUrlEncodedBody(Seq(("name", "email"), ("value", "test@test.com")): _*)
 
-      val result = searchController.search()(postRequest.withSession(User.sessionKey -> "user").withCSRFToken)
+      val result =
+        searchController.search()(postRequest.withSession(User.sessionKey -> "user", "isAdmin" -> "true").withCSRFToken)
 
       status(result) mustBe Status.OK
       val body: String = contentAsString(result)
@@ -211,7 +215,8 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
       val postRequest = FakeRequest("POST", "/search/q")
         .withFormUrlEncodedBody(Seq(("name", "nino"), ("value", "CE067583D")): _*)
 
-      val result = searchController.search()(postRequest.withSession(User.sessionKey -> "user").withCSRFToken)
+      val result =
+        searchController.search()(postRequest.withSession(User.sessionKey -> "user", "isAdmin" -> "true").withCSRFToken)
 
       status(result) mustBe Status.OK
       private val document = Jsoup.parse(contentAsString(result))
@@ -226,7 +231,8 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
       val postRequest = FakeRequest("POST", "/search/q")
         .withFormUrlEncodedBody(Seq(("name", "nino"), ("value", "CE067583D")): _*)
 
-      val result = searchController.search()(postRequest.withSession(User.sessionKey -> "user").withCSRFToken)
+      val result =
+        searchController.search()(postRequest.withSession(User.sessionKey -> "user", "isAdmin" -> "true").withCSRFToken)
 
       status(result) mustBe Status.OK
       contentAsString(result) must include("No paperless preference found for that identifier.")
@@ -257,7 +263,8 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
       val postRequest = FakeRequest("POST", "/search/q")
         .withFormUrlEncodedBody(Seq(("name", "nino"), ("value", "ce067583d")): _*)
 
-      val result = searchController.search()(postRequest.withSession(User.sessionKey -> "user").withCSRFToken)
+      val result =
+        searchController.search()(postRequest.withSession(User.sessionKey -> "user", "isAdmin" -> "true").withCSRFToken)
 
       verify(searchServiceMock, times(1))
         .searchPreference(ArgumentMatchers.eq(TaxIdentifier("nino", "CE067583D")))(
@@ -324,7 +331,7 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
           "identifierName"  -> "nino",
           "identifierValue" -> "CE067583D"
         )
-        .withSession(User.sessionKey -> "user")
+        .withSession(User.sessionKey -> "user", "isAdmin" -> "true")
 
       val result = searchController.optOut()(request.withCSRFToken)
 
@@ -367,7 +374,7 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
 
       val taxIdentifier = TaxIdentifier("nino", "CE067583D")
       implicit val request: FakeRequest[AnyContentAsEmpty.type] =
-        FakeRequest(Helpers.GET, "/").withSession(User.sessionKey -> "user")
+        FakeRequest(Helpers.GET, "/").withSession(User.sessionKey -> "user", "isAdmin" -> "true")
 
       val result = searchController.searchConfirmed(taxIdentifier)
 
@@ -407,7 +414,7 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
 
       val taxIdentifier = TaxIdentifier("nino", "CE067583D")
       implicit val request: FakeRequest[AnyContentAsEmpty.type] =
-        FakeRequest(Helpers.GET, "/").withSession(User.sessionKey -> "user")
+        FakeRequest(Helpers.GET, "/").withSession(User.sessionKey -> "user", "isAdmin" -> "true")
 
       val result = searchController.searchFailed(taxIdentifier, AlreadyOptedOut.errorCode)
 

@@ -19,9 +19,9 @@ package uk.gov.hmrc.preferencesadminfrontend.controllers
 import javax.inject.{ Inject, Singleton }
 import play.api.{ Configuration, Logging }
 import play.api.data.Form
-import play.api.data.Forms.{ mapping, _ }
+import play.api.data.Forms.{ mapping, * }
 import play.api.i18n.I18nSupport
-import play.api.mvc._
+import play.api.mvc.*
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
@@ -29,6 +29,7 @@ import uk.gov.hmrc.play.audit.model.DataEvent
 import uk.gov.hmrc.play.bootstrap.config.AppName
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
+import uk.gov.hmrc.preferencesadminfrontend.controllers.Role.Admin
 import uk.gov.hmrc.preferencesadminfrontend.controllers.model.User
 import uk.gov.hmrc.preferencesadminfrontend.services.LoginService
 import uk.gov.hmrc.preferencesadminfrontend.views.html.login
@@ -63,7 +64,10 @@ class LoginController @Inject() (
           if (loginService.isAuthorised(userData)) {
             auditConnector.sendEvent(createLoginEvent(userData.username, true))
             val sessionUpdated =
-              request.session + (User.sessionKey -> userData.username) + ("ts" -> Instant.now.toEpochMilli.toString)
+              request.session
+                + (User.sessionKey -> userData.username)
+                + ("ts"            -> Instant.now.toEpochMilli.toString)
+                + ("isAdmin"       -> loginService.hasRequiredRole(userData, Admin).toString)
             Future.successful(Redirect(routes.HomeController.showHomePage()).withSession(sessionUpdated))
           } else {
             auditConnector.sendEvent(createLoginEvent(userData.username, false))
@@ -97,6 +101,6 @@ class LoginController @Inject() (
     mapping(
       "username" -> nonEmptyText,
       "password" -> nonEmptyText
-    )(User.apply)(u => Some(Tuple.fromProductTyped(u)))
+    )((userName, password) => User(userName, password, List.empty[Role]))(user => Some(user.username, user.password))
   )
 }

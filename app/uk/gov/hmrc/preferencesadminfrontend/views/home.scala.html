@@ -17,7 +17,7 @@
 @this(layout: Layout,
 govukBreadcrumbs: GovukBreadcrumbs)
 
-@(isAdmin: Boolean)(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
+@()(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
 
 @layout(pageTitle = Some("Home")) {
     @govukBreadcrumbs(Breadcrumbs(
@@ -34,7 +34,7 @@ govukBreadcrumbs: GovukBreadcrumbs)
         <p class="desc">You can access the following control pages by clicking on the appropriate link</p>
         <ul class="menu">
             <li><a href="/paperless/admin/search">Paperless Admin</a></li>
-            @if(isAdmin) {
+            @if(request.session.get("isAdmin").getOrElse("false").toBoolean) {
                 <li><a href="/paperless/admin/message-brake">Message Brake</a></li>
                 <li><a href="/paperless/admin/allowlist">Message Brake Allowlist</a></li>
                 <li><a href="/paperless/admin/decode">Message Decode</a></li>

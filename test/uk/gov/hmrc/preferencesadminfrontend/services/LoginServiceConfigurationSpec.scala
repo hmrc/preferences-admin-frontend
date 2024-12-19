@@ -22,7 +22,7 @@ import com.typesafe.config.ConfigException.Missing
 import org.scalatestplus.play.PlaySpec
 import play.api.{ Configuration, Environment }
 import uk.gov.hmrc.preferencesadminfrontend.controllers.Role.Generic
-import uk.gov.hmrc.preferencesadminfrontend.controllers.model.{ User, UserConfig }
+import uk.gov.hmrc.preferencesadminfrontend.controllers.model.User
 
 class LoginServiceConfigurationSpec extends PlaySpec {
 
@@ -94,7 +94,7 @@ class LoginServiceConfigurationSpec extends PlaySpec {
 
   trait TestCase {
 
-    val user = UserConfig("user", "pwd", List(Generic))
+    val user = User("user", "pwd", List(Generic))
     val mockEnvironment = Environment.simple()
 
     def configurationForUsers(usersMap: Map[String, Any]*): Configuration =
