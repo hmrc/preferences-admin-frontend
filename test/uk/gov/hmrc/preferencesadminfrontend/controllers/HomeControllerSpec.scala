@@ -21,12 +21,12 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
-import play.api.http._
+import play.api.http.*
 import play.api.i18n.MessagesApi
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.test.CSRFTokenHelper._
 import play.api.test.FakeRequest
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
+import uk.gov.hmrc.preferencesadminfrontend.controllers.model.User
 import uk.gov.hmrc.preferencesadminfrontend.utils.SpecBase
 
 class HomeControllerSpec extends PlaySpec with GuiceOneAppPerSuite with SpecBase with ScalaFutures {
@@ -38,12 +38,12 @@ class HomeControllerSpec extends PlaySpec with GuiceOneAppPerSuite with SpecBase
 
   "GET /home" should {
     "return 200" in {
-      val result = homeController.showHomePage()(FakeRequest("GET", "/home").withCSRFToken)
+      val result = homeController.showHomePage()(FakeRequest("GET", "/home").withSession(User.sessionKey -> "user"))
       status(result) mustBe Status.OK
     }
 
     "return HTML" in {
-      val result = homeController.showHomePage()(FakeRequest("GET", "/home").withCSRFToken)
+      val result = homeController.showHomePage()(FakeRequest("GET", "/home").withSession(User.sessionKey -> "user"))
       contentType(result) mustBe Some("text/html")
       charset(result) mustBe Some("utf-8")
     }
@@ -51,12 +51,12 @@ class HomeControllerSpec extends PlaySpec with GuiceOneAppPerSuite with SpecBase
 
   "GET /decode" should {
     "return 200" in {
-      val result = homeController.showDecodePage()(FakeRequest("GET", "/decode").withCSRFToken)
+      val result = homeController.showDecodePage()(FakeRequest("GET", "/decode").withSession(User.sessionKey -> "user"))
       status(result) mustBe Status.OK
     }
 
     "return HTML" in {
-      val result = homeController.showDecodePage()(FakeRequest("GET", "/decode").withCSRFToken)
+      val result = homeController.showDecodePage()(FakeRequest("GET", "/decode").withSession(User.sessionKey -> "user"))
       contentType(result) mustBe Some("text/html")
       charset(result) mustBe Some("utf-8")
     }
