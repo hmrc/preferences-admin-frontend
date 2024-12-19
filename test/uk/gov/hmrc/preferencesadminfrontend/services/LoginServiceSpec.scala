@@ -19,7 +19,7 @@ package uk.gov.hmrc.preferencesadminfrontend.services
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
 import play.api.Configuration
-import uk.gov.hmrc.preferencesadminfrontend.controllers.model.{ User, UserConfig }
+import uk.gov.hmrc.preferencesadminfrontend.controllers.model.User
 
 class LoginServiceSpec extends PlaySpec {
 
@@ -49,7 +49,7 @@ class LoginServiceSpec extends PlaySpec {
   trait TestCase {
 
     val loginServiceConfiguration = new LoginServiceConfiguration(mock[Configuration]) {
-      override lazy val authorisedUsers: Seq[UserConfig] = Seq(UserConfig("username", "password"))
+      override lazy val authorisedUsers: Seq[User] = Seq(User("username", "password"))
     }
   }
 }

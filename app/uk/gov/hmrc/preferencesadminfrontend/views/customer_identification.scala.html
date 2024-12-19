@@ -42,6 +42,7 @@ govukBreadcrumbs: GovukBreadcrumbs)
     )
 
     @form(action = routes.SearchController.search()) {
+        @if(request.session.get("isAdmin").getOrElse("false").toBoolean) {
           @govukRadios(Radios(
               fieldset = Some(Fieldset(
                   legend = Some(Legend(
@@ -72,6 +73,34 @@ govukBreadcrumbs: GovukBreadcrumbs)
               )
           ).withFormField(searchForm("name"))
         )
+      } else {
+            @govukRadios(Radios(
+                fieldset = Some(Fieldset(
+                legend = Some(Legend(
+                content = Text("Customer Identification"),
+                classes = "govuk-fieldset__legend--l",
+                isPageHeading = true
+                    ))
+                )),
+                idPrefix = Some("name"),
+                name = "name",
+                items = Seq(
+                    RadioItem(
+                        content = Text("SaUtr"),
+                        value = Some("sautr")
+                    ),
+                    RadioItem(
+                        content = Text("Nino"),
+                        value = Some("nino")
+                    ),
+                    RadioItem(
+                        content = Text("ITSA ID"),
+                        value = Some("HMRC-MTD-IT")
+                    )
+                )
+                ).withFormField(searchForm("name"))
+            )
+        }
 
         @govukInput(
           Input(

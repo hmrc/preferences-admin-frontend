@@ -17,10 +17,7 @@
 package uk.gov.hmrc.preferencesadminfrontend.controllers.model
 
 import uk.gov.hmrc.preferencesadminfrontend.controllers.Role
-
-case class User(username: String, password: String)
-
-case class UserConfig(username: String, password: String, roles: List[Role] = List(Role.Generic))
+case class User(username: String, password: String, roles: List[Role] = List(Role.Generic))
 
 object User {
   val sessionKey = "userId"

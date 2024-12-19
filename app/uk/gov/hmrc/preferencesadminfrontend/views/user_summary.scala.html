@@ -17,7 +17,7 @@
 @import java.time.format.DateTimeFormatter
 @import java.util.Locale
 
-@(govukSummaryList: GovukSummaryList, preferences: List[uk.gov.hmrc.preferencesadminfrontend.services.model.Preference])
+@(govukSummaryList: GovukSummaryList, preferences: List[uk.gov.hmrc.preferencesadminfrontend.services.model.Preference])(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
 
 <div id="user-summary">
     <h2 class="govuk-heading-m">User Summary</h2>
@@ -92,23 +92,24 @@
         )
 
         <h2 class="govuk-heading-m"></h2>
+    @if(request.session.get("isAdmin").getOrElse("false").toBoolean) {
+        <table class="govuk-table">
+            <caption class="govuk-table__caption govuk-table__caption--m">Preference History</caption>
+            <thead class="govuk-table__head">
 
-    <table class="govuk-table">
-        <caption class="govuk-table__caption govuk-table__caption--m">Preference History</caption>
-        <thead class="govuk-table__head">
+            </thead>
+            <tbody class="govuk-table__body">
+            @for(event <- preference.events) {
+            <tr class="govuk-table__row" style="white-space: nowrap">
+                <th scope="row" class="govuk-table__header">@{event.eventType}</th>
+                <td class="govuk-table__cell govuk-table__cell--numeric">@{event.emailAddress}</td>
+                <td class="govuk-table__cell govuk-table__cell--numeric">@{DateTimeFormatter.ofPattern("d MMMM yyyy hh:mm:ss a").withLocale(Locale.ENGLISH).format(event.timestamp)}</td>
+            </tr>
+            }
 
-        </thead>
-        <tbody class="govuk-table__body">
-        @for(event <- preference.events) {
-        <tr class="govuk-table__row" style="white-space: nowrap">
-            <th scope="row" class="govuk-table__header">@{event.eventType}</th>
-            <td class="govuk-table__cell govuk-table__cell--numeric">@{event.emailAddress}</td>
-            <td class="govuk-table__cell govuk-table__cell--numeric">@{DateTimeFormatter.ofPattern("d MMMM yyyy hh:mm:ss a").withLocale(Locale.ENGLISH).format(event.timestamp)}</td>
-        </tr>
-        }
-
-        </tbody>
-    </table>
+            </tbody>
+        </table>
+    }
 
 }
 
