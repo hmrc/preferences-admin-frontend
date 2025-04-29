@@ -59,7 +59,7 @@ class SearchServiceSpec
   val entityId = UUID.randomUUID().toString
   override def afterEach(): Unit = reset(auditConnectorMock)
 
-  "getPreferences" should {
+  "getPreferencesByEmail" should {
     "return preference for nino user when it exists" in {
 
       when(entityResolverConnectorMock.getPreferenceDetails(validNino))
@@ -122,7 +122,7 @@ class SearchServiceSpec
     }
 
     "return preference for email address user when it exists" in {
-      when(preferencesConnectorMock.getPreferenceDetails(validEmailid.value))
+      when(preferencesConnectorMock.getPreferencesByEmail(validEmailid.value))
         .thenReturn(Future.successful(optedInPreferenceDetailsList(entityId)))
       when(preferencesConnectorMock.getPreferencesEvents(any[String])(any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.successful(List.empty[Event]))
@@ -144,7 +144,7 @@ class SearchServiceSpec
     }
 
     "return None if that nino does not exist" in {
-      when(preferencesConnectorMock.getPreferenceDetails(unknownEmailid.value)).thenReturn(Future.successful(Nil))
+      when(preferencesConnectorMock.getPreferencesByEmail(unknownEmailid.value)).thenReturn(Future.successful(Nil))
       when(entityResolverConnectorMock.getTaxIdentifiers(optedInPreferenceDetailsList(entityId).head))
         .thenReturn(Future.successful(taxIdentifiers))
 
@@ -152,7 +152,7 @@ class SearchServiceSpec
     }
 
     "return multiple preferences for email address user when it exists" in {
-      when(preferencesConnectorMock.getPreferenceDetails(validEmailid.value))
+      when(preferencesConnectorMock.getPreferencesByEmail(validEmailid.value))
         .thenReturn(Future.successful(optedInPreferenceDetailsList2(entityId)))
       when(entityResolverConnectorMock.getTaxIdentifiers(optedInPreferenceDetailsList(entityId).head))
         .thenReturn(Future.successful(taxIdentifiers))

@@ -42,7 +42,7 @@ class PreferencesConnector @Inject() (
 
   def serviceUrl: String = servicesConfig.baseUrl("preferences")
 
-  def getPreferenceDetails(
+  def getPreferencesByEmail(
     email: String
   )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[List[PreferenceDetails]] =
     httpClient
@@ -54,10 +54,10 @@ class PreferencesConnector @Inject() (
       }
 
   def getPreferencesEvents(
-    eventId: String
+    entityId: String
   )(implicit headerCarrier: HeaderCarrier, executionContext: ExecutionContext): Future[List[Event]] =
     httpClient
-      .get(new URI(s"$serviceUrl/preferences-admin/events/$eventId").toURL)
+      .get(new URI(s"$serviceUrl/preferences-admin/events/$entityId").toURL)
       .execute[List[Event]]
 
 }

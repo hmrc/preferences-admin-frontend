@@ -20,7 +20,12 @@ import play.api.libs.json.{ Json, OFormat }
 
 import java.time.ZonedDateTime
 
-case class Event(eventType: String, emailAddress: Option[String], timestamp: ZonedDateTime)
+case class Event(
+  eventType: String,
+  emailAddress: Option[String],
+  timestamp: ZonedDateTime,
+  viaMobileApp: Boolean = false
+)
 
 object Event {
 

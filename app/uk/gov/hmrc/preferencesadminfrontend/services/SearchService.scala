@@ -26,7 +26,8 @@ import uk.gov.hmrc.play.audit.model.{ DataCall, MergedDataEvent }
 import uk.gov.hmrc.play.bootstrap.config.AppName
 import uk.gov.hmrc.preferencesadminfrontend.connectors.*
 import uk.gov.hmrc.preferencesadminfrontend.controllers.model.{ Event, User }
-import uk.gov.hmrc.preferencesadminfrontend.services.model.{ EntityId, Preference, TaxIdentifier }
+import uk.gov.hmrc.preferencesadminfrontend.services.model.{ EntityId, PrefRoute, Preference, TaxIdentifier }
+import uk.gov.hmrc.preferencesadminfrontend.services.model.PrefRoute.*
 
 import scala.concurrent.{ ExecutionContext, Future }
 
@@ -41,60 +42,50 @@ class SearchService @Inject() (
   def searchPreference(
     taxId: TaxIdentifier
   )(implicit user: User, hc: HeaderCarrier, ec: ExecutionContext): Future[List[Preference]] = {
-    val preferences = if (taxId.name.equals("email")) getPreferences(taxId) else getPreference(taxId)
+    val preferences = if (taxId.name.equals("email")) getPreferencesByEmail(taxId) else getPreference(taxId)
     preferences.map(preference =>
       auditConnector.sendMergedEvent(createSearchEvent(user.username, taxId, preference.headOption))
     )
     preferences
   }
 
-  def getPreferences(
+  def getPreferencesByEmail(
     taxId: TaxIdentifier
-  )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[List[Preference]] = {
-    val preferences = for {
-      preferenceDetails <- preferencesConnector.getPreferenceDetails(taxId.value)
-    } yield preferenceDetails.map { details =>
-      for {
-        taxIdentifiers <- entityResolverConnector.getTaxIdentifiers(details)
-        events         <- getEvents(details.entityId)
-      } yield Preference(
-        details.entityId,
-        details.genericPaperless,
-        details.genericUpdatedAt,
-        details.email,
-        taxIdentifiers,
-        details.eventType.getOrElse(""),
-        events
-      )
-    }
-    preferences.flatMap(Future.sequence(_)).recover { case _ =>
-      Nil
-    }
-  }
+  )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[List[Preference]] =
+    preferencesConnector
+      .getPreferencesByEmail(taxId.value)
+      .flatMap(detailsList => Future.traverse(detailsList)(buildPreference))
+      .recover { case ex =>
+        Nil
+      }
 
-  def getPreference(
-    taxId: TaxIdentifier
-  )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[List[Preference]] = {
-    val preferenceDetail = for {
-      preferenceDetail <- entityResolverConnector.getPreferenceDetails(taxId)
-      taxIdentifiers   <- entityResolverConnector.getTaxIdentifiers(taxId)
-      events           <- getEvents(preferenceDetail.flatMap(_.entityId))
-    } yield preferenceDetail.map(details =>
-      Preference(
-        details.entityId,
-        details.genericPaperless,
-        details.genericUpdatedAt,
-        details.email,
-        taxIdentifiers,
-        details.eventType.getOrElse(""),
-        events
-      )
+  def getPreference(taxId: TaxIdentifier)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[List[Preference]] =
+    entityResolverConnector
+      .getPreferenceDetails(taxId)
+      .flatMap {
+        case Some(detailsList) => Future.traverse(List(detailsList))(buildPreference)
+        case None              => Future.successful(Nil)
+      }
+      .recover { case ex =>
+        Nil
+      }
+
+  private def buildPreference(
+    details: PreferenceDetails
+  )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Preference] =
+    for {
+      taxIdentifiers <- entityResolverConnector.getTaxIdentifiers(details)
+      events         <- getEvents(details.entityId)
+    } yield Preference(
+      entityId = details.entityId,
+      genericPaperless = details.genericPaperless,
+      genericUpdatedAt = details.genericUpdatedAt,
+      email = details.email,
+      taxIdentifiers = taxIdentifiers,
+      eventType = details.eventType.getOrElse(""),
+      events = events,
+      route = PrefRoute.from(details.viaMobileApp.getOrElse(false))
     )
-    preferenceDetail map {
-      case Some(preference) => List(preference)
-      case None             => Nil
-    }
-  }
 
   def getEvents(entityId: Option[EntityId])(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[List[Event]] =
     entityId match {

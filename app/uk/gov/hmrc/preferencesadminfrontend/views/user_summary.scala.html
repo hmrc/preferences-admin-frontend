@@ -91,6 +91,9 @@
             )
         )
 
+    @if(request.session.get("isAdmin").getOrElse("false").toBoolean) {
+        @govukSummaryList(SummaryList(Seq(SummaryListRow(key = Key(content = Text("Optin/Optout route")), value = Value(content = Text(preference.route.toString))))))
+    }
         <h2 class="govuk-heading-m"></h2>
     @if(request.session.get("isAdmin").getOrElse("false").toBoolean) {
         <table class="govuk-table">
@@ -101,7 +104,12 @@
             <tbody class="govuk-table__body">
             @for(event <- preference.events) {
             <tr class="govuk-table__row" style="white-space: nowrap">
-                <th scope="row" class="govuk-table__header">@{event.eventType}</th>
+                <th scope="row" class="govuk-table__header">
+                    @{event.eventType}
+                    @if(event.viaMobileApp) {
+                    <span>(M)</span>
+                    }
+                </th>
                 <td class="govuk-table__cell govuk-table__cell--numeric">@{event.emailAddress}</td>
                 <td class="govuk-table__cell govuk-table__cell--numeric">@{DateTimeFormatter.ofPattern("d MMMM yyyy hh:mm:ss a").withLocale(Locale.ENGLISH).format(event.timestamp)}</td>
             </tr>
