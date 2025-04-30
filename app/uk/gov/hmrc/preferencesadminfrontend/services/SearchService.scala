@@ -49,43 +49,49 @@ class SearchService @Inject() (
     preferences
   }
 
+  def buildPreference(
+    details: PreferenceDetails,
+    taxIdentifiers: Seq[TaxIdentifier],
+    events: List[Event]
+  ): Preference =
+    Preference(
+      details.entityId,
+      details.genericPaperless,
+      details.genericUpdatedAt,
+      details.email,
+      taxIdentifiers,
+      details.eventType.getOrElse(""),
+      events
+    )
+
   def getPreferencesByEmail(
     taxId: TaxIdentifier
-  )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[List[Preference]] =
-    preferencesConnector
-      .getPreferencesByEmail(taxId.value)
-      .flatMap(detailsList => Future.traverse(detailsList)(buildPreference))
-      .recover { case ex =>
-        Nil
-      }
+  )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[List[Preference]] = {
+    val preferences = for {
+      preferenceDetails <- preferencesConnector.getPreferencesByEmail(taxId.value)
+    } yield preferenceDetails.map { details =>
+      for {
+        taxIdentifiers <- entityResolverConnector.getTaxIdentifiers(details)
+        events         <- getEvents(details.entityId)
+      } yield buildPreference(details, taxIdentifiers, events)
+    }
+    preferences.flatMap(Future.sequence(_)).recover { case _ => Nil }
+  }
 
-  def getPreference(taxId: TaxIdentifier)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[List[Preference]] =
-    entityResolverConnector
-      .getPreferenceDetails(taxId)
-      .flatMap {
-        case Some(detailsList) => Future.traverse(List(detailsList))(buildPreference)
-        case None              => Future.successful(Nil)
-      }
-      .recover { case ex =>
-        Nil
-      }
+  def getPreference(
+    taxId: TaxIdentifier
+  )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[List[Preference]] = {
+    val preferenceDetail = for {
+      preferenceDetail <- entityResolverConnector.getPreferenceDetails(taxId)
+      taxIdentifiers   <- entityResolverConnector.getTaxIdentifiers(taxId)
+      events           <- getEvents(preferenceDetail.flatMap(_.entityId))
+    } yield preferenceDetail.map(details => buildPreference(details, taxIdentifiers, events))
 
-  private def buildPreference(
-    details: PreferenceDetails
-  )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Preference] =
-    for {
-      taxIdentifiers <- entityResolverConnector.getTaxIdentifiers(details)
-      events         <- getEvents(details.entityId)
-    } yield Preference(
-      entityId = details.entityId,
-      genericPaperless = details.genericPaperless,
-      genericUpdatedAt = details.genericUpdatedAt,
-      email = details.email,
-      taxIdentifiers = taxIdentifiers,
-      eventType = details.eventType.getOrElse(""),
-      events = events,
-      route = PrefRoute.from(details.viaMobileApp.getOrElse(false))
-    )
+    preferenceDetail.map {
+      case Some(preference) => List(preference)
+      case None             => Nil
+    }
+  }
 
   def getEvents(entityId: Option[EntityId])(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[List[Event]] =
     entityId match {

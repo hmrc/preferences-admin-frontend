@@ -44,6 +44,7 @@ import uk.gov.hmrc.play.audit.http.connector.AuditResult
 import uk.gov.hmrc.play.audit.model.DataEvent
 import uk.gov.hmrc.preferencesadminfrontend.connectors.*
 import uk.gov.hmrc.preferencesadminfrontend.controllers.model.Event
+import uk.gov.hmrc.preferencesadminfrontend.services.model.PrefRoute.Online
 import uk.gov.hmrc.preferencesadminfrontend.services.model.{ Email, EntityId, Preference, TaxIdentifier }
 import uk.gov.hmrc.preferencesadminfrontend.utils.SpecBase
 
@@ -59,7 +60,7 @@ class SearchServiceSpec
   val entityId = UUID.randomUUID().toString
   override def afterEach(): Unit = reset(auditConnectorMock)
 
-  "getPreferencesByEmail" should {
+  "getPreferences" should {
     "return preference for nino user when it exists" in {
 
       when(entityResolverConnectorMock.getPreferenceDetails(validNino))
@@ -436,7 +437,8 @@ trait SearchServiceTestCase extends SpecBase {
         genericUpdatedAt,
         None,
         email,
-        entityId = Some(EntityId(entityId))
+        entityId = Some(EntityId(entityId)),
+        viaMobileApp = Some(false)
       )
     )
   }
@@ -468,7 +470,8 @@ trait SearchServiceTestCase extends SpecBase {
     email = Some(verifiedEmail),
     taxIdentifiers = taxIdentifiers,
     "",
-    List.empty[Event]
+    List.empty[Event],
+    Online
   )
   def optedInPreferenceList(entityId: String) = List(
     Preference(
