@@ -48,7 +48,7 @@
 //
 //    "return Message status Failed and Send paper if isPaperless is true and there is pendingEmail" in new TestCase {
 //      override val testEmail = Email("test@test.com", true, Some(testDate), None, hasBounces = false, pendingEmail = Some("pendingemail@email.com"))
-//      when(entityResolver.getPreferencesByEmail(any())(any(), any()))
+//      when(entityResolver.getPreferenceDetails(any())(any(), any()))
 //        .thenReturn(Future.successful(Some(PreferenceDetails(true, Some(testDate), isPaperless = Some(true), false, None, Some(testEmail), None))))
 //      val sendMessageService = new MigratePreferencesService(entityResolver, messageService)
 //      sendMessageService
@@ -57,7 +57,7 @@
 //    }
 //
 //    "return Message status Failed if isPaperless is false" in new TestCase {
-//      when(entityResolver.getPreferencesByEmail(any())(any(), any()))
+//      when(entityResolver.getPreferenceDetails(any())(any(), any()))
 //        .thenReturn(Future.successful(Some(PreferenceDetails(false, Some(testDate), isPaperless = Some(false), false, None, Some(testEmail), None))))
 //      val sendMessageService = new MigratePreferencesService(entityResolver, messageService)
 //      sendMessageService.migrate("1111111111").futureValue mustBe (MessageStatus("1111111111", "unsuccessful", "red", "opted-out"))
@@ -71,7 +71,7 @@
 //
 //    "return Message status Failed if preference status has email bounced" in new TestCase {
 //      override val testEmail = Email("test@test.com", false, Some(testDate), None, hasBounces = true, None)
-//      when(entityResolver.getPreferencesByEmail(any())(any(), any()))
+//      when(entityResolver.getPreferenceDetails(any())(any(), any()))
 //        .thenReturn(Future.successful(Some(PreferenceDetails(true, Some(testDate), Some(true), false, None, Some(testEmail), None))))
 //      val sendMessageService = new MigratePreferencesService(entityResolver, messageService)
 //      sendMessageService.migrate("1111111111").futureValue mustBe (MessageStatus("1111111111", "unsuccessful", "red", "preference state-bounced"))
@@ -79,7 +79,7 @@
 //
 //    "return Message status Failed if preference status has email verifiedOn date is missing" in new TestCase {
 //      override val testEmail = Email("test@test.com", verified = false, verifiedOn = None, None, hasBounces = false, None)
-//      when(entityResolver.getPreferencesByEmail(any())(any(), any()))
+//      when(entityResolver.getPreferenceDetails(any())(any(), any()))
 //        .thenReturn(Future.successful(Some(PreferenceDetails(true, Some(testDate), Some(true), false, None, Some(testEmail), None))))
 //      val sendMessageService = new MigratePreferencesService(entityResolver, messageService)
 //      sendMessageService.migrate("1111111111").futureValue mustBe (MessageStatus("1111111111", "unsuccessful", "red", "unverified"))
@@ -87,13 +87,13 @@
 //
 //    "return Message status Failed if preference record is missing" in new TestCase {
 //      override val testEmail = Email("test@test.com", verified = false, verifiedOn = None, None, hasBounces = false, None)
-//      when(entityResolver.getPreferencesByEmail(any())(any(), any())).thenReturn(Future.successful(None))
+//      when(entityResolver.getPreferenceDetails(any())(any(), any())).thenReturn(Future.successful(None))
 //      val sendMessageService = new MigratePreferencesService(entityResolver, messageService)
 //      sendMessageService.migrate("1111111111").futureValue mustBe (MessageStatus("1111111111", "unsuccessful", "red", "No Preference record"))
 //    }
 //
 //    "return Message status Failed if preference is opted out" in new TestCase {
-//      when(entityResolver.getPreferencesByEmail(any())(any(), any()))
+//      when(entityResolver.getPreferenceDetails(any())(any(), any()))
 //        .thenReturn(Future.successful(Some(PreferenceDetails(genericPaperless = false, Some(testDate), Some(true), false, None, None, None))))
 //      val sendMessageService = new MigratePreferencesService(entityResolver, messageService)
 //      sendMessageService.migrate("1111111111").futureValue mustBe (MessageStatus("1111111111", "unsuccessful", "red", "opted-out"))
@@ -110,7 +110,7 @@
 //    val testEmail = Email("test@test.com", true, Some(testDate), None, hasBounces = false, pendingEmail = None)
 //    val testEntityId = "1111111"
 //
-//    when(entityResolver.getPreferencesByEmail(any())(any(), any()))
+//    when(entityResolver.getPreferenceDetails(any())(any(), any()))
 //      .thenReturn(Future.successful(Some(PreferenceDetails(true, Some(testDate), isPaperless = Some(true), false, None, Some(testEmail), None))))
 //    when(messageService.sendPenalyChargeApologyMessage(any(), any())(any(), any())).thenReturn(Future.successful(Right("messageId")))
 //  }

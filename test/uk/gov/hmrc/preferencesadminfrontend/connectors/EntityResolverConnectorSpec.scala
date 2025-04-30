@@ -118,7 +118,7 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
     }
   }
 
-  "getPreferencesByEmail" must {
+  "getPreferenceDetails" must {
     val verfiedOn = Some(ZonedDateTime.of(2018, 2, 15, 0, 0, 0, 0, ZoneOffset.UTC))
 
     "return generic paperless preference true and valid email address and verification true if user is opted in for saUtr" in new TestCase {
