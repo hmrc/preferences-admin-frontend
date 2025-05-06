@@ -44,6 +44,7 @@ import uk.gov.hmrc.play.audit.http.connector.AuditResult
 import uk.gov.hmrc.play.audit.model.DataEvent
 import uk.gov.hmrc.preferencesadminfrontend.connectors.*
 import uk.gov.hmrc.preferencesadminfrontend.controllers.model.Event
+import uk.gov.hmrc.preferencesadminfrontend.services.model.PrefRoute.Online
 import uk.gov.hmrc.preferencesadminfrontend.services.model.{ Email, EntityId, Preference, TaxIdentifier }
 import uk.gov.hmrc.preferencesadminfrontend.utils.SpecBase
 
@@ -122,7 +123,7 @@ class SearchServiceSpec
     }
 
     "return preference for email address user when it exists" in {
-      when(preferencesConnectorMock.getPreferenceDetails(validEmailid.value))
+      when(preferencesConnectorMock.getPreferencesByEmail(validEmailid.value))
         .thenReturn(Future.successful(optedInPreferenceDetailsList(entityId)))
       when(preferencesConnectorMock.getPreferencesEvents(any[String])(any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.successful(List.empty[Event]))
@@ -144,7 +145,7 @@ class SearchServiceSpec
     }
 
     "return None if that nino does not exist" in {
-      when(preferencesConnectorMock.getPreferenceDetails(unknownEmailid.value)).thenReturn(Future.successful(Nil))
+      when(preferencesConnectorMock.getPreferencesByEmail(unknownEmailid.value)).thenReturn(Future.successful(Nil))
       when(entityResolverConnectorMock.getTaxIdentifiers(optedInPreferenceDetailsList(entityId).head))
         .thenReturn(Future.successful(taxIdentifiers))
 
@@ -152,7 +153,7 @@ class SearchServiceSpec
     }
 
     "return multiple preferences for email address user when it exists" in {
-      when(preferencesConnectorMock.getPreferenceDetails(validEmailid.value))
+      when(preferencesConnectorMock.getPreferencesByEmail(validEmailid.value))
         .thenReturn(Future.successful(optedInPreferenceDetailsList2(entityId)))
       when(entityResolverConnectorMock.getTaxIdentifiers(optedInPreferenceDetailsList(entityId).head))
         .thenReturn(Future.successful(taxIdentifiers))
@@ -436,7 +437,8 @@ trait SearchServiceTestCase extends SpecBase {
         genericUpdatedAt,
         None,
         email,
-        entityId = Some(EntityId(entityId))
+        entityId = Some(EntityId(entityId)),
+        viaMobileApp = Some(false)
       )
     )
   }
@@ -468,7 +470,8 @@ trait SearchServiceTestCase extends SpecBase {
     email = Some(verifiedEmail),
     taxIdentifiers = taxIdentifiers,
     "",
-    List.empty[Event]
+    List.empty[Event],
+    Online
   )
   def optedInPreferenceList(entityId: String) = List(
     Preference(

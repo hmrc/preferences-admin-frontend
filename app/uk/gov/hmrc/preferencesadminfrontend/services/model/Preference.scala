@@ -28,7 +28,8 @@ case class Preference(
   email: Option[Email],
   taxIdentifiers: Seq[TaxIdentifier],
   eventType: String,
-  events: List[Event]
+  events: List[Event],
+  route: PrefRoute = PrefRoute.Online
 )
 
 object Preference {
@@ -37,4 +38,24 @@ object Preference {
     override def writes(o: ZonedDateTime): JsValue = Writes.ZonedDateTimeEpochMilliWrites.writes(o)
   }
   implicit val format: OFormat[Preference] = Json.format[Preference]
+}
+
+enum PrefRoute {
+  case MobileApp, Online
+}
+
+object PrefRoute {
+  implicit val prefRouteReads: Reads[PrefRoute] = Reads[PrefRoute] { json =>
+    json.validate[String].flatMap {
+      case "MobileApp" => JsSuccess(PrefRoute.MobileApp)
+      case "Online"    => JsSuccess(PrefRoute.Online)
+      case _           => JsError("Unknown PrefRoute")
+    }
+  }
+  implicit val prefRouteWrites: Writes[PrefRoute] = Writes[PrefRoute] { route =>
+    JsString(route.toString)
+  }
+
+  def from(viaMobile: Boolean): PrefRoute =
+    if (viaMobile) MobileApp else Online
 }

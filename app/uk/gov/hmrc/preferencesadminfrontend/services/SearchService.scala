@@ -26,7 +26,8 @@ import uk.gov.hmrc.play.audit.model.{ DataCall, MergedDataEvent }
 import uk.gov.hmrc.play.bootstrap.config.AppName
 import uk.gov.hmrc.preferencesadminfrontend.connectors.*
 import uk.gov.hmrc.preferencesadminfrontend.controllers.model.{ Event, User }
-import uk.gov.hmrc.preferencesadminfrontend.services.model.{ EntityId, Preference, TaxIdentifier }
+import uk.gov.hmrc.preferencesadminfrontend.services.model.{ EntityId, PrefRoute, Preference, TaxIdentifier }
+import uk.gov.hmrc.preferencesadminfrontend.services.model.PrefRoute.*
 
 import scala.concurrent.{ ExecutionContext, Future }
 
@@ -41,35 +42,40 @@ class SearchService @Inject() (
   def searchPreference(
     taxId: TaxIdentifier
   )(implicit user: User, hc: HeaderCarrier, ec: ExecutionContext): Future[List[Preference]] = {
-    val preferences = if (taxId.name.equals("email")) getPreferences(taxId) else getPreference(taxId)
+    val preferences = if (taxId.name.equals("email")) getPreferencesByEmail(taxId) else getPreference(taxId)
     preferences.map(preference =>
       auditConnector.sendMergedEvent(createSearchEvent(user.username, taxId, preference.headOption))
     )
     preferences
   }
 
-  def getPreferences(
+  def buildPreference(
+    details: PreferenceDetails,
+    taxIdentifiers: Seq[TaxIdentifier],
+    events: List[Event]
+  ): Preference =
+    Preference(
+      details.entityId,
+      details.genericPaperless,
+      details.genericUpdatedAt,
+      details.email,
+      taxIdentifiers,
+      details.eventType.getOrElse(""),
+      events
+    )
+
+  def getPreferencesByEmail(
     taxId: TaxIdentifier
   )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[List[Preference]] = {
     val preferences = for {
-      preferenceDetails <- preferencesConnector.getPreferenceDetails(taxId.value)
+      preferenceDetails <- preferencesConnector.getPreferencesByEmail(taxId.value)
     } yield preferenceDetails.map { details =>
       for {
         taxIdentifiers <- entityResolverConnector.getTaxIdentifiers(details)
         events         <- getEvents(details.entityId)
-      } yield Preference(
-        details.entityId,
-        details.genericPaperless,
-        details.genericUpdatedAt,
-        details.email,
-        taxIdentifiers,
-        details.eventType.getOrElse(""),
-        events
-      )
+      } yield buildPreference(details, taxIdentifiers, events)
     }
-    preferences.flatMap(Future.sequence(_)).recover { case _ =>
-      Nil
-    }
+    preferences.flatMap(Future.sequence(_)).recover { case _ => Nil }
   }
 
   def getPreference(
@@ -79,18 +85,9 @@ class SearchService @Inject() (
       preferenceDetail <- entityResolverConnector.getPreferenceDetails(taxId)
       taxIdentifiers   <- entityResolverConnector.getTaxIdentifiers(taxId)
       events           <- getEvents(preferenceDetail.flatMap(_.entityId))
-    } yield preferenceDetail.map(details =>
-      Preference(
-        details.entityId,
-        details.genericPaperless,
-        details.genericUpdatedAt,
-        details.email,
-        taxIdentifiers,
-        details.eventType.getOrElse(""),
-        events
-      )
-    )
-    preferenceDetail map {
+    } yield preferenceDetail.map(details => buildPreference(details, taxIdentifiers, events))
+
+    preferenceDetail.map {
       case Some(preference) => List(preference)
       case None             => Nil
     }
