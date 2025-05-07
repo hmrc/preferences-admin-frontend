@@ -61,7 +61,8 @@ class SearchService @Inject() (
       details.email,
       taxIdentifiers,
       details.eventType.getOrElse(""),
-      events
+      events,
+      PrefRoute.from(details.viaMobileApp.getOrElse(false))
     )
 
   def getPreferencesByEmail(

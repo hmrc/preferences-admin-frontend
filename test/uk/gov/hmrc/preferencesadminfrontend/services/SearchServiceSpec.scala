@@ -44,8 +44,8 @@ import uk.gov.hmrc.play.audit.http.connector.AuditResult
 import uk.gov.hmrc.play.audit.model.DataEvent
 import uk.gov.hmrc.preferencesadminfrontend.connectors.*
 import uk.gov.hmrc.preferencesadminfrontend.controllers.model.Event
-import uk.gov.hmrc.preferencesadminfrontend.services.model.PrefRoute.Online
-import uk.gov.hmrc.preferencesadminfrontend.services.model.{ Email, EntityId, Preference, TaxIdentifier }
+import uk.gov.hmrc.preferencesadminfrontend.services.model.PrefRoute.{ MobileApp, Online }
+import uk.gov.hmrc.preferencesadminfrontend.services.model.{ Email, EntityId, PrefRoute, Preference, TaxIdentifier }
 import uk.gov.hmrc.preferencesadminfrontend.utils.SpecBase
 
 import java.time.{ ZoneOffset, ZonedDateTime }
@@ -406,6 +406,39 @@ class SearchServiceSpec
     }
 
   }
+
+  "checkForPreferencesRoute" should {
+    "preferences opted in via mobile app" in {
+      when(entityResolverConnectorMock.getPreferenceDetails(validNino))
+        .thenReturn(Future.successful(preferenceDetails(genericPaperless = true, entityId, viaMobileApp = true)))
+      when(preferencesConnectorMock.getPreferencesEvents(any[String])(any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future.successful(List.empty[Event]))
+      when(entityResolverConnectorMock.getTaxIdentifiers(validNino)).thenReturn(Future.successful(taxIdentifiers))
+      val expectedAuditEvent = searchService.createSearchEvent("me", validNino, Some(optedInPreference(entityId)))
+      when(
+        auditConnectorMock
+          .sendMergedEvent(argThat(isSimilar(expectedAuditEvent)))(any[HeaderCarrier], any[ExecutionContext])
+      ).thenReturn(Future.successful(AuditResult.Success))
+
+      searchService.searchPreference(validNino).futureValue mustBe List(optedInPreference(entityId, MobileApp))
+    }
+
+    "preferences opted in via online" in {
+      when(entityResolverConnectorMock.getPreferenceDetails(validNino))
+        .thenReturn(Future.successful(preferenceDetails(genericPaperless = true, entityId)))
+      when(preferencesConnectorMock.getPreferencesEvents(any[String])(any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future.successful(List.empty[Event]))
+      when(entityResolverConnectorMock.getTaxIdentifiers(validNino)).thenReturn(Future.successful(taxIdentifiers))
+      val expectedAuditEvent = searchService.createSearchEvent("me", validNino, Some(optedInPreference(entityId)))
+      when(
+        auditConnectorMock
+          .sendMergedEvent(argThat(isSimilar(expectedAuditEvent)))(any[HeaderCarrier], any[ExecutionContext])
+      ).thenReturn(Future.successful(AuditResult.Success))
+
+      searchService.searchPreference(validNino).futureValue mustBe List(optedInPreference(entityId, Online))
+    }
+
+  }
 }
 
 trait SearchServiceTestCase extends SpecBase {
@@ -429,7 +462,7 @@ trait SearchServiceTestCase extends SpecBase {
     None
   )
 
-  def preferenceDetails(genericPaperless: Boolean, entityId: String) = {
+  def preferenceDetails(genericPaperless: Boolean, entityId: String, viaMobileApp: Boolean = false) = {
     val email = if (genericPaperless) Some(verifiedEmail) else None
     Some(
       PreferenceDetails(
@@ -438,7 +471,7 @@ trait SearchServiceTestCase extends SpecBase {
         None,
         email,
         entityId = Some(EntityId(entityId)),
-        viaMobileApp = Some(false)
+        viaMobileApp = Some(viaMobileApp)
       )
     )
   }
@@ -463,7 +496,7 @@ trait SearchServiceTestCase extends SpecBase {
 
   val taxIdentifiers = Seq(validSaUtr, validNino, validItsa)
 
-  def optedInPreference(entityId: String) = Preference(
+  def optedInPreference(entityId: String, prefRoute: PrefRoute = Online) = Preference(
     entityId = Some(EntityId(entityId)),
     genericPaperless = true,
     genericUpdatedAt = genericUpdatedAt,
@@ -471,7 +504,7 @@ trait SearchServiceTestCase extends SpecBase {
     taxIdentifiers = taxIdentifiers,
     "",
     List.empty[Event],
-    Online
+    prefRoute
   )
   def optedInPreferenceList(entityId: String) = List(
     Preference(
