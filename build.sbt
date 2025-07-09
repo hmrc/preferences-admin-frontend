@@ -14,7 +14,7 @@ lazy val microservice = Project(appName, file("."))
   .settings(scalaSettings *)
   .settings(defaultSettings() *)
   .settings(
-    scalaVersion := "3.3.3",
+    scalaVersion := "3.3.4",
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
     Test / parallelExecution := false,
     Test / fork := false,
@@ -35,7 +35,6 @@ lazy val microservice = Project(appName, file("."))
       "controllers.routes._"
     )
   )
-  .settings(resolvers ++= Seq(Resolver.jcenterRepo))
   .settings(ScoverageSettings())
 
 Test / test := (Test / test)
