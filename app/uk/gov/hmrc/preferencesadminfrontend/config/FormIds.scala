@@ -113,7 +113,14 @@ object FormIds {
     "M07iOSS",
     "M08aiOSS",
     "M08iOSS",
-    "M06a-OSS",
+    "M01OSS",
+    "M04OSS",
+    "M05OSS",
+    "M05aOSS",
+    "M06OSS",
+    "M06aOSS",
+    "M07OSS",
+    "M07aOSS",
     "AD2"
   )
 }
