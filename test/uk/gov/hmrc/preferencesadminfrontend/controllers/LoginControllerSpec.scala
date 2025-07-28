@@ -64,7 +64,7 @@ class LoginControllerSpec extends PlaySpec with GuiceOneAppPerSuite with SpecBas
       val result = loginController.loginAction()(fakeRequest)
 
       status(result) mustBe Status.SEE_OTHER
-      headers(result) must contain("Location" -> "/paperless/admin/home")
+      headers(result) must contain("Location" -> "/home")
       session(result).data must contain("userId" -> "user")
     }
 
@@ -95,7 +95,7 @@ class LoginControllerSpec extends PlaySpec with GuiceOneAppPerSuite with SpecBas
 
       session(result).data must not contain ("userId" -> "user")
       status(result) mustBe Status.SEE_OTHER
-      headers(result) must contain("Location" -> "/paperless/admin")
+      headers(result) must contain("Location" -> "/")
     }
   }
 
