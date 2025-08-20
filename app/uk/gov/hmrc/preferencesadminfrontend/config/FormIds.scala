@@ -18,7 +18,7 @@ package uk.gov.hmrc.preferencesadminfrontend.config
 
 //Added config list of valid formIds, since the environment configs doesn't support whitespace within the hmrc_config element values
 object FormIds {
-  val configList = Seq(
+  val configList: Seq[String] = Seq(
     "SA300",
     "SS300",
     "SA251",
@@ -96,6 +96,14 @@ object FormIds {
     "ITSAFD3",
     "ITSAPOA-CN",
     "ITSAUC1",
+    "LSP1",
+    "LSP1_CY",
+    "LSP2",
+    "LSP2_CY",
+    "LSP3",
+    "LSP3_CY",
+    "LSP4",
+    "LSP4_CY",
     "LPI1",
     "LPI1_CY",
     "LPP4",
