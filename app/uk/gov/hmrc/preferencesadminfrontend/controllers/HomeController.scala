@@ -54,7 +54,7 @@ class HomeController @Inject() (
   }
 
   val showMultiSearchPage: Action[AnyContent] = authorisedAction.async { implicit request => _ =>
-    Future.successful(Ok(decoderView()))
+    Future.successful(Ok(multiSearchView()))
   }
 
   def showResultsPage(): Action[AnyContent] = authorisedAction.async { implicit request => implicit user =>
