@@ -1,0 +1,59 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@this(layout: Layout, govukBreadcrumbs: GovukBreadcrumbs, form: FormWithCSRF)
+
+@()(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
+@import scala.concurrent.ExecutionContext.Implicits.global
+@import uk.gov.hmrc.preferencesadminfrontend.controllers.routes
+@scriptsBlock = {
+    <script>
+        function searchMessage() {
+            let searchText = document.getElementById("search-text").value;
+            document.getElementById('searchIds').value = searchText
+            document.getElementById("decode").disabled = true
+        }
+        resetButton.addEventListener('click', () => {
+            document.getElementById("search-text").value = '';
+            document.getElementById("search").disabled = false
+        });
+    </script>
+}
+@layout(pageTitle = Some("Multi Search Page"), scriptsBlock = Some(scriptsBlock)) {
+    @govukBreadcrumbs(Breadcrumbs(
+        items = Seq(
+            BreadcrumbsItem(
+                content = Text("Home"),
+                href = Some("/paperless/admin/home")
+            ),
+            BreadcrumbsItem(
+                content = Text("Multi Search Page"),
+                href = Some("#")
+            )
+        )
+    ))
+    <div class="govuk-body">
+        <p class="govuk-heading-m">Multi Search</p>
+        <p class="govuk-caption-m">Simply enter your ninos separated by comma then push the search button.</p>
+        <textarea class="govuk-textarea" id="search-text" name="search-text" rows="100" placeholder="Type (or paste) here..."></textarea>
+    </div>
+    <div class="govuk-button-group">
+        @form(action = routes.HomeController.showResultsPage(), Symbol("class") -> "button-form") {
+            <input type="hidden" name="search-ninos" id="searchIds" value=""/>
+            <button id="search" name="search" data-module="govuk-button" class="govuk-button" onclick="searchRecords()">Search</button>
+        }
+    </div>
+}

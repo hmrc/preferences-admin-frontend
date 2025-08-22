@@ -26,7 +26,7 @@ import uk.gov.hmrc.play.audit.model.{ DataCall, MergedDataEvent }
 import uk.gov.hmrc.play.bootstrap.config.AppName
 import uk.gov.hmrc.preferencesadminfrontend.connectors.*
 import uk.gov.hmrc.preferencesadminfrontend.controllers.model.{ Event, User }
-import uk.gov.hmrc.preferencesadminfrontend.services.model.{ EntityId, PrefRoute, Preference, TaxIdentifier }
+import uk.gov.hmrc.preferencesadminfrontend.services.model.{ Email, EntityId, PrefRoute, Preference, TaxIdentifier }
 import uk.gov.hmrc.preferencesadminfrontend.services.model.PrefRoute.*
 
 import scala.concurrent.{ ExecutionContext, Future }
@@ -47,6 +47,15 @@ class SearchService @Inject() (
       auditConnector.sendMergedEvent(createSearchEvent(user.username, taxId, preference.headOption))
     )
     preferences
+  }
+
+  def searchPreferences(
+    taxIds: String
+  )(implicit user: User, hc: HeaderCarrier, ec: ExecutionContext): Future[List[(String, String)]] = {
+    val ninosToSearch = taxIds.split(",").map(nino => TaxIdentifier("nino", nino)).toList
+    Future.traverse(ninosToSearch)(taxId =>
+      getPreference(taxId).map(_.flatMap(_.email.map(_.address))).map(value => (taxId.value, value.mkString(",")))
+    )
   }
 
   def buildPreference(

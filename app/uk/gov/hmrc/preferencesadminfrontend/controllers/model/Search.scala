@@ -18,6 +18,7 @@ package uk.gov.hmrc.preferencesadminfrontend.controllers.model
 
 import play.api.data.Form
 import play.api.data.Forms.{ mapping, nonEmptyText, text }
+import play.api.libs.json.{ Json, OFormat }
 import uk.gov.hmrc.preferencesadminfrontend.services.model.TaxIdentifier
 
 object Search {
@@ -34,5 +35,22 @@ object Search {
       )((name, value) => TaxIdentifier.apply(name, if (name == "HMRC-MTD-IT") value else value.toUpperCase))(t =>
         Some(Tuple.fromProductTyped(t))
       )
+    )
+}
+
+case class MultiSearch(identifiers: String, batch: String)
+
+object MultiSearch {
+  implicit val format: OFormat[MultiSearch] = Json.format[MultiSearch]
+}
+
+object SearchNinos {
+
+  def apply() =
+    Form[MultiSearch](
+      mapping(
+        "search-ninos" -> nonEmptyText,
+        "batch"        -> text
+      )(MultiSearch.apply)(g => Some(Tuple.fromProductTyped(g)))
     )
 }
