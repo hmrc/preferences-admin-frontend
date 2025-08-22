@@ -52,7 +52,7 @@ class SearchService @Inject() (
   def searchPreferences(
     taxIds: String
   )(implicit user: User, hc: HeaderCarrier, ec: ExecutionContext): Future[List[(String, String)]] = {
-    val ninosToSearch = taxIds.split(",").map(nino => TaxIdentifier("nino", nino)).toList
+    val ninosToSearch = taxIds.split(",").map(nino => TaxIdentifier("nino", nino.trim)).toList
     Future.traverse(ninosToSearch)(taxId =>
       getPreference(taxId).map(_.flatMap(_.email.map(_.address))).map(value => (taxId.value, value.mkString(",")))
     )
