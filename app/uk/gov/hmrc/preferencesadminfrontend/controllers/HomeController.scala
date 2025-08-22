@@ -27,7 +27,7 @@ import uk.gov.hmrc.preferencesadminfrontend.controllers.Role.Admin
 import uk.gov.hmrc.preferencesadminfrontend.services.*
 import uk.gov.hmrc.preferencesadminfrontend.controllers.model.{ SearchNinos, User }
 import uk.gov.hmrc.preferencesadminfrontend.services.LoginService
-import uk.gov.hmrc.preferencesadminfrontend.views.html.{ decode, emailSummary, home }
+import uk.gov.hmrc.preferencesadminfrontend.views.html.{ decode, emailSummary, home, multiSearch }
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -37,7 +37,7 @@ class HomeController @Inject() (
   homeView: home,
   loginService: LoginService,
   decoderView: decode,
-  multiSearchView: decode,
+  multiSearchView: multiSearch,
   emailSummaryView: emailSummary,
   searchService: SearchService,
   val mcc: MessagesControllerComponents

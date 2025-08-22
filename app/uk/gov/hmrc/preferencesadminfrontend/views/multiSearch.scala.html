@@ -21,7 +21,7 @@
 @import uk.gov.hmrc.preferencesadminfrontend.controllers.routes
 @scriptsBlock = {
     <script>
-        function searchMessage() {
+        function searchRecords() {
             let searchText = document.getElementById("search-text").value;
             document.getElementById('searchIds').value = searchText
             document.getElementById("decode").disabled = true
@@ -48,7 +48,7 @@
     <div class="govuk-body">
         <p class="govuk-heading-m">Multi Search</p>
         <p class="govuk-caption-m">Simply enter your ninos separated by comma then push the search button.</p>
-        <textarea class="govuk-textarea" id="search-text" name="search-text" rows="100" placeholder="Type (or paste) here..."></textarea>
+        <textarea class="govuk-textarea" id="search-text" name="search-text" rows="20" placeholder="Type (or paste) here..."></textarea>
     </div>
     <div class="govuk-button-group">
         @form(action = routes.HomeController.showResultsPage(), Symbol("class") -> "button-form") {
