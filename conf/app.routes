@@ -8,6 +8,8 @@ GET         /logout                                     uk.gov.hmrc.preferencesa
 GET         /                                           uk.gov.hmrc.preferencesadminfrontend.controllers.LoginController.showLoginPage()
 GET         /home                                       uk.gov.hmrc.preferencesadminfrontend.controllers.HomeController.showHomePage()
 GET         /decode                                     uk.gov.hmrc.preferencesadminfrontend.controllers.HomeController.showDecodePage()
+GET         /multi-search                               uk.gov.hmrc.preferencesadminfrontend.controllers.HomeController.showMultiSearchPage()
+GET         /search-results                             uk.gov.hmrc.preferencesadminfrontend.controllers.HomeController.showResultsPage()
 GET         /search                                     uk.gov.hmrc.preferencesadminfrontend.controllers.SearchController.showSearchPage()
 POST        /search/q                                   uk.gov.hmrc.preferencesadminfrontend.controllers.SearchController.search()
 POST        /search/opt-out                             uk.gov.hmrc.preferencesadminfrontend.controllers.SearchController.optOut()
