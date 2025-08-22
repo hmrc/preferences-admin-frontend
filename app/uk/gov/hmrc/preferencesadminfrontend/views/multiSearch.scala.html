@@ -53,6 +53,7 @@
     <div class="govuk-button-group">
         @form(action = routes.HomeController.showResultsPage(), Symbol("class") -> "button-form") {
             <input type="hidden" name="search-ninos" id="searchIds" value=""/>
+            <input type="hidden" name="batch" id="batch" value=""/>
             <button id="search" name="search" data-module="govuk-button" class="govuk-button" onclick="searchRecords()">Search</button>
         }
     </div>

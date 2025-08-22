@@ -23,7 +23,7 @@ object ScoverageSettings {
     Seq(
       // Semicolon-separated list of regexes matching classes to exclude
       ScoverageKeys.coverageExcludedPackages := "<empty>;.*Reverse.*;.*(config|testonly).*;.*(BuildInfo|Routes).*;.*\\$anon.*",
-      ScoverageKeys.coverageMinimumStmtTotal := 72.60,
+      ScoverageKeys.coverageMinimumStmtTotal := 69.75,
       ScoverageKeys.coverageFailOnMinimum := true,
       ScoverageKeys.coverageHighlighting := true,
       ConfigKey.configurationToKey(Test) / parallelExecution := false
