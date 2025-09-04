@@ -29,21 +29,36 @@ import play.api.test.Helpers.*
 import uk.gov.hmrc.preferencesadminfrontend.controllers.model.User
 import uk.gov.hmrc.preferencesadminfrontend.utils.SpecBase
 
-class HomeControllerSpec extends PlaySpec with GuiceOneAppPerSuite with SpecBase with ScalaFutures {
+class MultiSearchControllerSpec extends PlaySpec with GuiceOneAppPerSuite with SpecBase with ScalaFutures {
 
   implicit lazy val materializer: Materializer = app.materializer
   override implicit lazy val app: Application = GuiceApplicationBuilder().build()
   implicit val messagesApi: MessagesApi = app.injector.instanceOf[MessagesApi]
-  val homeController: HomeController = app.injector.instanceOf[HomeController]
+  val controller: MultiSearchController = app.injector.instanceOf[MultiSearchController]
 
-  "GET /home" should {
+  "GET /decode" should {
     "return 200" in {
-      val result = homeController.showHomePage()(FakeRequest("GET", "/home").withSession(User.sessionKey -> "user"))
+      val result = controller.showDecodePage()(FakeRequest("GET", "/decode").withSession(User.sessionKey -> "user"))
       status(result) mustBe Status.OK
     }
 
     "return HTML" in {
-      val result = homeController.showHomePage()(FakeRequest("GET", "/home").withSession(User.sessionKey -> "user"))
+      val result = controller.showDecodePage()(FakeRequest("GET", "/decode").withSession(User.sessionKey -> "user"))
+      contentType(result) mustBe Some("text/html")
+      charset(result) mustBe Some("utf-8")
+    }
+  }
+
+  "GET /multi-search" should {
+    "return 200" in {
+      val result =
+        controller.showMultiSearchPage()(FakeRequest("GET", "/multi-search").withSession(User.sessionKey -> "user"))
+      status(result) mustBe Status.OK
+    }
+
+    "return HTML" in {
+      val result =
+        controller.showMultiSearchPage()(FakeRequest("GET", "/multi-search").withSession(User.sessionKey -> "user"))
       contentType(result) mustBe Some("text/html")
       charset(result) mustBe Some("utf-8")
     }

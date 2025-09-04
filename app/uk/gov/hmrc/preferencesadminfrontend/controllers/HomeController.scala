@@ -17,29 +17,19 @@
 package uk.gov.hmrc.preferencesadminfrontend.controllers
 
 import play.api.Logging
-
-import javax.inject.{ Inject, Singleton }
 import play.api.i18n.I18nSupport
 import play.api.mvc.*
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
-import uk.gov.hmrc.preferencesadminfrontend.controllers.Role.Admin
-import uk.gov.hmrc.preferencesadminfrontend.services.*
-import uk.gov.hmrc.preferencesadminfrontend.controllers.model.{ SearchNinos, User }
-import uk.gov.hmrc.preferencesadminfrontend.services.LoginService
-import uk.gov.hmrc.preferencesadminfrontend.views.html.{ decode, emailSummary, home, multiSearch }
-import scala.concurrent.ExecutionContext.Implicits.global
+import uk.gov.hmrc.preferencesadminfrontend.views.html.home
+
+import javax.inject.{ Inject, Singleton }
 import scala.concurrent.Future
 
 @Singleton
 class HomeController @Inject() (
   authorisedAction: AuthorisedAction,
   homeView: home,
-  loginService: LoginService,
-  decoderView: decode,
-  multiSearchView: multiSearch,
-  emailSummaryView: emailSummary,
-  searchService: SearchService,
   val mcc: MessagesControllerComponents
 )(implicit
   appConfig: AppConfig
@@ -47,30 +37,5 @@ class HomeController @Inject() (
 
   val showHomePage: Action[AnyContent] = authorisedAction.async { implicit request => _ =>
     Future.successful(Ok(homeView()))
-  }
-
-  val showDecodePage: Action[AnyContent] = authorisedAction.async { implicit request => _ =>
-    Future.successful(Ok(decoderView()))
-  }
-
-  val showMultiSearchPage: Action[AnyContent] = authorisedAction.async { implicit request => _ =>
-    Future.successful(Ok(multiSearchView()))
-  }
-
-  def showResultsPage(): Action[AnyContent] = authorisedAction.async { implicit request => implicit user =>
-    SearchNinos()
-      .bindFromRequest()
-      .fold(
-        errors => Future.successful(BadRequest(emailSummaryView(List.empty, Some(s"Error found - $errors")))),
-        searchTaxIdentifier =>
-          searchService.searchPreferences(searchTaxIdentifier.identifiers).map {
-            case Nil =>
-              Ok(
-                emailSummaryView(Nil, None)
-              )
-            case preferenceList =>
-              Ok(emailSummaryView(preferenceList, None))
-          }
-      )
   }
 }
