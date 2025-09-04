@@ -21,14 +21,12 @@ import play.api.i18n.I18nSupport
 import play.api.mvc.*
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
-import uk.gov.hmrc.preferencesadminfrontend.controllers.Role.Admin
-import uk.gov.hmrc.preferencesadminfrontend.controllers.model.{ SearchNinos, User }
+import uk.gov.hmrc.preferencesadminfrontend.controllers.model.SearchNinos
 import uk.gov.hmrc.preferencesadminfrontend.services.*
 import uk.gov.hmrc.preferencesadminfrontend.views.html.*
 
 import javax.inject.{ Inject, Singleton }
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ ExecutionContext, Future }
 
 @Singleton
 class MultiSearchController @Inject() (
@@ -39,7 +37,8 @@ class MultiSearchController @Inject() (
   searchService: SearchService,
   val mcc: MessagesControllerComponents
 )(implicit
-  appConfig: AppConfig
+  appConfig: AppConfig,
+  ec: ExecutionContext
 ) extends FrontendController(mcc) with I18nSupport with Logging with RoleAuthorisedAction(authorisedAction) {
 
   override def role: Role = Role.Admin
