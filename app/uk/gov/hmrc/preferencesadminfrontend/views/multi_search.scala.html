@@ -51,7 +51,7 @@
         <textarea class="govuk-textarea" id="search-text" name="search-text" rows="20" placeholder="Type (or paste) here..."></textarea>
     </div>
     <div class="govuk-button-group">
-        @form(action = routes.HomeController.showResultsPage(), Symbol("class") -> "button-form") {
+        @form(action = routes.MultiSearchController.showResultsPage(), Symbol("class") -> "button-form") {
             <input type="hidden" name="search-ninos" id="searchIds" value=""/>
             <input type="hidden" name="batch" id="batch" value=""/>
             <button id="search" name="search" data-module="govuk-button" class="govuk-button" onclick="searchRecords()">Search</button>
