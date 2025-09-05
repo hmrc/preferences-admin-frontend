@@ -38,29 +38,40 @@ class MultiSearchControllerSpec extends PlaySpec with GuiceOneAppPerSuite with S
 
   "GET /decode" should {
     "return 200" in {
-      val result = controller.showDecodePage()(FakeRequest("GET", "/decode").withSession(User.sessionKey -> "user"))
+      val result = controller.showDecodePage()(FakeRequest("GET", "/decode").withSession(User.sessionKey -> "admin"))
       status(result) mustBe Status.OK
     }
 
     "return HTML" in {
-      val result = controller.showDecodePage()(FakeRequest("GET", "/decode").withSession(User.sessionKey -> "user"))
+      val result = controller.showDecodePage()(FakeRequest("GET", "/decode").withSession(User.sessionKey -> "admin"))
       contentType(result) mustBe Some("text/html")
       charset(result) mustBe Some("utf-8")
+    }
+
+    "redirect to login page for non-admin user" in {
+      val result = controller.showDecodePage()(FakeRequest("GET", "/decode").withSession(User.sessionKey -> "user"))
+      status(result) mustBe Status.SEE_OTHER
     }
   }
 
   "GET /multi-search" should {
     "return 200" in {
       val result =
-        controller.showMultiSearchPage()(FakeRequest("GET", "/multi-search").withSession(User.sessionKey -> "user"))
+        controller.showMultiSearchPage()(FakeRequest("GET", "/multi-search").withSession(User.sessionKey -> "admin"))
       status(result) mustBe Status.OK
     }
 
     "return HTML" in {
       val result =
-        controller.showMultiSearchPage()(FakeRequest("GET", "/multi-search").withSession(User.sessionKey -> "user"))
+        controller.showMultiSearchPage()(FakeRequest("GET", "/multi-search").withSession(User.sessionKey -> "admin"))
       contentType(result) mustBe Some("text/html")
       charset(result) mustBe Some("utf-8")
+    }
+
+    "redirect to login page for non-admin user" in {
+      val result =
+        controller.showMultiSearchPage()(FakeRequest("GET", "/multi-search").withSession(User.sessionKey -> "user"))
+      status(result) mustBe Status.SEE_OTHER
     }
   }
 }
