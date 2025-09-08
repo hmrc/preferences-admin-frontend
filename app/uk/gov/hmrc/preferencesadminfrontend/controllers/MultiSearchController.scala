@@ -43,11 +43,11 @@ class MultiSearchController @Inject() (
 
   override def role: Role = Role.Admin
 
-  val showDecodePage: Action[AnyContent] = authorisedAction.async { implicit request => _ =>
+  val showDecodePage: Action[AnyContent] = authorisedAction { implicit request => _ =>
     Future.successful(Ok(decoderView()))
   }
 
-  val showMultiSearchPage: Action[AnyContent] = authorisedAction.async { implicit request => _ =>
+  val showMultiSearchPage: Action[AnyContent] = authorisedAction { implicit request => _ =>
     Future.successful(Ok(multiSearchView()))
   }
 
