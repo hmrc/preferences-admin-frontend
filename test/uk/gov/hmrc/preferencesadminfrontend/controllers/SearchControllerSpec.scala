@@ -68,7 +68,7 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
       val result = searchController.showSearchPage()(FakeRequest().withSession().withCSRFToken)
 
       status(result) mustBe Status.SEE_OTHER
-      headers(result) must contain("Location" -> "/")
+      headers(result) must contain("Location" -> "/paperless/admin")
     }
   }
 
@@ -221,7 +221,7 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
       status(result) mustBe Status.OK
       private val document = Jsoup.parse(contentAsString(result))
       document.body().getElementById("confirm").getElementsByTag("form").attr("action") mustBe
-        "/search/opt-out"
+        "/paperless/admin/search/opt-out"
     }
 
     "return a not found error message if the preference is not found" in new SearchControllerTestCase {
@@ -281,7 +281,7 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
       status(result) mustBe Status.OK
       private val document = Jsoup.parse(contentAsString(result))
       document.body().getElementById("confirm").getElementsByTag("form").attr("action") mustBe
-        "/search/opt-out"
+        "/paperless/admin/search/opt-out"
     }
   }
 
