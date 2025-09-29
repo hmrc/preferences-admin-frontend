@@ -96,6 +96,8 @@ object FormIds {
     "ITSAFD3",
     "ITSAPOA-CN",
     "ITSAUC1",
+    "ITSAMIG1",
+    "ITSAMIG1_cy",
     "LSP1",
     "LSP1_CY",
     "LSP2",
