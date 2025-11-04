@@ -150,6 +150,8 @@ object FormIds {
     "M07OSS",
     "M07aOSS",
     "AD2",
-    "AD3"
+    "AD2_CY",
+    "AD3",
+    "AD3_CY"
   )
 }
