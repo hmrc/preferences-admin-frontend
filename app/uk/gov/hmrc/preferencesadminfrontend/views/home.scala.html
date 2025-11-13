@@ -19,7 +19,7 @@ govukBreadcrumbs: GovukBreadcrumbs)
 
 @()(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
 
-@layout(pageTitle = Some("Home")) {
+@layout(pageTitle = "Home") {
     @govukBreadcrumbs(Breadcrumbs(
       items = Seq(
           BreadcrumbsItem(

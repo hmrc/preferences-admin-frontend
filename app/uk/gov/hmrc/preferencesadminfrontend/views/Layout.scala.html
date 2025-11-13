@@ -14,37 +14,28 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.hmrcfrontend.views.html.components.{Header, HmrcHeader}
-@import uk.gov.hmrc.hmrcfrontend.views.html.helpers.HmrcStandardFooter
+@import uk.gov.hmrc.hmrcfrontend.views.html.helpers._
+@import uk.gov.hmrc.hmrcfrontend.views.html.components._
+@import uk.gov.hmrc.govukfrontend.views.html.components.implicits.RichServiceNavigation
+@import uk.gov.hmrc.hmrcfrontend.views.viewmodels.hmrcstandardpage._
+@import uk.gov.hmrc.preferencesadminfrontend.controllers.routes
 
 @this(
-    govukLayout: GovukLayout,
-    hmrcHeader: HmrcHeader,
-    head: Head,
-    hmrcStandardFooter: HmrcStandardFooter
+    hmrcStandardPage: HmrcStandardPage
 )
-@(pageTitle: Option[String] = None,
+@(pageTitle: String,
     headBlock: Option[Html] = None,
     scriptsBlock: Option[Html] = None
 )(contentBlock: Html)(implicit request: RequestHeader, messages: Messages, appConfig: AppConfig)
 
-
-@headerBlock = {
-    @hmrcHeader(Header(
-      signOutHref = Some("/paperless/admin/logout"),
-      serviceName = Some("Paperless Admin")
-    ))
-}
-
-@beforeContentBlock = {
-
-}
-
-@govukLayout(
-    pageTitle = pageTitle,
-    headBlock = Some(head(headBlock)),
-    headerBlock = Some(headerBlock),
-    scriptsBlock = scriptsBlock,
-    beforeContentBlock = Some(beforeContentBlock),
-    footerBlock = Some(hmrcStandardFooter())
-)(contentBlock)
+@hmrcStandardPage(HmrcStandardPageParams(
+    pageTitle = Some(pageTitle),
+    templateOverrides = TemplateOverrides(
+        additionalHeadBlock = headBlock,
+        additionalScriptsBlock = scriptsBlock,
+    ),
+    serviceURLs = ServiceURLs(
+        serviceUrl = Some(routes.HomeController.showHomePage().url),
+        signOutUrl = Some(routes.LoginController.logoutAction().url)
+    )
+))(contentBlock)

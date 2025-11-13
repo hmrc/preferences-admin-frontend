@@ -23,7 +23,7 @@ layout: Layout,
 form: FormWithCSRF)
 @(gmcBatchApprovalForm: Form[GmcBatchApproval])(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
 
-@layout(pageTitle = Some("Batch Rejection")) {
+@layout(pageTitle = "Batch Rejection") {
  <h1 class="heading-large">Batch Rejection</h1>
  <div class="section">
  @form(action = routes.MessageBrakeController.confirmRejectBatch()) {
