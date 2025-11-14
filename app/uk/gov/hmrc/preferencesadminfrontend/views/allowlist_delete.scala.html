@@ -26,7 +26,7 @@ govukTextarea: GovukTextarea,
 govukBreadcrumbs: GovukBreadcrumbs)
 @(entryForm: Form[AllowlistEntry])(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
 
-@layout(pageTitle = Some("Message Form IDs Allowlist")) {
+@layout(pageTitle = "Message Form IDs Allowlist") {
     @govukBreadcrumbs(Breadcrumbs(
         items = Seq(
           BreadcrumbsItem(

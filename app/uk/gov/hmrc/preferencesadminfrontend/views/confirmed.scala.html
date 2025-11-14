@@ -19,7 +19,7 @@
   govukBreadcrumbs: GovukBreadcrumbs)
 @(preference: List[uk.gov.hmrc.preferencesadminfrontend.services.model.Preference])(implicit request: Request[_], messages: Messages, appConfig: uk.gov.hmrc.preferencesadminfrontend.config.AppConfig)
 
-@layout(pageTitle = Some("User Summary")) {
+@layout(pageTitle = "User Summary") {
 
   @govukBreadcrumbs(Breadcrumbs(
       items = Seq(

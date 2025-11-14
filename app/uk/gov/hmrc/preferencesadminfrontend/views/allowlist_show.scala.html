@@ -23,7 +23,7 @@ form: FormWithCSRF,
 govukBreadcrumbs: GovukBreadcrumbs)
 @(allowlist: Allowlist)(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
 
-@layout(pageTitle = Some("Message Form IDs Allowlist")) {
+@layout(pageTitle = "Message Form IDs Allowlist") {
     @govukBreadcrumbs(Breadcrumbs(
         items = Seq(
           BreadcrumbsItem(

@@ -21,7 +21,7 @@
 @this(layout: Layout, govukButton: GovukButton, form: FormWithCSRF)
 @(summary: MigrationSummary, entries: List[Identifier], syncEntries: Form[SyncEntries])(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
 
-@layout(pageTitle = Some("Send message by UTR's")) {
+@layout(pageTitle = "Send message by UTR's") {
 
 <a href="/paperless/admin/migration" class="govuk-back-link">Back</a>
 
