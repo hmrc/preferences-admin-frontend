@@ -16,12 +16,11 @@
 
 package uk.gov.hmrc.preferencesadminfrontend.services
 
-import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito._
 import org.scalatest.concurrent.{ IntegrationPatience, ScalaFutures }
 import org.scalatestplus.play.PlaySpec
 import play.api.http.Status
-import play.api.libs.json.{ JsValue, Json }
+import play.api.libs.json.Json
 import uk.gov.hmrc.http.{ HeaderCarrier, HttpResponse }
 import uk.gov.hmrc.preferencesadminfrontend.model._
 import uk.gov.hmrc.preferencesadminfrontend.utils.SpecBase

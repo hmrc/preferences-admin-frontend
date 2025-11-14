@@ -26,8 +26,7 @@ import uk.gov.hmrc.play.audit.model.{ DataCall, MergedDataEvent }
 import uk.gov.hmrc.play.bootstrap.config.AppName
 import uk.gov.hmrc.preferencesadminfrontend.connectors.*
 import uk.gov.hmrc.preferencesadminfrontend.controllers.model.{ Event, User }
-import uk.gov.hmrc.preferencesadminfrontend.services.model.{ Email, EntityId, PrefRoute, Preference, TaxIdentifier }
-import uk.gov.hmrc.preferencesadminfrontend.services.model.PrefRoute.*
+import uk.gov.hmrc.preferencesadminfrontend.services.model.{ EntityId, PrefRoute, Preference, TaxIdentifier }
 
 import scala.concurrent.{ ExecutionContext, Future }
 

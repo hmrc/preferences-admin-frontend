@@ -19,10 +19,16 @@ lazy val microservice = Project(appName, file("."))
     Test / parallelExecution := false,
     Test / fork := false,
     retrieveManaged := true,
+    Global / excludeLintKeys += update / evictionWarningOptions,
     update / evictionWarningOptions := EvictionWarningOptions.default.withWarnScalaVersionEviction(false),
     routesGenerator := InjectedRoutesGenerator,
+    scalacOptions := scalacOptions.value.diff(Seq("-Wunused:all")),
+    scalacOptions += "-language:implicitConversions",
     scalacOptions ++= List(
       "-feature",
+      "-Wconf:msg=Flag.*repeatedly:s",
+      "-Wconf:src=routes/.*:s",
+      "-Wconf:src=views/.*:s",
       "-language:postfixOps",
       "-language:reflectiveCalls"
     )

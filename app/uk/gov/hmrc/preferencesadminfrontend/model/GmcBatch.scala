@@ -17,7 +17,7 @@
 package uk.gov.hmrc.preferencesadminfrontend.model
 
 import play.api.data.Form
-import play.api.data.Forms.{ mapping, nonEmptyText, number, optional, text }
+import play.api.data.Forms.{ mapping, nonEmptyText, number, optional }
 import play.api.libs.json.{ Json, OFormat }
 
 case class GmcBatch(
