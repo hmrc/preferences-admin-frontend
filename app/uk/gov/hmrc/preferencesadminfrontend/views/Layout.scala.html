@@ -16,7 +16,7 @@
 
 @import uk.gov.hmrc.hmrcfrontend.views.html.helpers._
 @import uk.gov.hmrc.hmrcfrontend.views.html.components._
-@import uk.gov.hmrc.govukfrontend.views.html.components.implicits.RichServiceNavigation
+@import uk.gov.hmrc.govukfrontend.views.html.components.implicits._
 @import uk.gov.hmrc.hmrcfrontend.views.viewmodels.hmrcstandardpage._
 @import uk.gov.hmrc.preferencesadminfrontend.controllers.routes
 
@@ -37,5 +37,9 @@
     serviceURLs = ServiceURLs(
         serviceUrl = Some(routes.HomeController.showHomePage().url),
         signOutUrl = Some(routes.LoginController.logoutAction().url)
+    ),
+    serviceNavigation = Some(
+        ServiceNavigation(serviceName = Some("Paperless Admin")).withLanguageToggle()
     )
+
 ))(contentBlock)
