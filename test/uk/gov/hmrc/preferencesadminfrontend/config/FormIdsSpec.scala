@@ -23,20 +23,22 @@ class FormIdsSpec extends PlaySpec {
   "configList" should {
 
     "contain ITSA form ids" in {
-      assert(FormIds.configList.contains("LPP1A_ITSA"))
-      assert(FormIds.configList.contains("LPP1A_ITSA_cy"))
+      val formIdsConfig: Seq[String] = FormIds.configList
 
-      assert(FormIds.configList.contains("LPP1B_ITSA"))
-      assert(FormIds.configList.contains("LPP1B_ITSA_cy"))
+      assert(formIdsConfig.contains("LPP1A_ITSA"))
+      assert(formIdsConfig.contains("LPP1A_ITSA_cy"))
 
-      assert(FormIds.configList.contains("LPP2_ITSA"))
-      assert(FormIds.configList.contains("LPP2_ITSA_cy"))
+      assert(formIdsConfig.contains("LPP1B_ITSA"))
+      assert(formIdsConfig.contains("LPP1B_ITSA_cy"))
 
-      assert(FormIds.configList.contains("LPP4_ITSA"))
-      assert(FormIds.configList.contains("LPP4_ITSA_cy"))
+      assert(formIdsConfig.contains("LPP2_ITSA"))
+      assert(formIdsConfig.contains("LPP2_ITSA_cy"))
 
-      assert(FormIds.configList.contains("PAR1_ITSA"))
-      assert(FormIds.configList.contains("PAR1_ITSA_cy"))
+      assert(formIdsConfig.contains("LPP4_ITSA"))
+      assert(formIdsConfig.contains("LPP4_ITSA_cy"))
+
+      assert(formIdsConfig.contains("PAR1_ITSA"))
+      assert(formIdsConfig.contains("PAR1_ITSA_cy"))
     }
   }
 }
