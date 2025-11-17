@@ -22,7 +22,7 @@ class FormIdsSpec extends PlaySpec {
 
   "configList" should {
 
-    "return correct form ids for ITSA" in {
+    "contain ITSA form ids" in {
       assert(FormIds.configList.contains("LPP1A_ITSA"))
       assert(FormIds.configList.contains("LPP1A_ITSA_cy"))
 
