@@ -25,20 +25,23 @@ class FormIdsSpec extends PlaySpec {
     "contain ITSA form ids" in {
       val formIdsConfig: Seq[String] = FormIds.configList
 
-      assert(formIdsConfig.contains("LPP1A_ITSA"))
-      assert(formIdsConfig.contains("LPP1A_ITSA_cy"))
+      val itsaFormIds: List[String] =
+        List(
+          "LPP1A_ITSA",
+          "LPP1A_ITSA_cy",
+          "LPP1B_ITSA",
+          "LPP1B_ITSA_cy",
+          "LPP2_ITSA",
+          "LPP2_ITSA_cy",
+          "LPP4_ITSA",
+          "LPP4_ITSA_cy",
+          "PAR1_ITSA",
+          "PAR1_ITSA_cy"
+        )
 
-      assert(formIdsConfig.contains("LPP1B_ITSA"))
-      assert(formIdsConfig.contains("LPP1B_ITSA_cy"))
-
-      assert(formIdsConfig.contains("LPP2_ITSA"))
-      assert(formIdsConfig.contains("LPP2_ITSA_cy"))
-
-      assert(formIdsConfig.contains("LPP4_ITSA"))
-      assert(formIdsConfig.contains("LPP4_ITSA_cy"))
-
-      assert(formIdsConfig.contains("PAR1_ITSA"))
-      assert(formIdsConfig.contains("PAR1_ITSA_cy"))
+      itsaFormIds.foreach { itsaFormId =>
+        assert(formIdsConfig.contains(itsaFormId))
+      }
     }
   }
 }
