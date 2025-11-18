@@ -19,7 +19,7 @@ govukBreadcrumbs: GovukBreadcrumbs)
 
 @()(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
 
-@layout(pageTitle = Some("Home")) {
+@layout(pageTitle = "Home") {
     @govukBreadcrumbs(Breadcrumbs(
       items = Seq(
           BreadcrumbsItem(
@@ -29,16 +29,26 @@ govukBreadcrumbs: GovukBreadcrumbs)
         )
       )
     )
-    <h1>Home</h1>
-    <div class="home-nav">
-        <p class="desc">You can access the following control pages by clicking on the appropriate link</p>
-        <ul class="menu">
-            <li><a href="/paperless/admin/search">Paperless Admin</a></li>
+    <div>
+        <h1>Home</h1>
+        <p class="govuk-!-font-size-24">You can access the following control pages by clicking on the appropriate link</p>
+        <ul class="govuk-task-list">
+            <li class="govuk-task-list__item govuk-task-list__item--with-link">
+                <a class="govuk-link govuk-task-list__link" href="/paperless/admin/search">Paperless Admin</a>
+            </li>
             @if(request.session.get("isAdmin").getOrElse("false").toBoolean) {
-                <li><a href="/paperless/admin/message-brake">Message Brake</a></li>
-                <li><a href="/paperless/admin/allowlist">Message Brake Allowlist</a></li>
-                <li><a href="/paperless/admin/decode">Message Decode</a></li>
-                <li><a href="/paperless/admin/multi-search">Multi Search</a></li>
+            <li class="govuk-task-list__item govuk-task-list__item--with-link">
+                <a class="govuk-link govuk-task-list__link" href="/paperless/admin/message-brake">Message Brake</a>
+            </li>
+            <li class="govuk-task-list__item govuk-task-list__item--with-link">
+                <a class="govuk-link govuk-task-list__link" href="/paperless/admin/allowlist">Message Brake Allowlist</a>
+            </li>
+            <li class="govuk-task-list__item govuk-task-list__item--with-link">
+                <a class="govuk-link govuk-task-list__link" href="/paperless/admin/decode">Message Decode</a>
+            </li>
+            <li class="govuk-task-list__item govuk-task-list__item--with-link">
+                <a class="govuk-link govuk-task-list__link" href="/paperless/admin/multi-search">Multi Search</a>
+            </li>
             }
         </ul>
     </div>
