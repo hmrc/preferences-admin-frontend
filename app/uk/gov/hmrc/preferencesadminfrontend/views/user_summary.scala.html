@@ -22,9 +22,9 @@
 <div id="user-summary">
     <h2 class="govuk-heading-m">User Summary</h2>
     @for(preference <- preferences) {
-        <hr class="rounded">
-        <div class="extra-details tooltip govuk-body">...
-            <span class="tooltip-content govuk-body">
+        <hr class="govuk-section-break govuk-section-break--visible">
+        <div class="govuk-body">
+            <span class="govuk-body govuk-visually-hidden">
                     <table class="govuk-table">
                         <tbody class="govuk-table__body">
                             <tr class="govuk-table__row">
@@ -39,7 +39,7 @@
                             }
                         </tbody>
                     </table>
-                </span>
+            </span>
         </div>
         @govukSummaryList(SummaryList(
             rows = Seq(
