@@ -3,16 +3,16 @@ import sbt._
 object AppDependencies {
 
   val bootstrapVersion = "9.19.0"
-  
-  val compile = Seq(
+
+  val compile: Seq[ModuleID] = Seq(
     "uk.gov.hmrc"   %% "bootstrap-frontend-play-30" % bootstrapVersion,
-    "uk.gov.hmrc"   %% "play-frontend-hmrc-play-30" % "12.20.0",
+    "uk.gov.hmrc"   %% "play-frontend-hmrc-play-30" % "12.22.0",
     "org.typelevel" %% "cats-core"                  % "2.13.0"
   )
 
-  val test = Seq(
+  val test: Seq[ModuleID] = Seq(
     "uk.gov.hmrc"   %% "bootstrap-test-play-30" % bootstrapVersion % Test,
     "org.scalactic" %% "scalactic"              % "3.2.19"         % Test,
-    "org.jsoup"      % "jsoup"                  % "1.21.1"          % Test
+    "org.jsoup"      % "jsoup"                  % "1.21.1"         % Test
   )
 }
