@@ -99,7 +99,7 @@ object FormIds {
     "ITSAMIG1",
     "ITSAMIG1_cy",
     "ITSAORM1",
-    "ITSAORM_cy",
+    "ITSAORM1_cy",
     "LSP1_ITSA",
     "LSP1_ITSA_CY",
     "LSP2_ITSA",
