@@ -27,7 +27,7 @@ import play.api.libs.json.*
 import uk.gov.hmrc.http.client.{ HttpClientV2, RequestBuilder }
 import uk.gov.hmrc.http.{ BadRequestException, HeaderCarrier, HttpResponse, StringContextOps, UpstreamErrorResponse }
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-import uk.gov.hmrc.preferencesadminfrontend.services.model.{ Email, TaxIdentifier }
+import uk.gov.hmrc.preferencesadminfrontend.services.model.{ Email, EntityId, TaxIdentifier }
 
 import java.net.URL
 import java.time.{ ZoneOffset, ZonedDateTime }
@@ -113,6 +113,37 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
       )
 
       val result = entityConnectorGetMock(expectedPath, error).getTaxIdentifiers(nino).futureValue
+
+      result mustBe empty
+    }
+  }
+
+  "getTaxIdentifiers overloaded with PreferenceDetails" must {
+    "construct the correct URL using entityId and return identifiers" in new TestCase {
+
+      val mockPreferenceDetails: PreferenceDetails = mockPreferenceDetailsForGetTaxIdentifiers(entityId)
+      val expectedPath = url"$entityResolverserviceUrl/entity-resolver/${mockPreferenceDetails.entityId.get}"
+      val responseJson: JsObject = taxIdentifiersResponseFor(sautr, nino)
+
+      val result: Seq[TaxIdentifier] = entityConnectorGetEntityMock(expectedPath, responseJson)
+        .getTaxIdentifiers(mockPreferenceDetails)
+        .futureValue
+
+      result.size mustBe 2
+      result must contain(sautr)
+      result must contain(nino)
+
+    }
+
+    "return empty sequence if the service returns 404" in new TestCase {
+
+      val mockPreferenceDetails: PreferenceDetails = mockPreferenceDetailsForGetTaxIdentifiers(entityId)
+      val expectedPath = url"$entityResolverserviceUrl/entity-resolver/$entityId"
+
+      val result: Seq[TaxIdentifier] =
+        entityConnectorGetMock(expectedPath, UpstreamErrorResponse("Not Found", Status.NOT_FOUND, Status.NOT_FOUND))
+          .getTaxIdentifiers(mockPreferenceDetails)
+          .futureValue
 
       result mustBe empty
     }
@@ -235,6 +266,8 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
     val nino = TaxIdentifier("nino", "NA000914D")
     val itsaId = TaxIdentifier("HMRC-MTD-IT", "XYIT00000067034")
 
+    val entityId: String = Random.nextInt(1000000).toString
+
     implicit val hc: HeaderCarrier = HeaderCarrier()
 
     lazy val mockResponse = mock[Option[Entity]]
@@ -300,6 +333,17 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
       }
       taxIdsJson.foldLeft(Json.obj("_id" -> "6a048719-3d4b-4a3e-9440-17b238807bc9"))(_ + _)
     }
+
+    def mockPreferenceDetailsForGetTaxIdentifiers(id: String): PreferenceDetails =
+      PreferenceDetails(
+        genericPaperless = true,
+        genericUpdatedAt = None,
+        isPaperless = None,
+        email = None,
+        entityId = Some(EntityId(id)),
+        eventType = None,
+        viaMobileApp = None
+      )
 
     def preferenceDetailsResponseForGenericOptedIn(emailVerified: Boolean) = {
       val genericUpdatedAt = 1518652800000L
