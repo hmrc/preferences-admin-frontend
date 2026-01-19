@@ -24,6 +24,7 @@ import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.Status
 import play.api.libs.json.*
+import play.api.libs.ws.WSRequest
 import uk.gov.hmrc.http.client.{ HttpClientV2, RequestBuilder }
 import uk.gov.hmrc.http.{ BadRequestException, HeaderCarrier, HttpResponse, StringContextOps, UpstreamErrorResponse }
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -146,6 +147,29 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
           .futureValue
 
       result mustBe empty
+    }
+  }
+
+  "confirm" must {
+    "return Right if the status is Successful (200)" in new TestCase {
+
+      val expectedPath = url"$entityResolverserviceUrl/preferences/confirm/$entityId/$itsaId"
+
+      val connector: EntityResolverConnector = entityConnectorPostMock(expectedPath, Status.OK)
+
+      connector.confirm(entityId, itsaId.name).futureValue mustBe Right(())
+
+    }
+
+    "return Left if status is 500" in new TestCase {
+      val expectedPath = url"$entityResolverserviceUrl/preferences/confirm/$entityId/$itsaId"
+
+      val connector: EntityResolverConnector =
+        entityConnectorPostMock(expectedPath, Status.INTERNAL_SERVER_ERROR, "ErrorBody")
+
+      connector.confirm(entityId, itsaId.name).futureValue mustBe Left(
+        "upstream error when confirming ITSA preference, 500 ErrorBody"
+      )
     }
   }
 
@@ -323,6 +347,18 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
 
       when(mockHttp.post(eql(expectedPath))(any)).thenReturn(requestBuilder)
       when(requestBuilder.execute[HttpResponse](any, any)).thenReturn(Future.failed(error))
+
+      new EntityResolverConnector(mockHttp, servicesConfig)
+    }
+
+    def entityConnectorPostMock(expectedPath: URL, status: Int, body: String = ""): EntityResolverConnector = {
+      val mockHttp: HttpClientV2 = mock[HttpClientV2]
+      val requestBuilder: RequestBuilder = mock[RequestBuilder]
+
+      when(mockHttp.post(any[URL])(any[HeaderCarrier])).thenReturn(requestBuilder)
+      when(requestBuilder.transform(any[WSRequest => WSRequest]())).thenReturn(requestBuilder)
+      when(requestBuilder.execute[HttpResponse](any, any))
+        .thenReturn(Future.successful(HttpResponse(status, body)))
 
       new EntityResolverConnector(mockHttp, servicesConfig)
     }
