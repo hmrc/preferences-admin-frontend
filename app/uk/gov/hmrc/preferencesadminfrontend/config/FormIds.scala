@@ -83,6 +83,7 @@ object FormIds {
     "PA302 2024",
     "PA302 2025",
     "ITSAQU1",
+    "ITSAQU1_cy",
     "ITSAQU2",
     "ITSAEOPS1",
     "ITSAEOPS2",
