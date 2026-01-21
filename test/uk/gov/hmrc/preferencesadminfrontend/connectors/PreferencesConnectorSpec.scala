@@ -110,5 +110,4 @@ class PreferencesConnectorSpec extends PlaySpec with ScalaFutures with EitherVal
 
     val connector = new PreferencesConnector(mockHttpClient, mockConfig, servicesConfig, mockActorSystem)
   }
-
 }
