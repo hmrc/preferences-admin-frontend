@@ -44,6 +44,7 @@ class SearchSpec extends PlaySpec with GuiceOneAppPerSuite with SpecBase {
       )
 
       json mustBe expectedJson
+      json.as[MultiSearch] mustBe multiSearch
 
     }
 
@@ -61,6 +62,41 @@ class SearchSpec extends PlaySpec with GuiceOneAppPerSuite with SpecBase {
 
     }
 
+  }
+
+  "SearchNinos form" must {
+    "bind successfully when valid data is provided" in {
+      val formData = Map(
+        "search-ninos" -> "AA123456A, BB123456B",
+        "batch"        -> "batch-001"
+      )
+
+      val form = SearchNinos().bind(formData)
+
+      form.errors mustBe empty
+      form.value mustBe Some(MultiSearch("AA123456A, BB123456B", "batch-001"))
+    }
+
+    "fail to bind when search-ninos is missing or empty" in {
+      val formData = Map(
+        "search-ninos" -> "",
+        "batch"        -> "batch-001"
+      )
+
+      val form = SearchNinos().bind(formData)
+
+      form.errors.size mustBe 1
+      form.errors.head.key mustBe "search-ninos"
+      form.errors.head.message mustBe "error.required"
+    }
+
+    "unbind correctly and fill form from model" in {
+      val model = MultiSearch("AA123456A", "batch-001")
+      val form = SearchNinos().fill(model)
+
+      form.data must contain("search-ninos" -> "AA123456A")
+      form.data must contain("batch" -> "batch-001")
+    }
   }
 
 }
