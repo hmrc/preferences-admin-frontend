@@ -17,24 +17,40 @@
 package uk.gov.hmrc.preferencesadminfrontend.controllers
 
 import org.apache.pekko.stream.Materializer
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.when
 import org.scalatest.concurrent.ScalaFutures
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.Application
 import play.api.http.*
 import play.api.i18n.MessagesApi
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.FakeRequest
 import play.api.test.Helpers.*
+import play.api.{Application, inject}
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.preferencesadminfrontend.controllers.model.User
+import uk.gov.hmrc.preferencesadminfrontend.services.SearchService
 import uk.gov.hmrc.preferencesadminfrontend.utils.SpecBase
 
-class MultiSearchControllerSpec extends PlaySpec with GuiceOneAppPerSuite with SpecBase with ScalaFutures {
+import scala.concurrent.{ExecutionContext, Future}
 
+class MultiSearchControllerSpec
+    extends PlaySpec with GuiceOneAppPerSuite with SpecBase with ScalaFutures with MockitoSugar {
+
+  lazy val mockSearchService: SearchService = mock[SearchService]
+
+  override implicit lazy val app: Application = GuiceApplicationBuilder()
+    .overrides(inject.bind[SearchService].toInstance(mockSearchService))
+    .build()
+
+  implicit val hc: HeaderCarrier = HeaderCarrier()
+  implicit lazy val ec: ExecutionContext = app.injector.instanceOf[ExecutionContext]
   implicit lazy val materializer: Materializer = app.materializer
-  override implicit lazy val app: Application = GuiceApplicationBuilder().build()
-  implicit val messagesApi: MessagesApi = app.injector.instanceOf[MessagesApi]
-  val controller: MultiSearchController = app.injector.instanceOf[MultiSearchController]
+  implicit lazy val messagesApi: MessagesApi = app.injector.instanceOf[MessagesApi]
+
+  lazy val controller: MultiSearchController = app.injector.instanceOf[MultiSearchController]
 
   "GET /decode" should {
     "return 200" in {
@@ -72,6 +88,49 @@ class MultiSearchControllerSpec extends PlaySpec with GuiceOneAppPerSuite with S
       val result =
         controller.showMultiSearchPage()(FakeRequest("GET", "/multi-search").withSession(User.sessionKey -> "user"))
       status(result) mustBe Status.SEE_OTHER
+    }
+  }
+
+  "showResultsPage - POST /multi-search/results" should {
+    "return 400 when form binding fails" in {
+      val request = FakeRequest("POST", "/multi-search/results")
+        .withSession(User.sessionKey -> "admin")
+
+      val result = controller.showResultsPage()(request)
+
+      status(result) mustBe BAD_REQUEST
+    }
+
+    "return 200 when service returns nil " in {
+      when(mockSearchService.searchPreferences(any())(any(), any(), any()))
+        .thenReturn(Future.successful(Nil))
+
+      val request = FakeRequest("POST", "/multi-search/results")
+        .withSession(User.sessionKey -> "admin")
+        .withFormUrlEncodedBody(
+          "search-ninos" -> "AB123456C",
+          "batch"        -> ""
+        )
+
+      val result = controller.showResultsPage()(request)
+
+      status(result) mustBe OK
+    }
+
+    "return 200 when service returns a list of preferences" in {
+      when(mockSearchService.searchPreferences(any())(any(), any(), any()))
+        .thenReturn(Future.successful(List(("AB123456C", "test@example.com"))))
+
+      val request = FakeRequest("POST", "/multi-search/results")
+        .withSession(User.sessionKey -> "admin")
+        .withFormUrlEncodedBody(
+          "search-ninos" -> "AB123456C",
+          "batch"        -> ""
+        )
+
+      val result = controller.showResultsPage()(request)
+
+      status(result) mustBe OK
     }
   }
 }
