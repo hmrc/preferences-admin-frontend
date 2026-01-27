@@ -24,7 +24,6 @@ class IdentifierSpec extends PlaySpec {
   "Identifier" must {
 
     "deserialize from JSON (Reads)" in {
-      // Use the exact field names defined in your case class
       val jsonString = """{
         "itsaId": "ITSA-123",
         "utr": "UTR-456"
@@ -40,7 +39,6 @@ class IdentifierSpec extends PlaySpec {
 
       val result = Json.toJson(identifier)
 
-      // Verify expected JSON structure
       (result \ "itsaId").as[String] mustBe "ITSA-123"
       (result \ "utr").as[String] mustBe "UTR-456"
     }
