@@ -23,6 +23,7 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import play.api.libs.json.{ JsSuccess, Json }
 import uk.gov.hmrc.http.{ HeaderCarrier, HttpResponse }
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.preferencesadminfrontend.connectors.ChannelPreferencesConnector.StatusUpdate
@@ -34,30 +35,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class ChannelPreferencesConnectorSpec extends PlaySpec with ScalaFutures with EitherValues with GuiceOneAppPerSuite {
-
-  trait Scope {
-    val OK = 200
-    val Bad = 400
-    val enrolment = "ITSA-NICE-DAY"
-    val status = true
-    val statusUpdate: StatusUpdate = StatusUpdate(enrolment, status)
-
-    implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
-    val httpClient: HttpClientV2 = mock[HttpClientV2]
-    val requestBuilder: RequestBuilder = mock[RequestBuilder]
-    val servicesConfig: ServicesConfig = app.injector.instanceOf[ServicesConfig]
-
-    val channelPreferencesConnector = new ChannelPreferencesConnector(httpClient, servicesConfig)
-
-    val channelPreferencesServiceUrl: String = app.injector.instanceOf[ServicesConfig].baseUrl("channel-preferences")
-    val expectedPath = new URI(s"$channelPreferencesServiceUrl/channel-preferences/preference/itsa/status").toURL
-
-    def httpResponse(status: Int, body: String): HttpResponse = HttpResponse(
-      status = status,
-      body = body,
-      headers = Map.empty
-    )
-  }
 
   "updateStatus" must {
     "return right SentStatus.Sent upon success" in new Scope {
@@ -81,5 +58,54 @@ class ChannelPreferencesConnectorSpec extends PlaySpec with ScalaFutures with Ei
         .left
         .value mustBe s"upstream error when sending status update, $Bad ITSA-BAD-DAY"
     }
+  }
+
+  "StatusUpdate" must {
+
+    "deserialize from JSON" in {
+      val json = Json.parse(
+        """{
+          | "enrolment": "X123456789",
+          | "status": true
+          |}""".stripMargin
+      )
+
+      val result = json.validate[StatusUpdate]
+
+      result mustBe JsSuccess(StatusUpdate("X123456789", status = true))
+    }
+
+    "serialize to JSON" in {
+      val statusUpdate = StatusUpdate("X123456789", status = false)
+
+      val result = Json.toJson(statusUpdate)
+
+      (result \ "enrolment").as[String] mustBe "X123456789"
+      (result \ "status").as[Boolean] mustBe false
+    }
+  }
+
+  trait Scope {
+    val OK = 200
+    val Bad = 400
+    val enrolment = "ITSA-NICE-DAY"
+    val status = true
+    val statusUpdate: StatusUpdate = StatusUpdate(enrolment, status)
+
+    implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
+    val httpClient: HttpClientV2 = mock[HttpClientV2]
+    val requestBuilder: RequestBuilder = mock[RequestBuilder]
+    val servicesConfig: ServicesConfig = app.injector.instanceOf[ServicesConfig]
+
+    val channelPreferencesConnector = new ChannelPreferencesConnector(httpClient, servicesConfig)
+
+    val channelPreferencesServiceUrl: String = app.injector.instanceOf[ServicesConfig].baseUrl("channel-preferences")
+    val expectedPath = new URI(s"$channelPreferencesServiceUrl/channel-preferences/preference/itsa/status").toURL
+
+    def httpResponse(status: Int, body: String): HttpResponse = HttpResponse(
+      status = status,
+      body = body,
+      headers = Map.empty
+    )
   }
 }

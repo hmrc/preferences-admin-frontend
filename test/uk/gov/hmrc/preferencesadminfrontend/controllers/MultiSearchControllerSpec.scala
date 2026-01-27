@@ -28,13 +28,13 @@ import play.api.i18n.MessagesApi
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.FakeRequest
 import play.api.test.Helpers.*
-import play.api.{Application, inject}
+import play.api.{ Application, inject }
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.preferencesadminfrontend.controllers.model.User
 import uk.gov.hmrc.preferencesadminfrontend.services.SearchService
 import uk.gov.hmrc.preferencesadminfrontend.utils.SpecBase
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
 class MultiSearchControllerSpec
     extends PlaySpec with GuiceOneAppPerSuite with SpecBase with ScalaFutures with MockitoSugar {

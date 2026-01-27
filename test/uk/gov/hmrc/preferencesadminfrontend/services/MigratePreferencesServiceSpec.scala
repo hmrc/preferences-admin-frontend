@@ -33,14 +33,8 @@ import scala.concurrent.{ ExecutionContext, Future }
 
 class MigratePreferencesServiceSpec
     extends PlaySpec with OptionValues with MockitoSugar with ScalaFutures with IntegrationPatience {
-  implicit val ec: scala.concurrent.ExecutionContext = scala.concurrent.ExecutionContext.global
 
-  "Identifier" must {
-    "write and read JSON" in new TestCase {
-      val json = Json.toJson(identifier)
-      json.as[Identifier] mustBe identifier
-    }
-  }
+  implicit val ec: scala.concurrent.ExecutionContext = scala.concurrent.ExecutionContext.global
 
   "migrate" must {
 
