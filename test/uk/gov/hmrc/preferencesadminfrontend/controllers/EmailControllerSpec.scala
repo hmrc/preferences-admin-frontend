@@ -23,31 +23,20 @@ import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.{ Application, inject }
+import play.api.http.Status
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.FakeRequest
-import play.api.test.Helpers.{ contentAsString, status }
+import play.api.test.Helpers.{ contentAsString, defaultAwaitTimeout, status }
+import play.api.{ Application, inject }
 import uk.gov.hmrc.preferencesadminfrontend.services.EmailService
-import uk.gov.hmrc.preferencesadminfrontend.utils.SpecBase
-import org.mockito.Mockito.mock
-import play.api.test.Helpers.defaultAwaitTimeout
-import play.api.http.Status
 
 import scala.concurrent.Future
 
 class EmailControllerSpec extends PlaySpec with GuiceOneAppPerSuite with ScalaFutures with MockitoSugar {
 
-  lazy val mockEmailService: EmailService = mock[EmailService]
-
-  override implicit lazy val app: Application = GuiceApplicationBuilder()
-    .overrides(inject.bind[EmailService].toInstance(mockEmailService))
-    .build()
-
-  def controller: EmailController = app.injector.instanceOf[EmailController]
-
   "GET /findEvent/:transId" should {
 
-    "return 200 with the event data when service returns successfully" in {
+    "return 200 with the event data when service returns successfully" in new TestCase {
       val expectedResponse = """{"event": "email_sent", "status": "delivered"}"""
 
       when(mockEmailService.findEvent(any())(any()))
@@ -60,7 +49,7 @@ class EmailControllerSpec extends PlaySpec with GuiceOneAppPerSuite with ScalaFu
       contentAsString(result) mustBe expectedResponse
     }
 
-    "return 200 with empty response when service returns empty string" in {
+    "return 200 with empty response when service returns empty string" in new TestCase {
       when(mockEmailService.findEvent(any())(any()))
         .thenReturn(Future.successful(""))
 
@@ -71,7 +60,7 @@ class EmailControllerSpec extends PlaySpec with GuiceOneAppPerSuite with ScalaFu
       contentAsString(result) mustBe ""
     }
 
-    "propagate the exception when service fails" in {
+    "propagate the exception when service fails" in new TestCase {
       when(mockEmailService.findEvent(any())(any()))
         .thenReturn(Future.failed(new RuntimeException("Service unavailable")))
 
@@ -82,5 +71,16 @@ class EmailControllerSpec extends PlaySpec with GuiceOneAppPerSuite with ScalaFu
         status(result)
       }
     }
+  }
+
+  class TestCase {
+
+    lazy val mockEmailService: EmailService = mock[EmailService]
+
+    implicit lazy val app: Application = GuiceApplicationBuilder()
+      .overrides(inject.bind[EmailService].toInstance(mockEmailService))
+      .build()
+
+    def controller: EmailController = app.injector.instanceOf[EmailController]
   }
 }

@@ -23,11 +23,8 @@ import org.scalatest.OptionValues
 import org.scalatest.concurrent.{ IntegrationPatience, ScalaFutures }
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
-import play.api.libs.json.Json
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.preferencesadminfrontend.connectors.{ EntityResolverConnector, PreferenceDetails }
-import uk.gov.hmrc.preferencesadminfrontend.model.MTDPMigration.{ CustomerType, MigratingCustomer, NonMigratingCustomer }
-import uk.gov.hmrc.preferencesadminfrontend.services.model.Email
+import uk.gov.hmrc.preferencesadminfrontend.model.MTDPMigration.{ MigratingCustomer, NonMigratingCustomer }
 
 import scala.concurrent.{ ExecutionContext, Future }
 
