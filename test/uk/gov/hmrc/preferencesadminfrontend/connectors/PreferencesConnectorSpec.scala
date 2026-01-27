@@ -57,13 +57,11 @@ class PreferencesConnectorSpec extends PlaySpec with ScalaFutures with EitherVal
       when(mockHttpClient.post(expectedPath)).thenReturn(mockRequestBuilder)
       when(mockRequestBuilder.withBody(any)(any, any, any)).thenReturn(mockRequestBuilder)
 
-      // BLANK 1: Make the execute call fail with a BadRequestException("Bad Request")
       when(mockRequestBuilder.execute[List[PreferenceDetails]](any, any))
         .thenReturn(Future.failed(BadRequestException("Bad Request")))
 
       val result: Seq[PreferenceDetails] = connector.getPreferencesByEmail(email).futureValue
 
-      // BLANK 2: What should the result be?
       result mustBe Nil
     }
   }
@@ -75,7 +73,6 @@ class PreferencesConnectorSpec extends PlaySpec with ScalaFutures with EitherVal
 
       when(mockHttpClient.get(expectedPath)).thenReturn(mockRequestBuilder)
 
-      // It returns a Future of a List of Events.
       when(mockRequestBuilder.execute[List[Event]](any, any))
         .thenReturn(Future.successful(mockEvents))
 

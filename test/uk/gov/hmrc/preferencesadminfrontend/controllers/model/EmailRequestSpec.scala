@@ -37,5 +37,4 @@ class EmailRequestSpec extends PlaySpec {
       result.toString() mustBe """{"email":"test@test.com"}"""
     }
   }
-
 }

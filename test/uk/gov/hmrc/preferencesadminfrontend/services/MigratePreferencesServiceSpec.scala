@@ -165,6 +165,5 @@ class MigratePreferencesServiceSpec
     val service = new MigratePreferencesService(mockResolver, mockMigrator)
 
     val identifier: Identifier = Identifier("ITSA-123", "UTR-456")
-
   }
 }

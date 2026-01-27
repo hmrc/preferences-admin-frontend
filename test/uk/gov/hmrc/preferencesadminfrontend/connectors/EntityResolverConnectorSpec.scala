@@ -133,7 +133,6 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
       result.size mustBe 2
       result must contain(sautr)
       result must contain(nino)
-
     }
 
     "return empty sequence if the service returns 404" in new TestCase {
@@ -152,18 +151,14 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
 
   "confirm" must {
     "return Right if the status is Successful (200)" in new TestCase {
-
       val expectedPath = url"$entityResolverserviceUrl/preferences/confirm/$entityId/$itsaId"
-
       val connector: EntityResolverConnector = entityConnectorPostMock(expectedPath, Status.OK)
 
       connector.confirm(entityId, itsaId.name).futureValue mustBe Right(())
-
     }
 
     "return Left if status is 500" in new TestCase {
       val expectedPath = url"$entityResolverserviceUrl/preferences/confirm/$entityId/$itsaId"
-
       val connector: EntityResolverConnector =
         entityConnectorPostMock(expectedPath, Status.INTERNAL_SERVER_ERROR, "ErrorBody")
 
@@ -277,6 +272,7 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
 
     "return false if PRECONDITION_FAILED" in new TestCase {
       val expectedPath = url"$entityResolverserviceUrl/entity-resolver-admin/manual-opt-out/sa/${sautr.value}"
+
       val error = UpstreamErrorResponse("", Status.PRECONDITION_FAILED, Status.PRECONDITION_FAILED)
       val result = entityConnectorPostMock(expectedPath, error).optOut(sautr).futureValue
 
@@ -421,7 +417,5 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
                     |}
        """.stripMargin)
     }
-
   }
-
 }

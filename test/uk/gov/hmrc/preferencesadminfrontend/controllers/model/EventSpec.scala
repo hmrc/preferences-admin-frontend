@@ -49,7 +49,6 @@ class EventSpec extends PlaySpec with GuiceOneAppPerSuite with SpecBase {
                 """
       )
       json mustBe expectedJson
-
     }
 
     "fail to deserialize when missing fields in " in {
@@ -65,8 +64,6 @@ class EventSpec extends PlaySpec with GuiceOneAppPerSuite with SpecBase {
       )
 
       invalidJson.validate[Event] mustBe a[JsError]
-
     }
   }
-
 }
