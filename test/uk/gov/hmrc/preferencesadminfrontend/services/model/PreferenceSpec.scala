@@ -21,7 +21,7 @@ import play.api.libs.json.{ JsError, JsString, Json }
 
 import java.time.{ ZoneId, ZonedDateTime }
 
-class PreferencesSpec extends PlaySpec {
+class PreferenceSpec extends PlaySpec {
 
   "PrefRoute" must {
     "create correct enum from boolean" in {

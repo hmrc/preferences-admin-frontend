@@ -34,7 +34,7 @@ import scala.concurrent.Future
 
 class EmailControllerSpec extends PlaySpec with GuiceOneAppPerSuite with ScalaFutures with MockitoSugar {
 
-  "GET /findEvent/:transId" should {
+  "findEvent" should {
 
     "return 200 with the event data when service returns successfully" in new TestCase {
       val expectedResponse = """{"event": "email_sent", "status": "delivered"}"""

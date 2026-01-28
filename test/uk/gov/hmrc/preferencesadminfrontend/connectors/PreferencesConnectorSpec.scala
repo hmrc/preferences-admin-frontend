@@ -38,7 +38,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class PreferencesConnectorSpec extends PlaySpec with ScalaFutures with EitherValues with GuiceOneAppPerSuite {
 
   "getPreferencesByEmail" must {
-    "return a list of PreferenceDetails on success" in new Scope {
+    "return a list of PreferenceDetails on success" in new TestCase {
       val expectedPath: URL = new URI(s"$serviceUrl/preferences/find-by-email").toURL
 
       when(mockHttpClient.post(expectedPath)).thenReturn(mockRequestBuilder)
@@ -51,7 +51,7 @@ class PreferencesConnectorSpec extends PlaySpec with ScalaFutures with EitherVal
       result mustBe mockResponseList
     }
 
-    "return an empty list if the service returns a BadRequestException" in new Scope {
+    "return an empty list if the service returns a BadRequestException" in new TestCase {
       val expectedPath: URL = new URI(s"$serviceUrl/preferences/find-by-email").toURL
 
       when(mockHttpClient.post(expectedPath)).thenReturn(mockRequestBuilder)
@@ -67,7 +67,7 @@ class PreferencesConnectorSpec extends PlaySpec with ScalaFutures with EitherVal
   }
 
   "getPreferencesEvents" must {
-    "return a list of events when successful" in new Scope {
+    "return a list of events when successful" in new TestCase {
       val entityId = "some-entity-id"
       val expectedPath: URL = new URI(s"$serviceUrl/preferences-admin/events/$entityId").toURL
 
@@ -82,7 +82,7 @@ class PreferencesConnectorSpec extends PlaySpec with ScalaFutures with EitherVal
     }
   }
 
-  trait Scope {
+  trait TestCase {
 
     val email = "test@example.com"
 

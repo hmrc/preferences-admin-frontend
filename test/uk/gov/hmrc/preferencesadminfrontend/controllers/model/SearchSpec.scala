@@ -25,7 +25,7 @@ class SearchSpec extends PlaySpec with GuiceOneAppPerSuite with SpecBase {
 
   "MultiSearch" must {
 
-    "Serialize correctly in " in {
+    "serialize correctly" in {
       val multiSearch = MultiSearch(
         identifiers = "identifier",
         batch = "batch"
@@ -46,7 +46,7 @@ class SearchSpec extends PlaySpec with GuiceOneAppPerSuite with SpecBase {
       json.as[MultiSearch] mustBe multiSearch
     }
 
-    "fail to deserialize when missing fields in " in {
+    "fail to deserialize when missing fields" in {
       val invalidJson = Json.parse(
         """
                 {

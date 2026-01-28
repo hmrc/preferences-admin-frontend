@@ -23,6 +23,7 @@ import org.scalatest.OptionValues
 import org.scalatest.concurrent.{ IntegrationPatience, ScalaFutures }
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
+import play.api.libs.json.{ JsSuccess, Json }
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.preferencesadminfrontend.model.MTDPMigration.{ MigratingCustomer, NonMigratingCustomer }
 
@@ -32,6 +33,30 @@ class MigratePreferencesServiceSpec
     extends PlaySpec with OptionValues with MockitoSugar with ScalaFutures with IntegrationPatience {
 
   implicit val ec: scala.concurrent.ExecutionContext = scala.concurrent.ExecutionContext.global
+
+  "Identifier" must {
+
+    "deserialize from JSON (Reads)" in {
+      val jsonString =
+        """{
+          "itsaId": "ITSA-123",
+          "utr": "UTR-456"
+        }"""
+
+      val result = Json.parse(jsonString).validate[Identifier]
+
+      result mustBe JsSuccess(Identifier("ITSA-123", "UTR-456"))
+    }
+
+    "serialize to JSON (Writes)" in {
+      val identifier = Identifier("ITSA-123", "UTR-456")
+
+      val result = Json.toJson(identifier)
+
+      (result \ "itsaId").as[String] mustBe "ITSA-123"
+      (result \ "utr").as[String] mustBe "UTR-456"
+    }
+  }
 
   "migrate" must {
 

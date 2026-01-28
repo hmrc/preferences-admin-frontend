@@ -37,7 +37,7 @@ import scala.concurrent.Future
 class ChannelPreferencesConnectorSpec extends PlaySpec with ScalaFutures with EitherValues with GuiceOneAppPerSuite {
 
   "updateStatus" must {
-    "return right SentStatus.Sent upon success" in new Scope {
+    "return right SentStatus.Sent upon success" in new TestCase {
       when(httpClient.post(expectedPath)).thenReturn(requestBuilder)
       when(requestBuilder.withBody(any)(any, any, any)).thenReturn(requestBuilder)
       when(requestBuilder.execute[HttpResponse]).thenReturn(Future.successful(httpResponse(OK, "ITSA-GREAT-DAY")))
@@ -47,7 +47,7 @@ class ChannelPreferencesConnectorSpec extends PlaySpec with ScalaFutures with Ei
         .futureValue mustBe Right(())
     }
 
-    "return left upstream error message upon a failure response" in new Scope {
+    "return left upstream error message upon a failure response" in new TestCase {
       when(httpClient.post(expectedPath)).thenReturn(requestBuilder)
       when(requestBuilder.withBody(any)(any, any, any)).thenReturn(requestBuilder)
       when(requestBuilder.execute[HttpResponse]).thenReturn(Future.successful(httpResponse(Bad, "ITSA-BAD-DAY")))
@@ -85,7 +85,7 @@ class ChannelPreferencesConnectorSpec extends PlaySpec with ScalaFutures with Ei
     }
   }
 
-  trait Scope {
+  trait TestCase {
     val OK = 200
     val Bad = 400
     val enrolment = "ITSA-NICE-DAY"

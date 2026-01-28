@@ -39,28 +39,25 @@ class EventSpec extends PlaySpec with GuiceOneAppPerSuite with SpecBase {
       val json = Json.toJson(event)
 
       val expectedJson = Json.parse(
-        """
-                {
-                  "eventType": "testEvent",
-                  "emailAddress": "test@email.com",
-                  "timestamp": "2026-01-01T01:01:01Z[Europe/London]",
-                  "viaMobileApp": true
-                }
-                """
+        """{
+          |"eventType": "testEvent",
+          |"emailAddress": "test@email.com",
+          |"timestamp": "2026-01-01T01:01:01Z[Europe/London]",
+          |"viaMobileApp": true
+          |}""".stripMargin
       )
+
       json mustBe expectedJson
     }
 
     "fail to deserialize when missing fields in " in {
 
       val invalidJson = Json.parse(
-        """
-                      {
-                        "emailAddress": "test@email.com",
-                        "timestamp": "2026-01-01T01:01:01Z[Europe/London]",
-                        "viaMobileApp": true
-                      }
-                      """
+        """{
+          |"emailAddress": "test@email.com",
+          |"timestamp": "2026-01-01T01:01:01Z[Europe/London]",
+          |"viaMobileApp": true
+          |}""".stripMargin
       )
 
       invalidJson.validate[Event] mustBe a[JsError]
