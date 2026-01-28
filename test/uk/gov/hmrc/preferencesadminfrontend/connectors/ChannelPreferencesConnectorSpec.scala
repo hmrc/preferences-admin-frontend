@@ -23,6 +23,7 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import play.api.libs.json.{ JsSuccess, Json }
 import uk.gov.hmrc.http.{ HeaderCarrier, HttpResponse }
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.preferencesadminfrontend.connectors.ChannelPreferencesConnector.StatusUpdate
@@ -35,7 +36,56 @@ import scala.concurrent.Future
 
 class ChannelPreferencesConnectorSpec extends PlaySpec with ScalaFutures with EitherValues with GuiceOneAppPerSuite {
 
-  trait Scope {
+  "updateStatus" must {
+    "return right SentStatus.Sent upon success" in new TestCase {
+      when(httpClient.post(expectedPath)).thenReturn(requestBuilder)
+      when(requestBuilder.withBody(any)(any, any, any)).thenReturn(requestBuilder)
+      when(requestBuilder.execute[HttpResponse]).thenReturn(Future.successful(httpResponse(OK, "ITSA-GREAT-DAY")))
+
+      channelPreferencesConnector
+        .updateStatus(statusUpdate)(headerCarrier)
+        .futureValue mustBe Right(())
+    }
+
+    "return left upstream error message upon a failure response" in new TestCase {
+      when(httpClient.post(expectedPath)).thenReturn(requestBuilder)
+      when(requestBuilder.withBody(any)(any, any, any)).thenReturn(requestBuilder)
+      when(requestBuilder.execute[HttpResponse]).thenReturn(Future.successful(httpResponse(Bad, "ITSA-BAD-DAY")))
+
+      channelPreferencesConnector
+        .updateStatus(statusUpdate)(headerCarrier)
+        .futureValue
+        .left
+        .value mustBe s"upstream error when sending status update, $Bad ITSA-BAD-DAY"
+    }
+  }
+
+  "StatusUpdate" must {
+
+    "deserialize from JSON" in {
+      val json = Json.parse(
+        """{
+          | "enrolment": "X123456789",
+          | "status": true
+          |}""".stripMargin
+      )
+
+      val result = json.validate[StatusUpdate]
+
+      result mustBe JsSuccess(StatusUpdate("X123456789", status = true))
+    }
+
+    "serialize to JSON" in {
+      val statusUpdate = StatusUpdate("X123456789", status = false)
+
+      val result = Json.toJson(statusUpdate)
+
+      (result \ "enrolment").as[String] mustBe "X123456789"
+      (result \ "status").as[Boolean] mustBe false
+    }
+  }
+
+  trait TestCase {
     val OK = 200
     val Bad = 400
     val enrolment = "ITSA-NICE-DAY"
@@ -57,29 +107,5 @@ class ChannelPreferencesConnectorSpec extends PlaySpec with ScalaFutures with Ei
       body = body,
       headers = Map.empty
     )
-  }
-
-  "updateStatus" must {
-    "return right SentStatus.Sent upon success" in new Scope {
-      when(httpClient.post(expectedPath)).thenReturn(requestBuilder)
-      when(requestBuilder.withBody(any)(any, any, any)).thenReturn(requestBuilder)
-      when(requestBuilder.execute[HttpResponse]).thenReturn(Future.successful(httpResponse(OK, "ITSA-GREAT-DAY")))
-
-      channelPreferencesConnector
-        .updateStatus(statusUpdate)(headerCarrier)
-        .futureValue mustBe Right(())
-    }
-
-    "return left upstream error message upon a failure response" in new Scope {
-      when(httpClient.post(expectedPath)).thenReturn(requestBuilder)
-      when(requestBuilder.withBody(any)(any, any, any)).thenReturn(requestBuilder)
-      when(requestBuilder.execute[HttpResponse]).thenReturn(Future.successful(httpResponse(Bad, "ITSA-BAD-DAY")))
-
-      channelPreferencesConnector
-        .updateStatus(statusUpdate)(headerCarrier)
-        .futureValue
-        .left
-        .value mustBe s"upstream error when sending status update, $Bad ITSA-BAD-DAY"
-    }
   }
 }
