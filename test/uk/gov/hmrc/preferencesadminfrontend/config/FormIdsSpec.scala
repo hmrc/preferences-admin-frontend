@@ -28,21 +28,23 @@ class FormIdsSpec extends PlaySpec {
       val itsaFormIds: List[String] =
         List(
           "LPP1A_ITSA",
-          "LPP1A_ITSA_cy",
           "LPP1B_ITSA",
-          "LPP1B_ITSA_cy",
           "LPP2_ITSA",
-          "LPP2_ITSA_cy",
           "LPP4_ITSA",
-          "LPP4_ITSA_cy",
           "PAR1_ITSA",
-          "PAR1_ITSA_cy",
-          "ITSAORM1",
-          "ITSAORM1_cy"
+          "ITSAORM1"
         )
 
       itsaFormIds.foreach { itsaFormId =>
         assert(formIdsConfig.contains(itsaFormId))
+      }
+    }
+
+    "not contain welsh form ids" in {
+      val formIdsConfig: Seq[String] = FormIds.configList
+
+      formIdsConfig.foreach { formId =>
+        assert(!formId.endsWith("_cy"))
       }
     }
   }
