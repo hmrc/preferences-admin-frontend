@@ -41,11 +41,7 @@ class FormIdsSpec extends PlaySpec {
     }
 
     "not contain welsh form ids" in {
-      val formIdsConfig: Seq[String] = FormIds.configList
-
-      formIdsConfig.foreach { formId =>
-        assert(!formId.endsWith("_cy"))
-      }
+      assert(!FormIds.configList.exists(_.endsWith("_cy")))
     }
   }
 }
