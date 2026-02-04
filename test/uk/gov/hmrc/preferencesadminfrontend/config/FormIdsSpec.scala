@@ -41,7 +41,7 @@ class FormIdsSpec extends PlaySpec {
     }
 
     "not contain welsh form ids" in {
-      assert(!FormIds.configList.exists(_.endsWith("_cy")))
+      assert(!FormIds.configList.exists(_.toLowerCase().endsWith("_cy")))
     }
   }
 }
