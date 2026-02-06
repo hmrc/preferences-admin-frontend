@@ -149,6 +149,9 @@ object FormIds {
     "M07OSS",
     "M07aOSS",
     "AD2",
-    "AD3"
+    "AD3",
+    "NIRef1",
+    "NIRef2",
+    "NIRef3",
   )
 }
