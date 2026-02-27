@@ -35,7 +35,7 @@ import play.api.test.{ FakeRequest, Helpers }
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.model.MergedDataEvent
 import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
-import uk.gov.hmrc.preferencesadminfrontend.connectors.{ AlreadyOptedOut, OptedOut }
+import uk.gov.hmrc.preferencesadminfrontend.connectors.{ AlreadyOptedOut, OptedOut, PreferenceNotFound }
 import uk.gov.hmrc.preferencesadminfrontend.controllers
 import uk.gov.hmrc.preferencesadminfrontend.controllers.model.{ Event, User }
 import uk.gov.hmrc.preferencesadminfrontend.services.*
@@ -283,6 +283,17 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
       document.body().getElementById("confirm").getElementsByTag("form").attr("action") mustBe
         "/paperless/admin/search/opt-out"
     }
+
+    "return BadRequest when form binding fails" in new SearchControllerTestCase {
+      val postRequest = FakeRequest("POST", "/search/q")
+        .withFormUrlEncodedBody(Seq(("name", ""), ("value", "")): _*)
+
+      val result = searchController.search()(
+        postRequest.withSession(User.sessionKey -> "user", "isAdmin" -> "true").withCSRFToken
+      )
+
+      status(result) mustBe Status.BAD_REQUEST
+    }
   }
 
   "submit opt out request" should {
@@ -339,6 +350,51 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
       val body: String = contentAsString(result)
       body must include("john.doe@digital.hmrc.gov.uk")
       body must include("15 February 2018 12:00:00 AM")
+    }
+
+    "show opt-out form with errors when reason is missing and preference exists" in new SearchControllerTestCase {
+      val preference = Preference(
+        entityId = Some(EntityId.generate()),
+        genericPaperless = true,
+        genericUpdatedAt = genericUpdatedAt,
+        Some(Email("test@test.com", verified = true, verifiedOn = verifiedOn, language = None, false, None)),
+        Seq(TaxIdentifier("nino", "CE067583D")),
+        "",
+        List.empty[Event]
+      )
+      when(searchServiceMock.getPreference(any[TaxIdentifier])(any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future.successful(List(preference)))
+
+      val request = FakeRequest(Helpers.POST, controllers.routes.SearchController.optOut().url)
+        .withFormUrlEncodedBody(
+          "reason"          -> "",
+          "identifierName"  -> "nino",
+          "identifierValue" -> "CE067583D"
+        )
+        .withSession(User.sessionKey -> "user", "isAdmin" -> "true")
+
+      val result = searchController.optOut()(request.withCSRFToken)
+
+      status(result) mustBe OK
+      contentAsString(result) must include("CE067583D")
+    }
+
+    "show customer identification view when form has errors and preference not found" in new SearchControllerTestCase {
+      when(searchServiceMock.getPreference(any[TaxIdentifier])(any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future.successful(Nil))
+
+      val request = FakeRequest(Helpers.POST, controllers.routes.SearchController.optOut().url)
+        .withFormUrlEncodedBody(
+          "identifierName"  -> "nino",
+          "identifierValue" -> "CE067583D"
+        )
+        .withSession(User.sessionKey -> "user", "isAdmin" -> "true")
+
+      val result = searchController.optOut()(request.withCSRFToken)
+
+      status(result) mustBe OK
+      contentAsString(result) must include("Customer Identification")
+      verify(searchServiceMock).getPreference(any[TaxIdentifier])(any[HeaderCarrier], any[ExecutionContext])
     }
   }
 
@@ -422,6 +478,22 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
       val body: String = contentAsString(result)
       body must include("john.doe@digital.hmrc.gov.uk")
       body must include("15 February 2018 12:00:00 AM")
+    }
+
+    "show failed view when preference not found" in new SearchControllerTestCase {
+      when(searchServiceMock.getPreference(any[TaxIdentifier])(any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future.successful(Nil))
+
+      val taxIdentifier = TaxIdentifier("nino", "CE067583D")
+      implicit val request: FakeRequest[AnyContentAsEmpty.type] =
+        FakeRequest(Helpers.GET, "/").withSession(User.sessionKey -> "user", "isAdmin" -> "true")
+
+      val result = searchController.searchConfirmed(taxIdentifier)
+
+      status(result) mustBe OK
+      val body = contentAsString(result)
+      body must include("Failed to manually opt user out")
+      body must include("No preference found")
     }
   }
 

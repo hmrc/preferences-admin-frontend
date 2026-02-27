@@ -279,6 +279,57 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
       result mustBe PreferenceNotFound
     }
 
+    // new tessts
+
+    "getTaxIdentifiers (taxId)" should {
+      "handle unexpected exceptions" in new TestCase {
+        val expectedPath = url"$entityResolverserviceUrl/entity-resolver/sa/${sautr.value}"
+        val result = entityConnectorGetMock(expectedPath, new RuntimeException("foo"))
+          .getTaxIdentifiers(sautr)
+          .futureValue
+        result mustBe empty
+      }
+    }
+
+    "getTaxIdentifiers (preferenceDetails)" should {
+      "handle Conflict error" in new TestCase {
+        val details = mockPreferenceDetailsForGetTaxIdentifiers(entityId)
+        val expectedPath = url"$entityResolverserviceUrl/entity-resolver/$entityId"
+        val result = entityConnectorGetMock(expectedPath, UpstreamErrorResponse("err", 409, 409))
+          .getTaxIdentifiers(details)
+          .futureValue
+        result mustBe empty
+      }
+    }
+
+    "getPreferenceDetails" should {
+      "handle Conflict error" in new TestCase {
+        val expectedPath = url"$entityResolverserviceUrl/portal/preferences/sa/${sautr.value}"
+        val result = entityConnectorGetMock(expectedPath, UpstreamErrorResponse("err", 409, 409))
+          .getPreferenceDetails(sautr)
+          .futureValue
+        result mustBe None
+      }
+
+      "handle unexpected exceptions" in new TestCase {
+        val expectedPath = url"$entityResolverserviceUrl/portal/preferences/sa/${sautr.value}"
+        val result = entityConnectorGetMock(expectedPath, new RuntimeException("foo"))
+          .getPreferenceDetails(sautr)
+          .futureValue
+        result mustBe None
+      }
+    }
+
+    "optOut" should {
+      "handle NotFoundException specifically" in new TestCase {
+        val expectedPath = url"$entityResolverserviceUrl/entity-resolver-admin/manual-opt-out/sa/${sautr.value}"
+        val result = entityConnectorPostMock(expectedPath, new uk.gov.hmrc.http.NotFoundException("404"))
+          .optOut(sautr)
+          .futureValue
+        result mustBe PreferenceNotFound
+      }
+    }
+
   }
 
   class TestCase {
