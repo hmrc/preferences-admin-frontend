@@ -30,7 +30,7 @@ class TaxIdentifierSpec extends PlaySpec {
   }
 
   "format" must {
-    "serialize and deserialize TaxIdentifier to/from JSON" in {
+    "read and write TaxIdentifier to from JSON" in {
       val taxId = TaxIdentifier("sautr", "1234567890")
       val json = Json.toJson(taxId)
       json mustBe Json.obj("name" -> "sautr", "value" -> "1234567890")

@@ -31,7 +31,7 @@ class GmcBatchApprovalSpec extends PlaySpec {
         .Invalid("Invalid characters entered")
     }
 
-    "serialize to and from Json" in {
+    "write to and read from Json" in {
       val approval = GmcBatchApproval("b", "f", "i", "t", "reason")
       Json.toJson(approval).as[GmcBatchApproval] mustBe approval
     }

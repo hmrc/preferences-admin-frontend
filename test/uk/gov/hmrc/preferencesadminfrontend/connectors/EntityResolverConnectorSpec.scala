@@ -279,9 +279,7 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
       result mustBe PreferenceNotFound
     }
 
-    // new tessts
-
-    "getTaxIdentifiers (taxId)" should {
+    "getTaxIdentifiers - taxId" should {
       "handle unexpected exceptions" in new TestCase {
         val expectedPath = url"$entityResolverserviceUrl/entity-resolver/sa/${sautr.value}"
         val result = entityConnectorGetMock(expectedPath, new RuntimeException("foo"))
@@ -291,7 +289,7 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
       }
     }
 
-    "getTaxIdentifiers (preferenceDetails)" should {
+    "getTaxIdentifiers - preferenceDetails" should {
       "handle Conflict error" in new TestCase {
         val details = mockPreferenceDetailsForGetTaxIdentifiers(entityId)
         val expectedPath = url"$entityResolverserviceUrl/entity-resolver/$entityId"
