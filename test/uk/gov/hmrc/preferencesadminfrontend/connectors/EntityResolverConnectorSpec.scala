@@ -16,24 +16,25 @@
 
 package uk.gov.hmrc.preferencesadminfrontend.connectors
 
-import org.mockito.ArgumentMatchers.{ eq as eql, * }
+import org.mockito.ArgumentMatchers.{eq as eql, *}
 import org.mockito.Mockito.when
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.Status
+import play.api.http.Status.CONFLICT
 import play.api.libs.json.*
 import play.api.libs.ws.WSRequest
-import uk.gov.hmrc.http.client.{ HttpClientV2, RequestBuilder }
-import uk.gov.hmrc.http.{ BadRequestException, HeaderCarrier, HttpResponse, StringContextOps, UpstreamErrorResponse }
+import uk.gov.hmrc.http.client.{HttpClientV2, RequestBuilder}
+import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, HttpResponse, StringContextOps, UpstreamErrorResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-import uk.gov.hmrc.preferencesadminfrontend.services.model.{ Email, EntityId, TaxIdentifier }
+import uk.gov.hmrc.preferencesadminfrontend.services.model.{Email, EntityId, TaxIdentifier}
 
 import java.net.URL
-import java.time.{ ZoneOffset, ZonedDateTime }
+import java.time.{ZoneOffset, ZonedDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Random
 
 class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceOneAppPerSuite {
@@ -293,7 +294,7 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
       "handle Conflict error" in new TestCase {
         val details = mockPreferenceDetailsForGetTaxIdentifiers(entityId)
         val expectedPath = url"$entityResolverserviceUrl/entity-resolver/$entityId"
-        val result = entityConnectorGetMock(expectedPath, UpstreamErrorResponse("err", 409, 409))
+        val result = entityConnectorGetMock(expectedPath, UpstreamErrorResponse("err", CONFLICT, CONFLICT))
           .getTaxIdentifiers(details)
           .futureValue
         result mustBe empty
@@ -303,7 +304,7 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
     "getPreferenceDetails" should {
       "handle Conflict error" in new TestCase {
         val expectedPath = url"$entityResolverserviceUrl/portal/preferences/sa/${sautr.value}"
-        val result = entityConnectorGetMock(expectedPath, UpstreamErrorResponse("err", 409, 409))
+        val result = entityConnectorGetMock(expectedPath, UpstreamErrorResponse("err", CONFLICT, CONFLICT))
           .getPreferenceDetails(sautr)
           .futureValue
         result mustBe None

@@ -19,6 +19,7 @@ package uk.gov.hmrc.preferencesadminfrontend.services
 import org.mockito.Mockito.*
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
+import play.api.http.Status.OK
 import uk.gov.hmrc.http.HttpResponse
 import uk.gov.hmrc.preferencesadminfrontend.connectors.EmailConnector
 
@@ -27,16 +28,16 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class EmailServiceSpec extends PlaySpec with MockitoSugar {
 
-  val mockConnector = mock[EmailConnector]
-  val service = new EmailService(mockConnector)
-
   "findEvent" should {
     "return the response body from the connector" in {
+      val mockConnector = mock[EmailConnector]
+      val service = new EmailService(mockConnector)
+
       val transId = "123"
       val expectedBody = "event data"
 
       when(mockConnector.findEvent(transId))
-        .thenReturn(Future.successful(HttpResponse(200, expectedBody)))
+        .thenReturn(Future.successful(HttpResponse(OK, expectedBody)))
 
       service.findEvent(transId).map(_ mustBe expectedBody)
     }

@@ -19,8 +19,8 @@ package uk.gov.hmrc.preferencesadminfrontend.controllers
 import org.apache.pekko.stream.Materializer
 import org.jsoup.Jsoup
 import org.mockito.ArgumentMatchers.any
-import org.mockito.Mockito.{ times, verify, when }
-import org.mockito.{ ArgumentMatcher, ArgumentMatchers }
+import org.mockito.Mockito.{times, verify, when}
+import org.mockito.{ArgumentMatcher, ArgumentMatchers}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
@@ -30,21 +30,21 @@ import play.api.http.Status
 import play.api.i18n.MessagesApi
 import play.api.mvc.AnyContentAsEmpty
 import play.api.test.CSRFTokenHelper.*
-import play.api.test.Helpers.{ headers, * }
-import play.api.test.{ FakeRequest, Helpers }
+import play.api.test.Helpers.{headers, *}
+import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.model.MergedDataEvent
 import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
-import uk.gov.hmrc.preferencesadminfrontend.connectors.{ AlreadyOptedOut, OptedOut, PreferenceNotFound }
+import uk.gov.hmrc.preferencesadminfrontend.connectors.{AlreadyOptedOut, OptedOut}
 import uk.gov.hmrc.preferencesadminfrontend.controllers
-import uk.gov.hmrc.preferencesadminfrontend.controllers.model.{ Event, User }
+import uk.gov.hmrc.preferencesadminfrontend.controllers.model.{Event, User}
 import uk.gov.hmrc.preferencesadminfrontend.services.*
-import uk.gov.hmrc.preferencesadminfrontend.services.model.{ Email, EntityId, Preference, TaxIdentifier }
+import uk.gov.hmrc.preferencesadminfrontend.services.model.{Email, EntityId, Preference, TaxIdentifier}
 import uk.gov.hmrc.preferencesadminfrontend.utils.SpecBase
-import uk.gov.hmrc.preferencesadminfrontend.views.html.{ confirmed, customer_identification, failed, user_opt_out }
+import uk.gov.hmrc.preferencesadminfrontend.views.html.{confirmed, customer_identification, failed, user_opt_out}
 
-import java.time.{ ZoneOffset, ZonedDateTime }
-import scala.concurrent.{ ExecutionContext, Future }
+import java.time.{ZoneOffset, ZonedDateTime}
+import scala.concurrent.{ExecutionContext, Future}
 
 class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPerSuite {
   implicit val hc: HeaderCarrier = HeaderCarrier()

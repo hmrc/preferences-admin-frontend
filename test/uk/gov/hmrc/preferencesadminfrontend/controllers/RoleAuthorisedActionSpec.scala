@@ -45,8 +45,14 @@ class RoleAuthorisedActionSpec extends PlaySpec with MockitoSugar with ScalaFutu
   }
 
   "Role.fromString" must {
-    "return Admin for 'admin'" in { Role.fromString("admin") mustBe Role.Admin }
-    "return Generic for 'generic'" in { Role.fromString("generic") mustBe Role.Generic }
+    "return Admin for 'admin'" in {
+      Role.fromString("admin") mustBe Role.Admin
+    }
+
+    "return Generic for 'generic'" in {
+      Role.fromString("generic") mustBe Role.Generic
+    }
+
     "throw IllegalArgumentException for invalid roles" in {
       val ex = intercept[IllegalArgumentException](Role.fromString("invalid"))
       ex.getMessage mustBe "Invalid argument for the role invalid"

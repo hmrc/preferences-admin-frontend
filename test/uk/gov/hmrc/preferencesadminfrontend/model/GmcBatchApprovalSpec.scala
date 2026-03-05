@@ -17,9 +17,7 @@
 package uk.gov.hmrc.preferencesadminfrontend.model
 
 import org.scalatestplus.play.PlaySpec
-
 import play.api.libs.json.Json
-import uk.gov.hmrc.preferencesadminfrontend.model.{ GmcBatch, GmcBatchApproval }
 
 class GmcBatchApprovalSpec extends PlaySpec {
 
