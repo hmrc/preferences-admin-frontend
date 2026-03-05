@@ -164,6 +164,46 @@ class MessageConnectorSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
         result.body must include("timeout error")
       }
     }
+
+    "Allowlist Admin" should {
+
+      "getAllowlist" should {
+        "return 200 OK with the current allowlist" in new TestCase {
+          when(mockHttp.get(any)(any)).thenReturn(requestBuilder)
+          when(requestBuilder.execute[HttpResponse](any, any))
+            .thenReturn(Future.successful(HttpResponse(Status.OK, emptyJson, Map.empty)))
+
+          val result = app.injector.instanceOf[MessageConnector].getAllowlist().futureValue
+          result.status mustBe Status.OK
+        }
+      }
+
+      "addFormIdToAllowlist" should {
+        "return 200 OK when a form is successfully added" in new TestCase {
+          val entry = AllowlistEntry("formId", "reason")
+          when(mockHttp.post(any)(any)).thenReturn(requestBuilder)
+          when(requestBuilder.withBody(any)(any, any, any)).thenReturn(requestBuilder)
+          when(requestBuilder.execute[HttpResponse](any, any))
+            .thenReturn(Future.successful(HttpResponse(Status.OK, emptyJson, Map.empty)))
+
+          val result = app.injector.instanceOf[MessageConnector].addFormIdToAllowlist(entry).futureValue
+          result.status mustBe Status.OK
+        }
+      }
+
+      "deleteFormIdFromAllowlist" should {
+        "return 200 OK when a form is successfully deleted" in new TestCase {
+          val entry = AllowlistEntry("formId", "reason")
+          when(mockHttp.post(any)(any)).thenReturn(requestBuilder)
+          when(requestBuilder.withBody(any)(any, any, any)).thenReturn(requestBuilder)
+          when(requestBuilder.execute[HttpResponse](any, any))
+            .thenReturn(Future.successful(HttpResponse(Status.OK, emptyJson, Map.empty)))
+
+          val result = app.injector.instanceOf[MessageConnector].deleteFormIdFromAllowlist(entry).futureValue
+          result.status mustBe Status.OK
+        }
+      }
+    }
   }
 
   trait TestCase {

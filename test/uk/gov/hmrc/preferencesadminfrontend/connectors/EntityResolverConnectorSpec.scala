@@ -23,6 +23,7 @@ import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.Status
+import play.api.http.Status.CONFLICT
 import play.api.libs.json.*
 import play.api.libs.ws.WSRequest
 import uk.gov.hmrc.http.client.{ HttpClientV2, RequestBuilder }
@@ -277,6 +278,55 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
       val result = entityConnectorPostMock(expectedPath, error).optOut(sautr).futureValue
 
       result mustBe PreferenceNotFound
+    }
+
+    "getTaxIdentifiers - taxId" should {
+      "handle unexpected exceptions" in new TestCase {
+        val expectedPath = url"$entityResolverserviceUrl/entity-resolver/sa/${sautr.value}"
+        val result = entityConnectorGetMock(expectedPath, new RuntimeException("foo"))
+          .getTaxIdentifiers(sautr)
+          .futureValue
+        result mustBe empty
+      }
+    }
+
+    "getTaxIdentifiers - preferenceDetails" should {
+      "handle Conflict error" in new TestCase {
+        val details = mockPreferenceDetailsForGetTaxIdentifiers(entityId)
+        val expectedPath = url"$entityResolverserviceUrl/entity-resolver/$entityId"
+        val result = entityConnectorGetMock(expectedPath, UpstreamErrorResponse("err", CONFLICT, CONFLICT))
+          .getTaxIdentifiers(details)
+          .futureValue
+        result mustBe empty
+      }
+    }
+
+    "getPreferenceDetails" should {
+      "handle Conflict error" in new TestCase {
+        val expectedPath = url"$entityResolverserviceUrl/portal/preferences/sa/${sautr.value}"
+        val result = entityConnectorGetMock(expectedPath, UpstreamErrorResponse("err", CONFLICT, CONFLICT))
+          .getPreferenceDetails(sautr)
+          .futureValue
+        result mustBe None
+      }
+
+      "handle unexpected exceptions" in new TestCase {
+        val expectedPath = url"$entityResolverserviceUrl/portal/preferences/sa/${sautr.value}"
+        val result = entityConnectorGetMock(expectedPath, new RuntimeException("foo"))
+          .getPreferenceDetails(sautr)
+          .futureValue
+        result mustBe None
+      }
+    }
+
+    "optOut" should {
+      "handle NotFoundException specifically" in new TestCase {
+        val expectedPath = url"$entityResolverserviceUrl/entity-resolver-admin/manual-opt-out/sa/${sautr.value}"
+        val result = entityConnectorPostMock(expectedPath, new uk.gov.hmrc.http.NotFoundException("404"))
+          .optOut(sautr)
+          .futureValue
+        result mustBe PreferenceNotFound
+      }
     }
 
   }
