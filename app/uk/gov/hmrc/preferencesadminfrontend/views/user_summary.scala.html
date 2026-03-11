@@ -27,10 +27,6 @@
             <span class="govuk-body govuk-visually-hidden">
                     <table class="govuk-table">
                         <tbody class="govuk-table__body">
-                            <tr class="govuk-table__row">
-                                <td class="govuk-table__cell">Entity ID</td>
-                                <td class="govuk-table__cell">@preference.entityId.getOrElse("Not available")</td>
-                            </tr>
                             @preference.email.map { email =>
                                 <tr class="govuk-table__row">
                                     <td class="govuk-table__cell">Language</td>
@@ -59,6 +55,12 @@
                     key = Key(content = Text("ITSA ID")),
                     value = Value(
                         content = Text(preference.taxIdentifiers.find(id => id.name == "HMRC-MTD-IT").fold("Not available")(_.value))
+                    )
+                ),
+                SummaryListRow(
+                    key = Key(content = Text("Entity ID")),
+                    value = Value(
+                        content = Text(preference.entityId.fold("Not available")(_.value))
                     )
                 ),
                 SummaryListRow(
