@@ -76,8 +76,9 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
 
     "return a preference with events if tax identifier exists" in new SearchControllerTestCase {
       val timeStamp = ZonedDateTime.of(2018, 2, 15, 0, 0, 0, 0, ZoneOffset.UTC)
+      val entityId = EntityId.generate()
       val preference = Preference(
-        entityId = Some(EntityId.generate()),
+        entityId = Some(entityId),
         genericPaperless = true,
         genericUpdatedAt = genericUpdatedAt,
         Some(
@@ -111,6 +112,7 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
       body must include("opt-in")
       body must include("test@test.com")
       body must include("15 February 2018 12:00:00 AM")
+      body must include(entityId.value)
     }
 
     "return a preference with events history if email address exists" in new SearchControllerTestCase {
