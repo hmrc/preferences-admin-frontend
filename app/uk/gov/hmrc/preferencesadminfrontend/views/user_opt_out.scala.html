@@ -88,8 +88,8 @@
                     content = Text("Are you sure you wish to opt this user out?")
                 ))
                 @form(action = routes.SearchController.optOut()) {
-                    <input type="hidden" name="identifierName" value="@{preference.taxIdentifiers.last.name}">
-                    <input type="hidden" name="identifierValue" value="@{preference.taxIdentifiers.last.value}">
+                    <input type="hidden" name="identifierName" value="@{preference.identifierName}">
+                    <input type="hidden" name="identifierValue" value="@{preference.identifierValue}">
                     @govukTextarea(
                         Textarea(
                             id = "reason",

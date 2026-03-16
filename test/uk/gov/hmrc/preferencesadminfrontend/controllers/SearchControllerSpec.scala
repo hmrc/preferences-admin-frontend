@@ -76,8 +76,9 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
 
     "return a preference with events if tax identifier exists" in new SearchControllerTestCase {
       val timeStamp = ZonedDateTime.of(2018, 2, 15, 0, 0, 0, 0, ZoneOffset.UTC)
+      val entityId = EntityId.generate()
       val preference = Preference(
-        entityId = Some(EntityId.generate()),
+        entityId = Some(entityId),
         genericPaperless = true,
         genericUpdatedAt = genericUpdatedAt,
         Some(
@@ -111,6 +112,44 @@ class SearchControllerSpec extends PlaySpec with ScalaFutures with GuiceOneAppPe
       body must include("opt-in")
       body must include("test@test.com")
       body must include("15 February 2018 12:00:00 AM")
+      body must include(entityId.value)
+    }
+
+    "return a preference with events even if tax identifier is removed - edge case" in new SearchControllerTestCase {
+      val timeStamp = ZonedDateTime.of(2018, 2, 15, 0, 0, 0, 0, ZoneOffset.UTC)
+      val entityId = EntityId.generate()
+      val preference = Preference(
+        entityId = Some(entityId),
+        genericPaperless = true,
+        genericUpdatedAt = genericUpdatedAt,
+        Some(
+          Email(
+            "john.doe@digital.hmrc.gov.uk",
+            verified = true,
+            verifiedOn = verifiedOn,
+            language = Some("cy"),
+            hasBounces = false,
+            None
+          )
+        ),
+        Seq.empty,
+        "",
+        List(Event("opt-in", Some("test@test.com"), timeStamp))
+      )
+      when(searchServiceMock.searchPreference(any[TaxIdentifier])(any[User], any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future.successful(List(preference)))
+
+      val postRequest = FakeRequest("POST", "/search/q")
+        .withFormUrlEncodedBody(Seq(("name", "nino"), ("value", "CE067583D")): _*)
+
+      val result =
+        searchController.search()(postRequest.withSession(User.sessionKey -> "user", "isAdmin" -> "true").withCSRFToken)
+
+      status(result) mustBe Status.OK
+      val body: String = contentAsString(result)
+      body must include("Preference History")
+      body must include("opt-in")
+      body must include(entityId.value)
     }
 
     "return a preference with events history if email address exists" in new SearchControllerTestCase {
