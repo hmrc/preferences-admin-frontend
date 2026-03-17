@@ -30,7 +30,10 @@ case class Preference(
   eventType: String,
   events: List[Event],
   route: PrefRoute = PrefRoute.Online
-)
+) {
+  val identifierName: String = taxIdentifiers.lastOption.fold("Not available")(_.name)
+  val identifierValue: String = taxIdentifiers.lastOption.fold("Not available")(_.value)
+}
 
 object Preference {
   implicit val dateFormatDefault: Format[ZonedDateTime] = new Format[ZonedDateTime] {
