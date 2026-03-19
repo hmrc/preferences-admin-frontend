@@ -98,6 +98,32 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
       result must contain(itsaId)
     }
 
+    "return all tax identifiers for sautr along with itsaId when sautr entered with spaces" in new TestCase {
+      val expectedPath = url"$entityResolverserviceUrl/entity-resolver/sa/${sautr.value}"
+      val responseJson = taxIdentifiersResponseFor(sautr, nino, itsaId)
+      val sautrWithSpaces = TaxIdentifier("sautr", s" ${sautr.value} ")
+      val result =
+        entityConnectorGetEntityMock(expectedPath, responseJson).getTaxIdentifiers(sautrWithSpaces).futureValue
+
+      result.size mustBe 3
+      result must contain(nino)
+      result must contain(sautr)
+      result must contain(itsaId)
+    }
+
+    "return all tax identifiers for itsaId when itsaId entered with spaces & special chars" in new TestCase {
+      val expectedPath = url"$entityResolverserviceUrl/entity-resolver/itsa/HMRC-MTD-IT~ITSAID~XYIT00000067034"
+      val responseJson = taxIdentifiersResponseFor(sautr, nino, itsaId)
+      val itsaIdWithSpaces = TaxIdentifier("HMRC-MTD-IT", s" HMRC-MTD-IT~ITSAID~XYIT00000067034 ")
+      val result =
+        entityConnectorGetEntityMock(expectedPath, responseJson).getTaxIdentifiers(itsaIdWithSpaces).futureValue
+
+      result.size mustBe 3
+      result must contain(nino)
+      result must contain(sautr)
+      result must contain(itsaId)
+    }
+
     "return empty sequence" in new TestCase {
       val expectedPath = url"$entityResolverserviceUrl/entity-resolver/paye/${nino.value}"
 
@@ -124,7 +150,7 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
     "construct the correct URL using entityId and return identifiers" in new TestCase {
 
       val mockPreferenceDetails: PreferenceDetails = mockPreferenceDetailsForGetTaxIdentifiers(entityId)
-      val expectedPath = url"$entityResolverserviceUrl/entity-resolver/${mockPreferenceDetails.entityId.get}"
+      val expectedPath = url"$entityResolverserviceUrl/entity-resolver?entityId=${mockPreferenceDetails.entityId.get}"
       val responseJson: JsObject = taxIdentifiersResponseFor(sautr, nino)
 
       val result: Seq[TaxIdentifier] = entityConnectorGetEntityMock(expectedPath, responseJson)
@@ -139,7 +165,7 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
     "return empty sequence if the service returns 404" in new TestCase {
 
       val mockPreferenceDetails: PreferenceDetails = mockPreferenceDetailsForGetTaxIdentifiers(entityId)
-      val expectedPath = url"$entityResolverserviceUrl/entity-resolver/$entityId"
+      val expectedPath = url"$entityResolverserviceUrl/entity-resolver?entityId=$entityId"
 
       val result: Seq[TaxIdentifier] =
         entityConnectorGetMock(expectedPath, UpstreamErrorResponse("Not Found", Status.NOT_FOUND, Status.NOT_FOUND))
@@ -224,6 +250,21 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
       result.get.email.get.verifiedOn.get.isEqual(verfiedOn.get) mustBe true
     }
 
+    "return email address and verification if user is opted in for nino when nino entered with spaces" in new TestCase {
+      val expectedPath = url"$entityResolverserviceUrl/portal/preferences/paye/${nino.value}"
+      val responseJson = preferenceDetailsResponseForGenericOptedIn(true)
+      val ninoValue = TaxIdentifier("nino", "NA000914 D ")
+
+      val result =
+        entityConnectorGetPreferenceDetailsMock(expectedPath, responseJson).getPreferenceDetails(ninoValue).futureValue
+
+      result mustBe defined
+      result.get.genericPaperless mustBe true
+      result.get.email.get.address mustBe "john.doe@digital.hmrc.gov.uk"
+      result.get.email.get.verified mustBe true
+      result.get.email.get.verifiedOn.get.isEqual(verfiedOn.get) mustBe true
+    }
+
     "return None if taxId does not exist" in new TestCase {
       val expectedPath = url"$entityResolverserviceUrl/portal/preferences/sa/${sautr.value}"
       val error = UpstreamErrorResponse("", Status.NOT_FOUND, Status.NOT_FOUND)
@@ -293,7 +334,7 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
     "getTaxIdentifiers - preferenceDetails" should {
       "handle Conflict error" in new TestCase {
         val details = mockPreferenceDetailsForGetTaxIdentifiers(entityId)
-        val expectedPath = url"$entityResolverserviceUrl/entity-resolver/$entityId"
+        val expectedPath = url"$entityResolverserviceUrl/entity-resolver?entityId=$entityId"
         val result = entityConnectorGetMock(expectedPath, UpstreamErrorResponse("err", CONFLICT, CONFLICT))
           .getTaxIdentifiers(details)
           .futureValue

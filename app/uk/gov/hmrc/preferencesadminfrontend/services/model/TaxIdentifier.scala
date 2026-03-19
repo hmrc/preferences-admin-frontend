@@ -19,7 +19,7 @@ package uk.gov.hmrc.preferencesadminfrontend.services.model
 import play.api.libs.json.{ Json, OFormat }
 
 case class TaxIdentifier(name: String, value: String) {
-  val regime = name match {
+  val regime: String = name match {
     case "sautr"       => "sa"
     case "itsa"        => "itsa"
     case "nino"        => "paye"

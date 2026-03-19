@@ -39,15 +39,20 @@ class EntityResolverConnector @Inject() (httpClient: HttpClientV2, val servicesC
   val logger = Logger(getClass)
   implicit val ef: Format[Entity] = Entity.formats
 
-  def serviceUrl = servicesConfig.baseUrl("entity-resolver")
+  val serviceUrl: String = servicesConfig.baseUrl("entity-resolver")
+
+  def sanitize(input: String): String =
+    input.replaceAll("[^a-zA-Z0-9-_~]", "")
 
   def getTaxIdentifiers(
     taxId: TaxIdentifier
   )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[TaxIdentifier]] = {
     def warnNotOptedOut(message: String) = s"getTaxIdentifiersTaxId $message"
+    val regime: String = taxId.regime
+    val value: String = sanitize(taxId.value)
     val response =
       httpClient
-        .get(new URI(s"$serviceUrl/entity-resolver/${taxId.regime}/${taxId.value}").toURL)
+        .get(new URI(s"$serviceUrl/entity-resolver/$regime/$value").toURL)
         .execute[Option[Entity]]
     response
       .map(
@@ -81,7 +86,7 @@ class EntityResolverConnector @Inject() (httpClient: HttpClientV2, val servicesC
     def warnNotOptedOut(message: String) = s"getTaxIdentifiersPreferenceDetails $message"
     val response =
       httpClient
-        .get(new URI(s"$serviceUrl/entity-resolver/${preferenceDetails.entityId.get}").toURL)
+        .get(new URI(s"$serviceUrl/entity-resolver?entityId=${preferenceDetails.entityId.get}").toURL)
         .execute[Option[Entity]]
     response
       .map(
@@ -113,8 +118,10 @@ class EntityResolverConnector @Inject() (httpClient: HttpClientV2, val servicesC
     taxId: TaxIdentifier
   )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[PreferenceDetails]] = {
     def warnNotOptedOut(message: String) = s"getTaxIdentifiersPreferenceDetails $message"
+    val regime = taxId.regime
+    val value = sanitize(taxId.value)
     httpClient
-      .get(new URI(s"$serviceUrl/portal/preferences/${taxId.regime}/${taxId.value}").toURL)
+      .get(new URI(s"$serviceUrl/portal/preferences/$regime/$value").toURL)
       .execute[Option[PreferenceDetails]]
       .recover {
         case ex: BadRequestException =>
