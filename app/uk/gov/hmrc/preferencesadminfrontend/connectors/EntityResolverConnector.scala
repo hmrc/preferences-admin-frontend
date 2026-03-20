@@ -81,7 +81,7 @@ class EntityResolverConnector @Inject() (httpClient: HttpClientV2, val servicesC
     def warnNotOptedOut(message: String) = s"getTaxIdentifiersPreferenceDetails $message"
     val response =
       httpClient
-        .get(new URI(s"$serviceUrl/entity-resolver/${preferenceDetails.entityId.get}").toURL)
+        .get(new URI(s"$serviceUrl/entity-resolver?entityId=${preferenceDetails.entityId.get}").toURL)
         .execute[Option[Entity]]
     response
       .map(
