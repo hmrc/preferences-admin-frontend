@@ -124,7 +124,7 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
     "construct the correct URL using entityId and return identifiers" in new TestCase {
 
       val mockPreferenceDetails: PreferenceDetails = mockPreferenceDetailsForGetTaxIdentifiers(entityId)
-      val expectedPath = url"$entityResolverserviceUrl/entity-resolver/${mockPreferenceDetails.entityId.get}"
+      val expectedPath = url"$entityResolverserviceUrl/entity-resolver?entityId=${mockPreferenceDetails.entityId.get}"
       val responseJson: JsObject = taxIdentifiersResponseFor(sautr, nino)
 
       val result: Seq[TaxIdentifier] = entityConnectorGetEntityMock(expectedPath, responseJson)
@@ -139,7 +139,7 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
     "return empty sequence if the service returns 404" in new TestCase {
 
       val mockPreferenceDetails: PreferenceDetails = mockPreferenceDetailsForGetTaxIdentifiers(entityId)
-      val expectedPath = url"$entityResolverserviceUrl/entity-resolver/$entityId"
+      val expectedPath = url"$entityResolverserviceUrl/entity-resolver?entityId=$entityId"
 
       val result: Seq[TaxIdentifier] =
         entityConnectorGetMock(expectedPath, UpstreamErrorResponse("Not Found", Status.NOT_FOUND, Status.NOT_FOUND))
@@ -293,7 +293,7 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
     "getTaxIdentifiers - preferenceDetails" should {
       "handle Conflict error" in new TestCase {
         val details = mockPreferenceDetailsForGetTaxIdentifiers(entityId)
-        val expectedPath = url"$entityResolverserviceUrl/entity-resolver/$entityId"
+        val expectedPath = url"$entityResolverserviceUrl/entity-resolver?entityId=$entityId"
         val result = entityConnectorGetMock(expectedPath, UpstreamErrorResponse("err", CONFLICT, CONFLICT))
           .getTaxIdentifiers(details)
           .futureValue
