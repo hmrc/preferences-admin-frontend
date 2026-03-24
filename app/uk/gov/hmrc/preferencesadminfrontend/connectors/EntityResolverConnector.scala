@@ -39,20 +39,15 @@ class EntityResolverConnector @Inject() (httpClient: HttpClientV2, val servicesC
   val logger = Logger(getClass)
   implicit val ef: Format[Entity] = Entity.formats
 
-  val serviceUrl: String = servicesConfig.baseUrl("entity-resolver")
-
-  def sanitize(input: String): String =
-    input.replaceAll("[^a-zA-Z0-9-_~]", "")
+  def serviceUrl = servicesConfig.baseUrl("entity-resolver")
 
   def getTaxIdentifiers(
     taxId: TaxIdentifier
   )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[TaxIdentifier]] = {
     def warnNotOptedOut(message: String) = s"getTaxIdentifiersTaxId $message"
-    val regime: String = taxId.regime
-    val value: String = sanitize(taxId.value)
     val response =
       httpClient
-        .get(new URI(s"$serviceUrl/entity-resolver/$regime/$value").toURL)
+        .get(new URI(s"$serviceUrl/entity-resolver?taxRegime=${taxId.regime}&taxId=${taxId.value}").toURL)
         .execute[Option[Entity]]
     response
       .map(
@@ -118,10 +113,8 @@ class EntityResolverConnector @Inject() (httpClient: HttpClientV2, val servicesC
     taxId: TaxIdentifier
   )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[PreferenceDetails]] = {
     def warnNotOptedOut(message: String) = s"getTaxIdentifiersPreferenceDetails $message"
-    val regime = taxId.regime
-    val value = sanitize(taxId.value)
     httpClient
-      .get(new URI(s"$serviceUrl/portal/preferences/$regime/$value").toURL)
+      .get(new URI(s"$serviceUrl/portal/preferences/${taxId.regime}/${taxId.value}").toURL)
       .execute[Option[PreferenceDetails]]
       .recover {
         case ex: BadRequestException =>
