@@ -98,6 +98,32 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
       result must contain(itsaId)
     }
 
+    "return all tax identifiers for sautr along with itsaId when sautr entered with spaces" in new TestCase {
+      val expectedPath = url"$entityResolverserviceUrl/entity-resolver/sa/${sautr.value}"
+      val responseJson = taxIdentifiersResponseFor(sautr, nino, itsaId)
+      val sautrWithSpaces = TaxIdentifier("sautr", s" ${sautr.value} ")
+      val result =
+        entityConnectorGetEntityMock(expectedPath, responseJson).getTaxIdentifiers(sautrWithSpaces).futureValue
+
+      result.size mustBe 3
+      result must contain(nino)
+      result must contain(sautr)
+      result must contain(itsaId)
+    }
+
+    "return all tax identifiers for itsaId when itsaId entered with spaces & special chars" in new TestCase {
+      val expectedPath = url"$entityResolverserviceUrl/entity-resolver/itsa/HMRC-MTD-IT~ITSAID~XYIT00000067034"
+      val responseJson = taxIdentifiersResponseFor(sautr, nino, itsaId)
+      val itsaIdWithSpaces = TaxIdentifier("HMRC-MTD-IT", s" HMRC-MTD-IT~ITSAID~XYIT00000067034 ")
+      val result =
+        entityConnectorGetEntityMock(expectedPath, responseJson).getTaxIdentifiers(itsaIdWithSpaces).futureValue
+
+      result.size mustBe 3
+      result must contain(nino)
+      result must contain(sautr)
+      result must contain(itsaId)
+    }
+
     "return empty sequence" in new TestCase {
       val expectedPath = url"$entityResolverserviceUrl/entity-resolver/paye/${nino.value}"
 
@@ -216,6 +242,21 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
 
       val result =
         entityConnectorGetPreferenceDetailsMock(expectedPath, responseJson).getPreferenceDetails(nino).futureValue
+
+      result mustBe defined
+      result.get.genericPaperless mustBe true
+      result.get.email.get.address mustBe "john.doe@digital.hmrc.gov.uk"
+      result.get.email.get.verified mustBe true
+      result.get.email.get.verifiedOn.get.isEqual(verfiedOn.get) mustBe true
+    }
+
+    "return email address and verification if user is opted in for nino when nino entered with spaces" in new TestCase {
+      val expectedPath = url"$entityResolverserviceUrl/portal/preferences/paye/${nino.value}"
+      val responseJson = preferenceDetailsResponseForGenericOptedIn(true)
+      val ninoValue = TaxIdentifier("nino", "NA000914 D ")
+
+      val result =
+        entityConnectorGetPreferenceDetailsMock(expectedPath, responseJson).getPreferenceDetails(ninoValue).futureValue
 
       result mustBe defined
       result.get.genericPaperless mustBe true
