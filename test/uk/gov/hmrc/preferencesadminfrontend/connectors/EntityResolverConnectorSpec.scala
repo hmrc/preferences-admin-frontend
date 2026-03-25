@@ -43,7 +43,7 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
 
   "getTaxIdentifiers" must {
     "return only sautr if nino does not exist" in new TestCase {
-      val expectedPath = url"$entityResolverserviceUrl/entity-resolver/sa/${sautr.value}"
+      val expectedPath = url"$entityResolverserviceUrl/entity-resolver?taxRegime=sa&taxId=${sautr.value}"
       val responseJson = taxIdentifiersResponseFor(sautr)
 
       val result = entityConnectorGetEntityMock(expectedPath, responseJson).getTaxIdentifiers(sautr).futureValue
@@ -53,7 +53,7 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
     }
 
     "return all tax identifiers for sautr" in new TestCase {
-      val expectedPath = url"$entityResolverserviceUrl/entity-resolver/sa/${sautr.value}"
+      val expectedPath = url"$entityResolverserviceUrl/entity-resolver?taxRegime=sa&taxId=${sautr.value}"
       val responseJson = taxIdentifiersResponseFor(sautr, nino)
 
       val result = entityConnectorGetEntityMock(expectedPath, responseJson).getTaxIdentifiers(sautr).futureValue
@@ -64,7 +64,7 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
     }
 
     "return all tax identifiers for nino" in new TestCase {
-      val expectedPath = url"$entityResolverserviceUrl/entity-resolver/paye/${nino.value}"
+      val expectedPath = url"$entityResolverserviceUrl/entity-resolver?taxRegime=paye&taxId=${nino.value}"
       val responseJson = taxIdentifiersResponseFor(sautr, nino)
 
       val result = entityConnectorGetEntityMock(expectedPath, responseJson).getTaxIdentifiers(nino).futureValue
@@ -75,7 +75,7 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
     }
 
     "return all tax identifiers for nino along with itsaId" in new TestCase {
-      val expectedPath = url"$entityResolverserviceUrl/entity-resolver/paye/${nino.value}"
+      val expectedPath = url"$entityResolverserviceUrl/entity-resolver?taxRegime=paye&taxId=${nino.value}"
       val responseJson = taxIdentifiersResponseFor(sautr, nino, itsaId)
 
       val result = entityConnectorGetEntityMock(expectedPath, responseJson).getTaxIdentifiers(nino).futureValue
@@ -87,7 +87,7 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
     }
 
     "return all tax identifiers for sautr along with itsaId" in new TestCase {
-      val expectedPath = url"$entityResolverserviceUrl/entity-resolver/sa/${sautr.value}"
+      val expectedPath = url"$entityResolverserviceUrl/entity-resolver?taxRegime=sa&taxId=${sautr.value}"
       val responseJson = taxIdentifiersResponseFor(sautr, nino, itsaId)
 
       val result = entityConnectorGetEntityMock(expectedPath, responseJson).getTaxIdentifiers(sautr).futureValue
@@ -99,7 +99,7 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
     }
 
     "return all tax identifiers for sautr along with itsaId when sautr entered with spaces" in new TestCase {
-      val expectedPath = url"$entityResolverserviceUrl/entity-resolver/sa/${sautr.value}"
+      val expectedPath = url"$entityResolverserviceUrl/entity-resolver?taxRegime=sa&taxId=${sautr.value}"
       val responseJson = taxIdentifiersResponseFor(sautr, nino, itsaId)
       val sautrWithSpaces = TaxIdentifier("sautr", s" ${sautr.value} ")
       val result =
@@ -112,7 +112,8 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
     }
 
     "return all tax identifiers for itsaId when itsaId entered with spaces & special chars" in new TestCase {
-      val expectedPath = url"$entityResolverserviceUrl/entity-resolver/itsa/HMRC-MTD-IT~ITSAID~XYIT00000067034"
+      val expectedPath =
+        url"$entityResolverserviceUrl/entity-resolver?taxRegime=itsa&taxId=HMRC-MTD-IT~ITSAID~XYIT00000067034"
       val responseJson = taxIdentifiersResponseFor(sautr, nino, itsaId)
       val itsaIdWithSpaces = TaxIdentifier("HMRC-MTD-IT", s" HMRC-MTD-IT~ITSAID~XYIT00000067034 ")
       val result =
@@ -125,7 +126,7 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
     }
 
     "return empty sequence" in new TestCase {
-      val expectedPath = url"$entityResolverserviceUrl/entity-resolver/paye/${nino.value}"
+      val expectedPath = url"$entityResolverserviceUrl/entity-resolver?taxRegime=paye&taxId=${nino.value}"
 
       val result = entityConnectorGetMock(expectedPath, UpstreamErrorResponse("", Status.CONFLICT, Status.CONFLICT))
         .getTaxIdentifiers(nino)
@@ -135,7 +136,7 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
     }
 
     "return empty sequence  if Entity-Resolver cannot parse parameter" in new TestCase {
-      val expectedPath = url"$entityResolverserviceUrl/entity-resolver/paye/${nino.value}"
+      val expectedPath = url"$entityResolverserviceUrl/entity-resolver?taxRegime=paye&taxId=${nino.value}"
       val error = new BadRequestException(message =
         s"""'{"statusCode":400,"message":"Cannot parse parameter '${nino.name}' with value '${nino.value}'"}'"""
       )
@@ -323,7 +324,7 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
 
     "getTaxIdentifiers - taxId" should {
       "handle unexpected exceptions" in new TestCase {
-        val expectedPath = url"$entityResolverserviceUrl/entity-resolver/sa/${sautr.value}"
+        val expectedPath = url"$entityResolverserviceUrl/entity-resolver?taxRegime=sa&taxId=${sautr.value}"
         val result = entityConnectorGetMock(expectedPath, new RuntimeException("foo"))
           .getTaxIdentifiers(sautr)
           .futureValue

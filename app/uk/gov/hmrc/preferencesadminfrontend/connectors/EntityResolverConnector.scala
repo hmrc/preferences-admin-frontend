@@ -52,7 +52,7 @@ class EntityResolverConnector @Inject() (httpClient: HttpClientV2, val servicesC
     val value: String = sanitize(taxId.value)
     val response =
       httpClient
-        .get(new URI(s"$serviceUrl/entity-resolver/$regime/$value").toURL)
+        .get(new URI(s"$serviceUrl/entity-resolver?taxRegime=$regime&taxId=$value").toURL)
         .execute[Option[Entity]]
     response
       .map(
