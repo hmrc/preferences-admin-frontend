@@ -32,7 +32,8 @@ class FormIdsSpec extends PlaySpec {
           "LPP2_ITSA",
           "LPP4_ITSA",
           "PAR1_ITSA",
-          "ITSAORM1"
+          "ITSAORM1",
+          "PL3"
         )
 
       itsaFormIds.foreach { itsaFormId =>
