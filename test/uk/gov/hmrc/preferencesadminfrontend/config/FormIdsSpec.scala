@@ -41,6 +41,22 @@ class FormIdsSpec extends PlaySpec {
       }
     }
 
+    "contain NIRef form ids" in {
+      val formIdsConfig: Seq[String] = FormIds.configList
+
+      val niRefFormIds: List[String] =
+        List(
+          "NIRef1",
+          "NIRef2",
+          "NIRef3",
+          "NIRef4"
+        )
+
+      niRefFormIds.foreach { id =>
+        assert(formIdsConfig.contains(id))
+      }
+    }
+
     "not contain welsh form ids" in {
       assert(!FormIds.configList.exists(_.toLowerCase().endsWith("_cy")))
     }
