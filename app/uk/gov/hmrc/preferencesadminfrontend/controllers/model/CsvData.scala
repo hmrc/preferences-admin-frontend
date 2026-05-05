@@ -18,9 +18,8 @@ package uk.gov.hmrc.preferencesadminfrontend.controllers.model
 
 import play.api.libs.json._
 
-case class CsvData(field1: String, field2: String, field3: String)
+case class CsvData(nino: String, utr: String, itsaId: String)
 
 object CsvData {
-  // Implicitly generates the JSON format for the API call
   implicit val format: OFormat[CsvData] = Json.format[CsvData]
 }
