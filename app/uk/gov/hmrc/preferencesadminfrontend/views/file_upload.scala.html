@@ -1,0 +1,35 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@this(layout: Layout, govukBreadcrumbs: GovukBreadcrumbs, form: FormWithCSRF)
+
+@()(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
+@import scala.concurrent.ExecutionContext.Implicits.global
+@import uk.gov.hmrc.preferencesadminfrontend.controllers.routes
+
+@layout(pageTitle = "File Upload Page") {
+    <div class="govuk-button-group">
+        @form(action = routes.UploadController.upload(), Symbol("enctype")-> "multipart/form-data") {
+            <div class="govuk-form-group">
+                <label class="govuk-heading-m" for="file-upload-1">
+                    Upload a CSV file
+                </label>
+                <input class="govuk-file-upload" id="file-upload-1" name="fileUpload1" type="file" accept=".csv">
+            </div>
+            <button type="submit" id="submit" data-module="govuk-button" class="govuk-button" >Upload and Process</button>
+        }
+    </div>
+}
