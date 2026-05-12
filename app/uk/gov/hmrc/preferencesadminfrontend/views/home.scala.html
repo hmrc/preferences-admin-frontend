@@ -14,8 +14,8 @@
  * limitations under the License.
  *@
 
-@this(layout: Layout,
-govukBreadcrumbs: GovukBreadcrumbs)
+@import uk.gov.hmrc.preferencesadminfrontend.views.TemplateHelper
+@this(layout: Layout, govukBreadcrumbs: GovukBreadcrumbs)
 
 @()(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
 
@@ -36,7 +36,7 @@ govukBreadcrumbs: GovukBreadcrumbs)
             <li class="govuk-task-list__item govuk-task-list__item--with-link">
                 <a class="govuk-link govuk-task-list__link" href="/paperless/admin/search">Paperless Admin</a>
             </li>
-            @if(request.session.get("isAdmin").getOrElse("false").toBoolean) {
+            @if(TemplateHelper.validateRole(request.session, "isAdmin")) {
             <li class="govuk-task-list__item govuk-task-list__item--with-link">
                 <a class="govuk-link govuk-task-list__link" href="/paperless/admin/message-brake">Message Brake</a>
             </li>

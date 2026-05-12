@@ -15,6 +15,7 @@
  *@
 
 @import uk.gov.hmrc.govukfrontend.views.html.components.implicits._
+@import uk.gov.hmrc.preferencesadminfrontend.views.TemplateHelper._
 @import uk.gov.hmrc.preferencesadminfrontend.controllers.routes
 
 @this(
@@ -42,7 +43,7 @@ govukBreadcrumbs: GovukBreadcrumbs)
     )
 
     @form(action = routes.SearchController.search()) {
-        @if(request.session.get("isAdmin").getOrElse("false").toBoolean) {
+        @if(validateRole(request.session, "isAdmin")) {
           @govukRadios(Radios(
               fieldset = Some(Fieldset(
                   legend = Some(Legend(

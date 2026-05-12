@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.preferencesadminfrontend.controllers
 
-import play.api.mvc.{ AnyContent, Request, Result }
+import play.api.mvc.{ Action, AnyContent, Request, Result }
 import uk.gov.hmrc.preferencesadminfrontend.controllers.model.User
 
 import javax.inject.Inject
@@ -24,18 +24,19 @@ import scala.concurrent.Future
 
 trait RoleAuthorisedAction @Inject() (val authorisedActionService: AuthorisedAction) {
   def role: Role
-  def authorisedAction(block: Request[AnyContent] => User => Future[Result]) =
+  def authorisedAction(block: Request[AnyContent] => User => Future[Result]): Action[AnyContent] =
     authorisedActionService.async(role)(block)
 }
 
 enum Role {
-  case Admin, Generic
+  case Admin, Generic, SolsGeneric
 }
 
 object Role {
   def fromString(role: String): Role = role.trim.toLowerCase match {
     case "admin"   => Admin
     case "generic" => Generic
+    case "sols"    => SolsGeneric
     case _         => throw IllegalArgumentException(s"Invalid argument for the role $role")
   }
 }
