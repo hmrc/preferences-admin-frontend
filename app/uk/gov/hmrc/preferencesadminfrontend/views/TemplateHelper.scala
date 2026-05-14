@@ -17,6 +17,7 @@
 package uk.gov.hmrc.preferencesadminfrontend.views
 
 import play.api.data.Form
+import play.api.mvc.Session
 import play.twirl.api.Html
 import uk.gov.hmrc.preferencesadminfrontend.model.{ GmcBatch, GmcBatchApproval }
 
@@ -37,4 +38,6 @@ object TemplateHelper {
 
   def showFormIds(gmcBatchApproval: Form[GmcBatchApproval]): List[String] =
     gmcBatchApproval("formId").value.map(_.split(",").toList).getOrElse(Nil)
+
+  def validateRole(session: Session, role: String): Boolean = session.get(role).getOrElse("false").toBoolean
 }

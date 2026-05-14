@@ -30,14 +30,12 @@ class LoginService @Inject() (loginServiceConfig: LoginServiceConfiguration) {
     loginServiceConfig.authorisedUsers.exists(u => u.username == user.username && u.password == user.password)
 
   def hasRequiredRole(user: User, role: Role): Boolean =
-    loginServiceConfig.authorisedUsers.exists(u =>
-      u.username == user.username && (u.roles.contains(role) || u.roles.contains(Role.Admin))
-    )
+    loginServiceConfig.authorisedUsers.exists(u => u.username == user.username && u.roles.contains(role))
 }
 
 class LoginServiceConfiguration @Inject() (val configuration: Configuration) {
 
-  def verifyConfiguration() = if (authorisedUsers.isEmpty) throw new Missing("Property users is empty")
+  def verifyConfiguration(): Unit = if (authorisedUsers.isEmpty) throw new Missing("Property users is empty")
 
   lazy val authorisedUsers: Seq[User] =
     configuration
@@ -50,7 +48,7 @@ class LoginServiceConfiguration @Inject() (val configuration: Configuration) {
         User(
           userConfig.getOptional[String]("username").getOrElse(throw new Missing("Property username missing")),
           decodedPwd,
-          userConfig.getOptional[String]("roles").getOrElse("Generic").split(",").map(Role.fromString(_)).toList
+          userConfig.getOptional[String]("roles").getOrElse("Generic").split(",").map(Role.fromString).toList
         )
       }
 }

@@ -17,6 +17,7 @@
 @import uk.gov.hmrc.govukfrontend.views.html.components.implicits._
 @import uk.gov.hmrc.preferencesadminfrontend.controllers.model.OptOutReasonWithIdentifier
 @import uk.gov.hmrc.preferencesadminfrontend.controllers.routes
+@import uk.gov.hmrc.preferencesadminfrontend.views.TemplateHelper._
 
 @this(
     layout: Layout,
@@ -52,7 +53,7 @@
 
 @uk.gov.hmrc.preferencesadminfrontend.views.html.user_summary(govukSummaryList, preferences)
 
-@if(preferences.size == 1){
+@if(preferences.size == 1 && validateRole(request.session, "isAdmin") ){
 
 @for(preference <- preferences){
     <h2 class="govuk-heading-m">Actions</h2>

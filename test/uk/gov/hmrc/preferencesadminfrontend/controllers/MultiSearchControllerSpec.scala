@@ -26,6 +26,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.*
 import play.api.i18n.MessagesApi
 import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.mvc.AnyContentAsEmpty
 import play.api.test.FakeRequest
 import play.api.test.Helpers.*
 import play.api.{ Application, inject }
@@ -80,8 +81,8 @@ class MultiSearchControllerSpec
 
   "showResultsPage - POST /multi-search/results" should {
     "return 400 when form binding fails" in new TestCase {
-      val request = FakeRequest("POST", "/multi-search/results")
-        .withSession(User.sessionKey -> "admin")
+      val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest("POST", "/multi-search/results")
+        .withSession(User.sessionKey -> "user")
 
       val result = controller.showResultsPage()(request)
 
@@ -93,7 +94,7 @@ class MultiSearchControllerSpec
         .thenReturn(Future.successful(Nil))
 
       val request = FakeRequest("POST", "/multi-search/results")
-        .withSession(User.sessionKey -> "admin")
+        .withSession(User.sessionKey -> "user")
         .withFormUrlEncodedBody(
           "search-ninos" -> "AB123456C",
           "batch"        -> ""
@@ -109,7 +110,7 @@ class MultiSearchControllerSpec
         .thenReturn(Future.successful(List(("AB123456C", "test@example.com"))))
 
       val request = FakeRequest("POST", "/multi-search/results")
-        .withSession(User.sessionKey -> "admin")
+        .withSession(User.sessionKey -> "user")
         .withFormUrlEncodedBody(
           "search-ninos" -> "AB123456C",
           "batch"        -> ""
