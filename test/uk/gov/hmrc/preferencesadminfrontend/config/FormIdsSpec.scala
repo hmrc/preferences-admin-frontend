@@ -57,6 +57,16 @@ class FormIdsSpec extends PlaySpec {
       }
     }
 
+    "contain Low Earners Pension Payment (LEPP) form ids" in {
+      val formIdsConfig: Seq[String] = FormIds.configList
+
+      val lEPPFormIds: List[String] = List("LEPP1", "LEPP2", "LEPP3", "LEPP4")
+
+      lEPPFormIds.foreach { id =>
+        assert(formIdsConfig.contains(id))
+      }
+    }
+
     "not contain welsh form ids" in {
       assert(!FormIds.configList.exists(_.toLowerCase().endsWith("_cy")))
     }
