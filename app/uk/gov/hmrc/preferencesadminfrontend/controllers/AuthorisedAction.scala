@@ -31,10 +31,11 @@ class AuthorisedAction @Inject() (loginService: LoginService, val controllerComp
 
   def async(role: Role)(block: Request[AnyContent] => User => Future[Result]): Action[AnyContent] =
     Action.async { implicit request =>
+      val isAdmin = request.session.get("isAdmin").getOrElse("false").toBoolean
       val user = request.session.get(User.sessionKey).map(name => User(name, ""))
 
       user match {
-        case Some(user) if loginService.hasRequiredRole(user, role) => block(request)(user)
+        case Some(user) if loginService.hasRequiredRole(user, role) || isAdmin => block(request)(user)
         case _ => Future.successful(play.api.mvc.Results.Redirect(routes.LoginController.showLoginPage()))
       }
     }
