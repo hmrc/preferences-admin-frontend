@@ -29,8 +29,11 @@ class LoginService @Inject() (loginServiceConfig: LoginServiceConfiguration) {
   def isAuthorised(user: User): Boolean =
     loginServiceConfig.authorisedUsers.exists(u => u.username == user.username && u.password == user.password)
 
+  // ToDo - Refactor this to remove explicit check for Admin role, needs further changes to implementation
   def hasRequiredRole(user: User, role: Role): Boolean =
-    loginServiceConfig.authorisedUsers.exists(u => u.username == user.username && u.roles.contains(role))
+    loginServiceConfig.authorisedUsers.exists(u =>
+      u.username == user.username && (u.roles.contains(role) || u.roles.contains(Role.Admin))
+    )
 }
 
 class LoginServiceConfiguration @Inject() (val configuration: Configuration) {
