@@ -29,7 +29,7 @@ import uk.gov.hmrc.play.audit.model.DataEvent
 import uk.gov.hmrc.play.bootstrap.config.AppName
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
-import uk.gov.hmrc.preferencesadminfrontend.controllers.Role.Admin
+import uk.gov.hmrc.preferencesadminfrontend.controllers.Role.{ Admin, SolsGeneric }
 import uk.gov.hmrc.preferencesadminfrontend.controllers.model.User
 import uk.gov.hmrc.preferencesadminfrontend.services.LoginService
 import uk.gov.hmrc.preferencesadminfrontend.views.html.login
@@ -68,6 +68,7 @@ class LoginController @Inject() (
                 + (User.sessionKey -> userData.username)
                 + ("ts"            -> Instant.now.toEpochMilli.toString)
                 + ("isAdmin"       -> loginService.hasRequiredRole(userData, Admin).toString)
+                + ("isSols"        -> loginService.hasRequiredRole(userData, SolsGeneric).toString)
             Future.successful(Redirect(routes.HomeController.showHomePage()).withSession(sessionUpdated))
           } else {
             auditConnector.sendEvent(createLoginEvent(userData.username, false))
