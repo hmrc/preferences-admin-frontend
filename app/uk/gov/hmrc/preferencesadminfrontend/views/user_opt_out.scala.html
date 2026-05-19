@@ -53,7 +53,7 @@
 
 @uk.gov.hmrc.preferencesadminfrontend.views.html.user_summary(govukSummaryList, preferences)
 
-@if(preferences.size == 1 && validateRole(request.session, "isAdmin") ){
+@if(preferences.size == 1 && !validateRole(request.session, "isSols") ){
 
 @for(preference <- preferences){
     <h2 class="govuk-heading-m">Actions</h2>
