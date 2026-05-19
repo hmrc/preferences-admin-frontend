@@ -9,6 +9,8 @@ GET         /                                           uk.gov.hmrc.preferencesa
 GET         /home                                       uk.gov.hmrc.preferencesadminfrontend.controllers.HomeController.showHomePage()
 GET         /decode                                     uk.gov.hmrc.preferencesadminfrontend.controllers.MultiSearchController.showDecodePage()
 GET         /multi-search                               uk.gov.hmrc.preferencesadminfrontend.controllers.MultiSearchController.showMultiSearchPage()
+GET         /file-upload                                uk.gov.hmrc.preferencesadminfrontend.controllers.UploadController.showUploadPage()
+POST        /upload                                     uk.gov.hmrc.preferencesadminfrontend.controllers.UploadController.upload()
 GET         /search-results                             uk.gov.hmrc.preferencesadminfrontend.controllers.MultiSearchController.showResultsPage()
 GET         /search                                     uk.gov.hmrc.preferencesadminfrontend.controllers.SearchController.showSearchPage()
 POST        /search/q                                   uk.gov.hmrc.preferencesadminfrontend.controllers.SearchController.search()
