@@ -43,7 +43,7 @@ govukBreadcrumbs: GovukBreadcrumbs)
     )
 
     @form(action = routes.SearchController.search()) {
-        @if(validateRole(request.session, "isAdmin")) {
+        @if(validateRole(request.session, "isAdmin") || validateRole(request.session, "isSols")) {
           @govukRadios(Radios(
               fieldset = Some(Fieldset(
                   legend = Some(Legend(
