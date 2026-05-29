@@ -58,8 +58,5 @@ class UploadService @Inject() {
       .map { _ =>
         Ok("Processing complete.")
       }
-      .recover { case e: Exception =>
-        InternalServerError(s"Error: ${e.getMessage}")
-      }
   }
 }
