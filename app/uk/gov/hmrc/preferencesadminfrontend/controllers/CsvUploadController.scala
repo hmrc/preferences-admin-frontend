@@ -53,7 +53,7 @@ class CsvUploadController @Inject() (
         uploadService.readFromFile(path).flatMap(uploadService.process)
       }
       .getOrElse {
-        Future.successful(BadRequest("File missing!"))
+        Future.successful(BadRequest("File missing or incorrect data supplied!"))
       }
   }
 }

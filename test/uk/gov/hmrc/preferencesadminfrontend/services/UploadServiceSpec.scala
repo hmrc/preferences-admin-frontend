@@ -69,7 +69,7 @@ class UploadServiceSpec extends PlaySpec with MockitoSugar with ScalaFutures {
 
         val resultFuture = service.process(records)
         status(resultFuture) mustBe OK
-        contentAsString(resultFuture) mustBe "Processing complete."
+        contentAsString(resultFuture) mustBe "Processing 2 records."
       }
     }
   }

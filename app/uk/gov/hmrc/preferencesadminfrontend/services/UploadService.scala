@@ -21,7 +21,7 @@ import org.apache.pekko.stream.scaladsl.*
 import org.apache.pekko.util.ByteString
 import play.api.libs.json.Json
 import play.api.mvc.*
-import play.api.mvc.Results.{ InternalServerError, Ok }
+import play.api.mvc.Results.Ok
 import uk.gov.hmrc.preferencesadminfrontend.services.model.CsvData
 
 import java.nio.file.Path
@@ -56,7 +56,7 @@ class UploadService @Inject() {
     Future
       .sequence(processingFutures)
       .map { _ =>
-        Ok("Processing complete.")
+        Ok(s"Processing ${processingFutures.size} records.")
       }
   }
 }
