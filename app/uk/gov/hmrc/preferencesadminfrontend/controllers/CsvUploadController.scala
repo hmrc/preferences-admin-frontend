@@ -1,0 +1,59 @@
+/*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package uk.gov.hmrc.preferencesadminfrontend.controllers
+
+import org.apache.pekko.actor.ActorSystem
+import play.api.Logging
+import play.api.i18n.I18nSupport
+import play.api.libs.Files
+import play.api.mvc.*
+import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
+import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
+import uk.gov.hmrc.preferencesadminfrontend.services.UploadService
+import uk.gov.hmrc.preferencesadminfrontend.services.model.CsvData
+import uk.gov.hmrc.preferencesadminfrontend.views.html.*
+
+import javax.inject.{ Inject, Singleton }
+import scala.concurrent.{ ExecutionContext, Future }
+
+@Singleton
+class CsvUploadController @Inject() (
+  authorisedAction: AuthorisedAction,
+  csvUpload: csv_upload,
+  uploadService: UploadService,
+  mcc: MessagesControllerComponents
+)(implicit appConfig: AppConfig, ec: ExecutionContext, actorSystem: ActorSystem)
+    extends FrontendController(mcc) with I18nSupport with Logging with RoleAuthorisedAction(authorisedAction) {
+
+  override def role: Role = Role.Admin
+
+  val showUploadPage: Action[AnyContent] = authorisedAction { implicit request => _ =>
+    Future.successful(Ok(csvUpload()))
+  }
+
+  def upload(): Action[MultipartFormData[Files.TemporaryFile]] = Action.async(parse.multipartFormData) { request =>
+    request.body
+      .file("csvFile")
+      .map { filePart =>
+        val path = filePart.ref.path
+        uploadService.readFromFile(path).flatMap(uploadService.process)
+      }
+      .getOrElse {
+        Future.successful(BadRequest("File missing!"))
+      }
+  }
+}
