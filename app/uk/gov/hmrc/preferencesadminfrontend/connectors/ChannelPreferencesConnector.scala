@@ -16,15 +16,16 @@
 
 package uk.gov.hmrc.preferencesadminfrontend.connectors
 
-import cats.syntax.either._
+import cats.syntax.either.*
 import play.api.http.Status
 import play.api.libs.json.{ Json, OFormat }
 import play.api.libs.ws.writeableOf_JsValue
 import uk.gov.hmrc.http.{ HeaderCarrier, HttpResponse }
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.preferencesadminfrontend.connectors.ChannelPreferencesConnector.StatusUpdate
-import uk.gov.hmrc.http.HttpReads.Implicits._
+import uk.gov.hmrc.http.HttpReads.Implicits.*
 import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.preferencesadminfrontend.services.model.CsvData
 
 import java.net.URI
 import javax.inject.{ Inject, Singleton }
@@ -53,6 +54,18 @@ class ChannelPreferencesConnector @Inject() (httpClient: HttpClientV2, val servi
         httpResponse.status match {
           case status if Status.isSuccessful(status) => ().asRight
           case other => s"upstream error when sending status update, $other ${httpResponse.body}".asLeft
+        }
+      }
+
+  def process(csv: CsvData)(implicit hc: HeaderCarrier): Future[Either[String, Unit]] =
+    httpClient
+      .post(new URI(s"$serviceUrl/channel-preferences/process").toURL)
+      .withBody(Json.toJson(csv))
+      .execute[HttpResponse]
+      .map { httpResponse =>
+        httpResponse.status match {
+          case status if Status.isSuccessful(status) => ().asRight
+          case other => s"upstream error when sending the request, $other ${httpResponse.body}".asLeft
         }
       }
 }
