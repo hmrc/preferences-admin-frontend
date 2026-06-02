@@ -18,7 +18,6 @@ package uk.gov.hmrc.preferencesadminfrontend.services
 
 import org.apache.pekko.stream.Materializer
 import org.apache.pekko.stream.scaladsl.*
-import org.apache.pekko.util.ByteString
 import play.api.mvc.*
 import play.api.mvc.Results.Ok
 import uk.gov.hmrc.http.HeaderCarrier
@@ -30,24 +29,17 @@ import javax.inject.Inject
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{ ExecutionContext, Future }
 
-class UploadService @Inject() (channelPreferencesConnector: ChannelPreferencesConnector) {
+class UploadService @Inject() (channelPreferencesConnector: ChannelPreferencesConnector, csvReader: CsvReader) {
 
-  private val FrameLength = 1024
-  private val AllowTruncation = true
+  def readFromFile(path: Path)(implicit mat: Materializer): Future[List[CsvData]] = {
+    val extractCsvData: PartialFunction[Any, CsvData] = {
+      case line: String if line.split(",").map(_.trim).length >= 3 =>
+        val cols = line.split(",").map(_.trim)
+        CsvData(cols(0), cols(1), cols(2))
+    }
 
-  def readFromFile(path: Path)(implicit mat: Materializer): Future[List[CsvData]] =
-    FileIO
-      .fromPath(path)
-      .via(Framing.delimiter(ByteString("\n"), FrameLength, AllowTruncation))
-      .map(_.utf8String.trim)
-      .filter(_.nonEmpty)
-      .collect {
-        case line if line.split(",").map(_.trim).length >= 3 =>
-          val cols = line.split(",").map(_.trim)
-          CsvData(cols(0), cols(1), cols(2))
-      }
-      .runWith(Sink.seq)
-      .map(_.toList)(mat.executionContext)
+    csvReader.readFromFile(path, extractCsvData)
+  }
 
   def process(
     records: List[CsvData]
@@ -63,4 +55,5 @@ class UploadService @Inject() (channelPreferencesConnector: ChannelPreferencesCo
         Ok(s"Processed ${records.size} records successfully.")
       }
   }
+
 }

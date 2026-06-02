@@ -18,17 +18,17 @@ package uk.gov.hmrc.preferencesadminfrontend.services
 
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.stream.Materializer
-import org.scalatest.concurrent.ScalaFutures
-import org.scalatestplus.mockito.MockitoSugar
 import org.mockito.ArgumentMatchers.*
 import org.mockito.Mockito.*
+import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.SpanSugar.convertIntToGrainOfTime
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
-import play.api.test.Helpers.*
 import play.api.mvc.Results.{ BadRequest, InternalServerError, Ok }
+import play.api.test.Helpers.*
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.preferencesadminfrontend.connectors.ChannelPreferencesConnector
-import uk.gov.hmrc.preferencesadminfrontend.services.model.CsvData
+import uk.gov.hmrc.preferencesadminfrontend.services.model.*
 
 import java.nio.file.{ Files, Path }
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -41,7 +41,7 @@ class UploadServiceSpec extends PlaySpec with MockitoSugar with ScalaFutures {
   implicit val hc: HeaderCarrier = HeaderCarrier()
   implicit val defaultPatience: PatienceConfig = PatienceConfig(timeout = 5.seconds, interval = 100.millis)
   val mockConnector: ChannelPreferencesConnector = mock[ChannelPreferencesConnector]
-  val serviceUnderTest = new UploadService(mockConnector)
+  val serviceUnderTest = new UploadService(mockConnector, new CsvReader)
 
   "UploadService.readFromFile" should {
     "successfully parse a valid CSV file and skip invalid rows" in {
@@ -129,5 +129,6 @@ class UploadServiceSpec extends PlaySpec with MockitoSugar with ScalaFutures {
         contentAsString(Future.successful(result)) must include("Processed 3 records successfully.")
       }
     }
+
   }
 }
