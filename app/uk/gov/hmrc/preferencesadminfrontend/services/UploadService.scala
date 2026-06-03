@@ -27,6 +27,7 @@ import uk.gov.hmrc.preferencesadminfrontend.services.model.CsvData
 
 import java.nio.file.Path
 import javax.inject.Inject
+import scala.concurrent.duration.DurationInt
 import scala.concurrent.{ ExecutionContext, Future }
 
 class UploadService @Inject() (channelPreferencesConnector: ChannelPreferencesConnector) {
@@ -48,13 +49,18 @@ class UploadService @Inject() (channelPreferencesConnector: ChannelPreferencesCo
       .runWith(Sink.seq)
       .map(_.toList)(mat.executionContext)
 
-  def process(records: List[CsvData])(implicit ec: ExecutionContext, hc: HeaderCarrier): Future[Result] = {
-    val processingFutures = records.map(channelPreferencesConnector.process)
-
-    Future
-      .sequence(processingFutures)
+  def process(
+    records: List[CsvData]
+  )(implicit ec: ExecutionContext, hc: HeaderCarrier, mat: Materializer): Future[Result] = {
+    val LimitR = 10
+    Source(records)
+      .throttle(LimitR, 1.second)
+      .mapAsync(parallelism = 2) { record =>
+        channelPreferencesConnector.process(record)
+      }
+      .runWith(Sink.ignore)
       .map { _ =>
-        Ok(s"Processing ${processingFutures.size} records.")
+        Ok(s"Processed ${records.size} records successfully.")
       }
   }
 }
