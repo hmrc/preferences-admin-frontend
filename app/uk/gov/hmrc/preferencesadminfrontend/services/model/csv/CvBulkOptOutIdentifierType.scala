@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.preferencesadminfrontend.services.model
+package uk.gov.hmrc.preferencesadminfrontend.services.model.csv
+
 import play.api.libs.json.*
+import uk.gov.hmrc.preferencesadminfrontend.services.model.*
 
 object CvBulkOptOutIdentifierType {
   private val allValues = List(NinoIdentifierType, SAUTRIdentifierType, ITSAIdentifierType, EmailIdentifierType)

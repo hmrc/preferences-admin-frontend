@@ -29,7 +29,7 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.preferencesadminfrontend.connectors.ChannelPreferencesConnector.StatusUpdate
 import uk.gov.hmrc.http.HttpReads.Implicits.readRaw
 import uk.gov.hmrc.http.client.{ HttpClientV2, RequestBuilder }
-import uk.gov.hmrc.preferencesadminfrontend.services.model.CsvData
+import uk.gov.hmrc.preferencesadminfrontend.services.model.csv.CsvData
 
 import java.net.{ URI, URL }
 import scala.concurrent.ExecutionContext.Implicits.global

@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.preferencesadminfrontend.services.model
+package uk.gov.hmrc.preferencesadminfrontend.services.model.csv
 
-import play.api.libs.json.{ Json, OFormat }
+import play.api.libs.json.*
 
-case class CvBulkOptOutCsvData(identifierType: CvBulkOptOutIdentifierType, value: String)
+case class CsvData(nino: String, utr: String, mtditsaid: String)
 
-object CvBulkOptOutCsvData {
-  implicit val format: OFormat[CvBulkOptOutCsvData] = Json.format[CvBulkOptOutCsvData]
+object CsvData {
+  implicit val format: OFormat[CsvData] = Json.format[CsvData]
 }

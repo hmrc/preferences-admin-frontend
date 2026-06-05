@@ -22,11 +22,10 @@ import org.scalactic.Prettifier
 import org.scalatest.concurrent.{ IntegrationPatience, ScalaFutures }
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
-import play.api.libs.json.Json
-import play.api.test.Helpers.{ contentAsString, status }
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.preferencesadminfrontend.services.model.{ CvBulkOptOutCsvData, EmailIdentifierType, ITSAIdentifierType, NinoIdentifierType }
 import play.api.test.Helpers.*
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.preferencesadminfrontend.services.model.csv.{ CvBulkOptOutCsvData, EmailIdentifierType, ITSAIdentifierType, NinoIdentifierType }
+
 import java.nio.file.{ Files, Path }
 import scala.concurrent.{ ExecutionContextExecutor, Future }
 
@@ -76,13 +75,12 @@ class BulkUploadOptOutsServiceSpec extends AnyWordSpecLike with Matchers with Sc
       try {
         val eventualCvBulkOptOutCsvDataList: Future[List[Either[String, CvBulkOptOutCsvData]]] =
           bulkUploadOptOutsService.readBulkOptOutsFromFile(tempFile)
+
         whenReady(eventualCvBulkOptOutCsvDataList) { cvOptOutCsvDataList =>
           // not used in comparison but in showing a clear diff on failure
-          implicit val prettifier: Prettifier = new Prettifier {
-            override def apply(o: Any): String = o match {
-              case entries: List[_] => entries.mkString(",\n").stripSuffix("\n")
-              case _                => o.toString
-            }
+          implicit val prettifier: Prettifier = {
+            case entries: List[_] => entries.mkString(",\n").stripSuffix("\n")
+            case o: Any           => o.toString
           }
 
           cvOptOutCsvDataList mustBe List(

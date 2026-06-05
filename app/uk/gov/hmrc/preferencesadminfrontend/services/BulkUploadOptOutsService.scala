@@ -20,7 +20,7 @@ import org.apache.pekko.stream.Materializer
 import play.api.mvc.Result
 import play.api.mvc.Results.Ok
 import play.api.libs.json.Json
-import uk.gov.hmrc.preferencesadminfrontend.services.model.{ CvBulkOptOutCsvData, CvBulkOptOutIdentifierType, EmailIdentifierType }
+import uk.gov.hmrc.preferencesadminfrontend.services.model.csv.{ CvBulkOptOutCsvData, CvBulkOptOutIdentifierType, EmailIdentifierType }
 
 import java.nio.file.Path
 import javax.inject.Inject

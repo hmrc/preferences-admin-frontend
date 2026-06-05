@@ -22,7 +22,7 @@ import play.api.mvc.*
 import play.api.mvc.Results.Ok
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.preferencesadminfrontend.connectors.ChannelPreferencesConnector
-import uk.gov.hmrc.preferencesadminfrontend.services.model.CsvData
+import uk.gov.hmrc.preferencesadminfrontend.services.model.csv.CsvData
 
 import java.nio.file.Path
 import javax.inject.Inject

@@ -19,6 +19,7 @@ package uk.gov.hmrc.preferencesadminfrontend.services.model
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.libs.json.{ JsString, JsSuccess }
+import uk.gov.hmrc.preferencesadminfrontend.services.model.csv.{ CvBulkOptOutIdentifierType, EmailIdentifierType, ITSAIdentifierType, NinoIdentifierType, SAUTRIdentifierType }
 
 class CvBulkOptOutIdentifierTypeSpec extends AnyWordSpecLike with Matchers {
 

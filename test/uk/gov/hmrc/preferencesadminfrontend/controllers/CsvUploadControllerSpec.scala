@@ -36,7 +36,7 @@ import play.api.{ Application, inject }
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.preferencesadminfrontend.controllers.model.User
 import uk.gov.hmrc.preferencesadminfrontend.services.{ BulkUploadOptOutsService, UploadService }
-import uk.gov.hmrc.preferencesadminfrontend.services.model.{ CvBulkOptOutCsvData, NinoIdentifierType }
+import uk.gov.hmrc.preferencesadminfrontend.services.model.csv.{ CvBulkOptOutCsvData, NinoIdentifierType }
 import uk.gov.hmrc.preferencesadminfrontend.utils.SpecBase
 
 import java.nio.file.Path
