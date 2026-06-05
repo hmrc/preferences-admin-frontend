@@ -19,16 +19,18 @@ package uk.gov.hmrc.preferencesadminfrontend.services
 import org.apache.pekko.stream.Materializer
 import org.apache.pekko.stream.scaladsl.*
 import org.apache.pekko.util.ByteString
-import play.api.libs.json.Json
 import play.api.mvc.*
 import play.api.mvc.Results.Ok
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.preferencesadminfrontend.connectors.ChannelPreferencesConnector
 import uk.gov.hmrc.preferencesadminfrontend.services.model.CsvData
 
 import java.nio.file.Path
 import javax.inject.Inject
+import scala.concurrent.duration.DurationInt
 import scala.concurrent.{ ExecutionContext, Future }
 
-class UploadService @Inject() {
+class UploadService @Inject() (channelPreferencesConnector: ChannelPreferencesConnector) {
 
   private val FrameLength = 1024
   private val AllowTruncation = true
@@ -47,16 +49,18 @@ class UploadService @Inject() {
       .runWith(Sink.seq)
       .map(_.toList)(mat.executionContext)
 
-  def process(records: List[CsvData])(implicit ec: ExecutionContext): Future[Result] = {
-    val processingFutures = records.map { record =>
-      val jsonPayload = Json.toJson(record)
-      Future.successful(s"jsonpayload $jsonPayload to be posted")
-    }
-
-    Future
-      .sequence(processingFutures)
+  def process(
+    records: List[CsvData]
+  )(implicit ec: ExecutionContext, hc: HeaderCarrier, mat: Materializer): Future[Result] = {
+    val LimitR = 10
+    Source(records)
+      .throttle(LimitR, 1.second)
+      .mapAsync(parallelism = 2) { record =>
+        channelPreferencesConnector.process(record)
+      }
+      .runWith(Sink.ignore)
       .map { _ =>
-        Ok(s"Processing ${processingFutures.size} records.")
+        Ok(s"Processed ${records.size} records successfully.")
       }
   }
 }

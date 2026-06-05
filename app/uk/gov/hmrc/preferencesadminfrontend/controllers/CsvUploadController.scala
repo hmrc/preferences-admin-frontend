@@ -45,15 +45,16 @@ class CsvUploadController @Inject() (
     Future.successful(Ok(csvUpload()))
   }
 
-  def upload(): Action[MultipartFormData[Files.TemporaryFile]] = Action.async(parse.multipartFormData) { request =>
-    request.body
-      .file("csvFile")
-      .map { filePart =>
-        val path = filePart.ref.path
-        uploadService.readFromFile(path).flatMap(uploadService.process)
-      }
-      .getOrElse {
-        Future.successful(BadRequest("File missing or incorrect data supplied!"))
-      }
+  def upload(): Action[MultipartFormData[Files.TemporaryFile]] = Action.async(parse.multipartFormData) {
+    implicit request =>
+      request.body
+        .file("csvFile")
+        .map { filePart =>
+          val path = filePart.ref.path
+          uploadService.readFromFile(path).flatMap(uploadService.process)
+        }
+        .getOrElse {
+          Future.successful(BadRequest("File missing or incorrect data supplied!"))
+        }
   }
 }
