@@ -49,7 +49,7 @@ class CsvUploadControllerSpec
   override implicit lazy val app: Application = GuiceApplicationBuilder().build()
   implicit val messagesApi: MessagesApi = app.injector.instanceOf[MessagesApi]
 
-  "GET /csv-upload" should {
+  "showUploadPage (GET /csv-upload)" should {
     "return 200" in new TestCase {
       val result: Future[Result] =
         controller.showUploadPage()(FakeRequest("GET", "/decode").withSession(User.sessionKey -> "admin"))
@@ -70,7 +70,7 @@ class CsvUploadControllerSpec
     }
   }
 
-  "POST /csv-upload/confirmation" should {
+  "upload (POST /csv-upload/confirmation)" should {
     "return 400 when form binding fails" in new TestCase {
       val request = FakeRequest("POST", "/csv-upload/confirmation")
         .withSession(User.sessionKey -> "admin")
