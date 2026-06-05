@@ -113,7 +113,7 @@ class CsvUploadControllerSpec
     }
   }
 
-  "GET /csv-upload-bulk-opt-outs" should {
+  "GET /csv-upload-bulk-opt-outs - showBulkOptOutsUploadPage" should {
     "return HTML" in new TestCase {
       val result: Future[Result] =
         controller.showBulkOptOutsUploadPage()(FakeRequest("", "").withSession(User.sessionKey -> "admin"))
