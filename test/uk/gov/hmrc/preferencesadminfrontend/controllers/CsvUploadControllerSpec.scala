@@ -113,7 +113,7 @@ class CsvUploadControllerSpec
     }
   }
 
-  "GET /csv-upload-bulk-opt-outs - showBulkOptOutsUploadPage" should {
+  "showBulkOptOutsUploadPage (GET /csv-upload-bulk-opt-outs)" should {
     "return HTML" in new TestCase {
       val result: Future[Result] =
         controller.showBulkOptOutsUploadPage()(FakeRequest("", "").withSession(User.sessionKey -> "admin"))
@@ -130,7 +130,7 @@ class CsvUploadControllerSpec
     }
   }
 
-  "POST /csv-upload-bulk-opt-outs/confirmation - uploadBulkOptOuts" should {
+  "uploadBulkOptOuts (POST /csv-upload-bulk-opt-outs/confirmation)" should {
 
     def filePart: FilePart[TemporaryFile] = FilePart(
       key = "csvFile",
