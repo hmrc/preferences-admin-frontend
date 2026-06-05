@@ -14,11 +14,10 @@
  * limitations under the License.
  *@
 
+@import uk.gov.hmrc.preferencesadminfrontend.controllers.routes
+
 @this(layout: Layout, govukBreadcrumbs: GovukBreadcrumbs, form: FormWithCSRF,govukWarningText : GovukWarningText)
 @(errors:List[String], uploaededFileHadNoEntries: Boolean)(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
-@import scala.concurrent.ExecutionContext.Implicits.global
-@import uk.gov.hmrc.preferencesadminfrontend.controllers.routes
-@import uk.gov.hmrc.preferencesadminfrontend.views.TemplateHelper._
 
 @layout(pageTitle = "CSV Bulk Opt Outs Upload Page") {
     <div class="govuk-button-group">
