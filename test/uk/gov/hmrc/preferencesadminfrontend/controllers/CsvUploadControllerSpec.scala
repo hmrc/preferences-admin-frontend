@@ -130,7 +130,7 @@ class CsvUploadControllerSpec
     }
   }
 
-  "POST /csv-upload-bulk-opt-outs/confirmation" should {
+  "POST /csv-upload-bulk-opt-outs/confirmation - uploadBulkOptOuts" should {
 
     def filePart: FilePart[TemporaryFile] = FilePart(
       key = "csvFile",
