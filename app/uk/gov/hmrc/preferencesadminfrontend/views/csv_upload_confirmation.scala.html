@@ -21,7 +21,9 @@
 
 @(message: String )(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
 
-<div id="file-upload-confirmation">
-    <h2 class="govuk-heading-m">File Upload Confirmation</h2>
-    <p class="govuk-body">@message</p>
-</div>
+@layout(pageTitle = "CSV Upload Confirmation") {
+  <div id="file-upload-confirmation">
+      <h2 class="govuk-heading-m">File Upload Confirmation</h2>
+      <p class="govuk-body">@message</p>
+  </div>
+}
