@@ -35,8 +35,13 @@ class BulkUploadOptOutsService @Inject() (csvReader: CsvReader) {
       case line: String if line.split(",").map(_.trim).length >= 1 =>
         val cols = line.split(",").map(_.trim)
         val typeText = cols(0)
+        val doesNotHaveExtraCoulmnValues = !cols.zipWithIndex.exists { case (value, index) =>
+          index > 1 & value.nonEmpty
+        }
+
         CvBulkOptOutIdentifierType.fromString(typeText) match {
-          case Some(identifierType: CvBulkOptOutIdentifierType) if cols.length == 2 && cols(1).nonEmpty =>
+          case Some(identifierType: CvBulkOptOutIdentifierType)
+              if cols.length > 1 && cols(1).nonEmpty && doesNotHaveExtraCoulmnValues =>
             processIdentifiedLine(line, identifierType, cols(1))
 
           case _ =>

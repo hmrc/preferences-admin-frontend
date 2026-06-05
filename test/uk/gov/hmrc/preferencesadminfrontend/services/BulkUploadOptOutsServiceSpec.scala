@@ -55,7 +55,7 @@ class BulkUploadOptOutsServiceSpec extends AnyWordSpecLike with Matchers with Sc
       } finally Files.deleteIfExists(tempFile)
     }
 
-    "parse a valid CSV file returning failed rows and successful rows in a processable format" in {
+    "parse a valid CSV file returning failed rows and successful rows in a processable format ignoring extra empty values" in {
       val csvContent =
         """nino, data2
           |
@@ -63,7 +63,7 @@ class BulkUploadOptOutsServiceSpec extends AnyWordSpecLike with Matchers with Sc
           |unknownType1, data3
           |email, bademail
           |email, goodemail@a.com
-          |itsa, data4
+          |itsa, data4,,
           |unknownType2, data5
           |itsa
           |nino,
