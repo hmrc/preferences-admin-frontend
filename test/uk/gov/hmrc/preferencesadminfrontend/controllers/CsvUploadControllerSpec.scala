@@ -100,7 +100,7 @@ class CsvUploadControllerSpec
       when(mockUploadService.readFromFile(any())(any()))
         .thenReturn(Future.successful(Nil))
       when(mockUploadService.process(any())(any(), any(), any()))
-        .thenReturn(Future.successful(Ok("success")))
+        .thenReturn(Future.successful("success"))
 
       val request = FakeRequest("POST", "/multi-search/results")
         .withSession(User.sessionKey -> "admin")

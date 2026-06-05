@@ -34,6 +34,7 @@ import scala.concurrent.{ ExecutionContext, Future }
 class CsvUploadController @Inject() (
   authorisedAction: AuthorisedAction,
   csvUpload: csv_upload,
+  csvUploadConfirm: csv_upload_confirmation,
   uploadService: UploadService,
   mcc: MessagesControllerComponents
 )(implicit appConfig: AppConfig, ec: ExecutionContext, actorSystem: ActorSystem)
@@ -51,10 +52,13 @@ class CsvUploadController @Inject() (
         .file("csvFile")
         .map { filePart =>
           val path = filePart.ref.path
-          uploadService.readFromFile(path).flatMap(uploadService.process)
+          uploadService
+            .readFromFile(path)
+            .flatMap(uploadService.process)
+            .map(msg => Ok(csvUploadConfirm(msg)))
         }
         .getOrElse {
-          Future.successful(BadRequest("File missing or incorrect data supplied!"))
+          Future.successful(BadRequest(csvUploadConfirm("File missing or incorrect data supplied!")))
         }
   }
 }

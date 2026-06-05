@@ -19,8 +19,6 @@ package uk.gov.hmrc.preferencesadminfrontend.services
 import org.apache.pekko.stream.Materializer
 import org.apache.pekko.stream.scaladsl.*
 import org.apache.pekko.util.ByteString
-import play.api.mvc.*
-import play.api.mvc.Results.Ok
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.preferencesadminfrontend.connectors.ChannelPreferencesConnector
 import uk.gov.hmrc.preferencesadminfrontend.services.model.CsvData
@@ -51,7 +49,7 @@ class UploadService @Inject() (channelPreferencesConnector: ChannelPreferencesCo
 
   def process(
     records: List[CsvData]
-  )(implicit ec: ExecutionContext, hc: HeaderCarrier, mat: Materializer): Future[Result] = {
+  )(implicit ec: ExecutionContext, hc: HeaderCarrier, mat: Materializer): Future[String] = {
     val LimitR = 10
     Source(records)
       .throttle(LimitR, 1.second)
@@ -60,7 +58,7 @@ class UploadService @Inject() (channelPreferencesConnector: ChannelPreferencesCo
       }
       .runWith(Sink.ignore)
       .map { _ =>
-        Ok(s"Processed ${records.size} records successfully.")
+        s"Processed ${records.size} records successfully."
       }
   }
 }
