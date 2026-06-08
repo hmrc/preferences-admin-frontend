@@ -25,7 +25,7 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.preferencesadminfrontend.connectors.ChannelPreferencesConnector.StatusUpdate
 import uk.gov.hmrc.http.HttpReads.Implicits.*
 import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.preferencesadminfrontend.services.model.CsvData
+import uk.gov.hmrc.preferencesadminfrontend.services.model.csv.CsvData
 
 import java.net.URI
 import javax.inject.{ Inject, Singleton }
