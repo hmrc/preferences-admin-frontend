@@ -1,5 +1,5 @@
-/*
- * Copyright 2026 HM Revenue & Customs
+@*
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,14 +12,18 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */
+ *@
 
-package uk.gov.hmrc.preferencesadminfrontend.services.model.csv
+@import java.time.format.DateTimeFormatter
+@import java.util.Locale
 
-import play.api.libs.json.*
+@this(layout: Layout, govukBreadcrumbs: GovukBreadcrumbs)
 
-case class CsvData(nino: String, sautr: String, mtditsaid: String)
+@(message: String )(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
 
-object CsvData {
-  implicit val format: OFormat[CsvData] = Json.format[CsvData]
+@layout(pageTitle = "CSV Upload Confirmation") {
+  <div id="file-upload-confirmation">
+      <h2 class="govuk-heading-m">File Upload Confirmation</h2>
+      <p class="govuk-body">@message</p>
+  </div>
 }

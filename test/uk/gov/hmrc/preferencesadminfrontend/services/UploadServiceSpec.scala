@@ -25,7 +25,6 @@ import org.scalatest.time.SpanSugar.convertIntToGrainOfTime
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import play.api.mvc.Results.{ BadRequest, InternalServerError, Ok }
-import play.api.test.Helpers.*
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.preferencesadminfrontend.connectors.ChannelPreferencesConnector
 import uk.gov.hmrc.preferencesadminfrontend.services.model.*
@@ -78,8 +77,7 @@ class UploadServiceSpec extends PlaySpec with MockitoSugar with ScalaFutures {
       val resultFuture = serviceUnderTest.process(records)
 
       whenReady(resultFuture) { result =>
-        result.header.status mustBe OK
-        contentAsString(Future.successful(result)) must include("Processed 3 records successfully.")
+        result must include("Processed 3 records successfully.")
       }
 
       verify(mockConnector, times(3)).process(any[CsvData])(any[HeaderCarrier])
@@ -93,8 +91,7 @@ class UploadServiceSpec extends PlaySpec with MockitoSugar with ScalaFutures {
       val resultFuture = serviceUnderTest.process(records)
 
       whenReady(resultFuture) { result =>
-        result.header.status mustBe OK
-        contentAsString(Future.successful(result)) must include("Processed 0 records successfully.")
+        result must include("Processed 0 records successfully.")
       }
 
       verifyNoInteractions(mockConnector)
@@ -126,8 +123,7 @@ class UploadServiceSpec extends PlaySpec with MockitoSugar with ScalaFutures {
       val resultFuture = serviceUnderTest.process(records)
 
       whenReady(resultFuture) { result =>
-        result.header.status mustBe OK
-        contentAsString(Future.successful(result)) must include("Processed 3 records successfully.")
+        result must include("Processed 3 records successfully.")
       }
     }
 
