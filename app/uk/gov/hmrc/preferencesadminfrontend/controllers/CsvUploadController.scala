@@ -23,8 +23,7 @@ import play.api.libs.Files
 import play.api.mvc.*
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
-import uk.gov.hmrc.preferencesadminfrontend.services.UploadService
-import uk.gov.hmrc.preferencesadminfrontend.services.model.CsvData
+import uk.gov.hmrc.preferencesadminfrontend.services.{ BulkUploadOptOutsService, UploadService }
 import uk.gov.hmrc.preferencesadminfrontend.views.html.*
 
 import javax.inject.{ Inject, Singleton }
@@ -35,7 +34,9 @@ class CsvUploadController @Inject() (
   authorisedAction: AuthorisedAction,
   csvUpload: csv_upload,
   csvUploadConfirm: csv_upload_confirmation,
+  csvUploadBulkOptOuts: csv_upload_bulk_opt_outs,
   uploadService: UploadService,
+  bulkUploadOptOutsService: BulkUploadOptOutsService,
   mcc: MessagesControllerComponents
 )(implicit appConfig: AppConfig, ec: ExecutionContext, actorSystem: ActorSystem)
     extends FrontendController(mcc) with I18nSupport with Logging with RoleAuthorisedAction(authorisedAction) {
@@ -60,5 +61,42 @@ class CsvUploadController @Inject() (
         .getOrElse {
           Future.successful(BadRequest(csvUploadConfirm("File missing or incorrect data supplied!")))
         }
+  }
+
+  val showBulkOptOutsUploadPage: Action[AnyContent] = authorisedAction { implicit request => _ =>
+    Future.successful(Ok(csvUploadBulkOptOuts(errors = List.empty, uploaededFileHadNoEntries = false)))
+  }
+
+  def uploadBulkOptOuts(): Action[MultipartFormData[Files.TemporaryFile]] = Action.async(parse.multipartFormData) {
+    implicit request =>
+      request.body
+        .file("csvFile")
+        .map { filePart =>
+          processOptOutFileUpload(filePart)
+        }
+        .getOrElse {
+          Future.successful(Ok(csvUploadBulkOptOuts(errors = List.empty, uploaededFileHadNoEntries = true)))
+        }
+  }
+
+  private def processOptOutFileUpload(
+    filePart: MultipartFormData.FilePart[Files.TemporaryFile]
+  )(implicit request: Request[_]) = {
+    val path = filePart.ref.path
+    val eventualErrorsOrOptOutDataList = bulkUploadOptOutsService.readBulkOptOutsFromFile(path)
+
+    eventualErrorsOrOptOutDataList.flatMap { errorOrOptOutList =>
+      if (errorOrOptOutList.isEmpty) {
+        Future.successful(Ok(csvUploadBulkOptOuts(errors = List.empty, uploaededFileHadNoEntries = true)))
+      } else {
+        val errors = errorOrOptOutList.collect { case Left(error) => error }
+        if (errors.nonEmpty) {
+          Future.successful(Ok(csvUploadBulkOptOuts(errors, uploaededFileHadNoEntries = false)))
+        } else {
+          val succesfulEntries = errorOrOptOutList.collect { case Right(success) => success }
+          bulkUploadOptOutsService.processBulkOptOuts(succesfulEntries)
+        }
+      }
+    }
   }
 }

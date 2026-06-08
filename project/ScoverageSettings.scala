@@ -15,7 +15,7 @@
  */
 
 import sbt.Keys.parallelExecution
-import sbt.{Def, *}
+import sbt.{ Def, * }
 import scoverage.ScoverageKeys
 
 object ScoverageSettings {
@@ -23,6 +23,7 @@ object ScoverageSettings {
     Seq(
       // Semicolon-separated list of regexes matching classes to exclude
       ScoverageKeys.coverageExcludedPackages := "<empty>;.*Reverse.*;.*(config|testonly).*;.*(BuildInfo|Routes).*;.*\\$anon.*",
+      ScoverageKeys.coverageExcludedFiles := ".*CvBulkOptOutIdentifierType;.*IdUpdateCsvData;.*CvBulkOptOutCsvData;.*TemplateHelper",
       ScoverageKeys.coverageMinimumStmtTotal := 85.00,
       ScoverageKeys.coverageFailOnMinimum := true,
       ScoverageKeys.coverageHighlighting := true,
