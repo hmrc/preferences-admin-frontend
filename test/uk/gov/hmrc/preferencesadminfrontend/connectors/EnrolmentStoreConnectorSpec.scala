@@ -17,34 +17,51 @@
 package uk.gov.hmrc.preferencesadminfrontend.connectors
 
 import cats.syntax.option.*
-import org.mockito.ArgumentMatchers.eq as eql
-import org.mockito.Mockito.when
-import org.mockito.ArgumentMatchers.any
-import org.scalatest.EitherValues
-import org.scalatest.concurrent.ScalaFutures
-import org.scalatestplus.mockito.MockitoSugar.mock
-import org.scalatestplus.play.PlaySpec
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import com.github.tomakehurst.wiremock.client.WireMock
+import play.api.http.Status
 import play.api.libs.json.Json
-import uk.gov.hmrc.http.{ HeaderCarrier, HttpResponse }
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.preferencesadminfrontend.model.UserState.Activated
 import uk.gov.hmrc.preferencesadminfrontend.model.{ PrincipalUserIds, UserState }
 import uk.gov.hmrc.preferencesadminfrontend.services.model.TaxIdentifier
-import uk.gov.hmrc.http.HttpReads.Implicits.readRaw
-import uk.gov.hmrc.http.client.{ HttpClientV2, RequestBuilder }
+import uk.gov.hmrc.preferencesadminfrontend.utils.ConnectorBaseSpec
 
-import java.net.{ URI, URL }
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+class EnrolmentStoreConnectorSpec extends ConnectorBaseSpec(EnrolmentStoreConnector.configKey) {
 
-class EnrolmentStoreConnectorSpec extends PlaySpec with ScalaFutures with EitherValues with GuiceOneAppPerSuite {
+  trait Scope {
+    val saUtr = "MY-UTR"
+    val taxId: TaxIdentifier = TaxIdentifier("sautr", saUtr)
+
+    val principalUserId: String = "6696231619140440"
+    val principalUserIds: PrincipalUserIds = Json
+      .parse("""{
+               |  "principalUserIds": [
+               |      "6696231619140440"
+               |  ]
+               |}""".stripMargin)
+      .as[PrincipalUserIds]
+    val userState: UserState = UserState(Activated)
+    implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
+    val enrolmentStoreConnector: EnrolmentStoreConnector = app.injector.instanceOf[EnrolmentStoreConnector]
+  }
 
   "getUserIds" must {
+
+    def stubGetUserIds(id: String, statusCode: Int, response: String): Unit =
+      wireMockServer.stubFor(
+        WireMock
+          .get(WireMock.urlPathEqualTo(s"/enrolment-store-proxy/enrolment-store/enrolments/$id/users"))
+          .withQueryParam("type", WireMock.equalTo("principal"))
+          .willReturn(
+            WireMock
+              .aResponse()
+              .withStatus(statusCode)
+              .withBody(response)
+          )
+      )
+
     "return right list of principal ids upon success" in new Scope {
-      when(httpClient.get(eql(expectedPrincipalPath))(any)).thenReturn(requestBuilder)
-      when(requestBuilder.execute[HttpResponse])
-        .thenReturn(Future.successful(HttpResponse(OK, Json.toJson(principalUserIds).toString())))
+      stubGetUserIds(s"IR-SA~UTR~${taxId.value}", Status.OK, Json.toJson(principalUserIds).toString())
 
       enrolmentStoreConnector
         .getUserIds(taxId)(headerCarrier)
@@ -52,31 +69,47 @@ class EnrolmentStoreConnectorSpec extends PlaySpec with ScalaFutures with Either
     }
 
     "return an empty list of principal user ids when NO_CONTENT is returned" in new Scope {
-      when(httpClient.get(eql(expectedPrincipalPath))(any)).thenReturn(requestBuilder)
-      when(requestBuilder.execute[HttpResponse]).thenReturn(Future.successful(httpResponse(NoContent, body = "")))
+      stubGetUserIds(s"IR-SA~UTR~${taxId.value}", Status.NO_CONTENT, "")
 
       enrolmentStoreConnector
         .getUserIds(taxId)(headerCarrier)
         .futureValue mustBe Right(List.empty)
     }
 
-    "return an upstream error when neither OK or NO_CONTENT status code is returned" in new Scope {
-      when(httpClient.get(eql(expectedPrincipalPath))(any)).thenReturn(requestBuilder)
-      when(requestBuilder.execute[HttpResponse]).thenReturn(Future.successful(httpResponse(Bad, body = "BAD_NEWS")))
+    "return an error message when neither OK or BAD_REQUEST status code is returned" in new Scope {
+      stubGetUserIds(s"IR-SA~UTR~${taxId.value}", Status.BAD_REQUEST, "BAD_NEWS")
 
       enrolmentStoreConnector
         .getUserIds(taxId)(headerCarrier)
-        .futureValue
-        .left
-        .value mustBe s"upstream error when getting principals, $Bad BAD_NEWS"
+        .futureValue mustBe Left(s"upstream error when getting principals, ${Status.BAD_REQUEST} BAD_NEWS")
+    }
+
+    "return an error when INTERNAL_SERVER_ERROR status code is returned" in new Scope {
+      stubGetUserIds(s"IR-SA~UTR~${taxId.value}", Status.INTERNAL_SERVER_ERROR, "SERVER_ERROR")
+
+      enrolmentStoreConnector
+        .getUserIds(taxId)(headerCarrier)
+        .futureValue mustBe Left(
+        s"upstream error when getting principals, ${Status.INTERNAL_SERVER_ERROR} SERVER_ERROR"
+      )
     }
   }
 
   "getUserState" must {
+    def stubGetUserState(principalUserId: String, taxId: String, statusCode: Int, response: String): Unit =
+      wireMockServer.stubFor(
+        WireMock
+          .get(WireMock.urlEqualTo(s"/enrolment-store-proxy/enrolment-store/users/$principalUserId/enrolments/$taxId"))
+          .willReturn(
+            WireMock
+              .aResponse()
+              .withStatus(statusCode)
+              .withBody(response)
+          )
+      )
+
     "return right some users state upon success" in new Scope {
-      when(httpClient.get(eql(expectedUserStatePath))(any)).thenReturn(requestBuilder)
-      when(requestBuilder.execute[HttpResponse])
-        .thenReturn(Future.successful(httpResponse(OK, body = Json.toJson(userState).toString())))
+      stubGetUserState(principalUserId, s"IR-SA~UTR~${taxId.value}", Status.OK, Json.toJson(userState).toString())
 
       enrolmentStoreConnector
         .getUserState(principalUserId, taxId)(headerCarrier)
@@ -84,8 +117,7 @@ class EnrolmentStoreConnectorSpec extends PlaySpec with ScalaFutures with Either
     }
 
     "return right none when a NOT_FOUND status is returned" in new Scope {
-      when(httpClient.get(eql(expectedUserStatePath))(any)).thenReturn(requestBuilder)
-      when(requestBuilder.execute[HttpResponse]).thenReturn(Future.successful(httpResponse(NotFound, body = "")))
+      stubGetUserState(principalUserId, s"IR-SA~UTR~${taxId.value}", Status.NOT_FOUND, "")
 
       enrolmentStoreConnector
         .getUserState(principalUserId, taxId)(headerCarrier)
@@ -93,59 +125,22 @@ class EnrolmentStoreConnectorSpec extends PlaySpec with ScalaFutures with Either
     }
 
     "return an upstream error when neither OK or NOT_FOUND status code is returned" in new Scope {
-      when(httpClient.get(eql(expectedUserStatePath))(any)).thenReturn(requestBuilder)
-      when(requestBuilder.execute[HttpResponse]).thenReturn(Future.successful(httpResponse(Bad, body = "BAD_NEWS")))
+      stubGetUserState(principalUserId, s"IR-SA~UTR~${taxId.value}", Status.BAD_REQUEST, "BAD_NEWS")
 
       enrolmentStoreConnector
         .getUserState(principalUserId, taxId)(headerCarrier)
-        .futureValue
-        .left
-        .value mustBe s"upstream error when checking enrolment state, $Bad BAD_NEWS"
+        .futureValue mustBe Left(s"upstream error when checking enrolment state, ${Status.BAD_REQUEST} BAD_NEWS")
+    }
+
+    "return an error when INTERNAL_SERVER_ERROR status code is returned" in new Scope {
+      stubGetUserState(principalUserId, s"IR-SA~UTR~${taxId.value}", Status.INTERNAL_SERVER_ERROR, "SERVER_ERROR")
+
+      enrolmentStoreConnector
+        .getUserState(principalUserId, taxId)(headerCarrier)
+        .futureValue mustBe Left(
+        s"upstream error when checking enrolment state, ${Status.INTERNAL_SERVER_ERROR} SERVER_ERROR"
+      )
     }
   }
 
-  trait Scope {
-    val OK = 200
-    val NoContent = 204
-    val Bad = 400
-    val NotFound = 404
-
-    val saUtr = "MY-UTR"
-    val taxId: TaxIdentifier = TaxIdentifier("sautr", saUtr)
-
-    val principalUserId: String = "6696231619140440"
-    val principalUserIds: PrincipalUserIds = Json
-      .parse("""{
-               |
-               |    "principalUserIds":[
-               |        "6696231619140440"
-               |    ]
-               |
-               |
-               |}""".stripMargin)
-      .as[PrincipalUserIds]
-    val userState: UserState = UserState(Activated)
-
-    implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
-    val httpClient: HttpClientV2 = mock[HttpClientV2]
-    val requestBuilder: RequestBuilder = mock[RequestBuilder]
-    val servicesConfig: ServicesConfig = app.injector.instanceOf[ServicesConfig]
-
-    val enrolmentStoreConnector = new EnrolmentStoreConnector(httpClient, servicesConfig)
-    val enrolmentStoreServiceUrl: String = app.injector.instanceOf[ServicesConfig].baseUrl("enrolment-store")
-    val expectedPrincipalPath: URL =
-      new URI(
-        s"$enrolmentStoreServiceUrl/enrolment-store-proxy/enrolment-store/enrolments/IR-SA~UTR~$saUtr/users?type=principal"
-      ).toURL
-    val expectedUserStatePath: URL =
-      new URI(
-        s"$enrolmentStoreServiceUrl/enrolment-store-proxy/enrolment-store/users/$principalUserId/enrolments/IR-SA~UTR~$saUtr"
-      ).toURL
-
-    def httpResponse(status: Int, body: String): HttpResponse = HttpResponse(
-      status = status,
-      body = body,
-      headers = Map.empty
-    )
-  }
 }

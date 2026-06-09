@@ -33,13 +33,19 @@ import java.net.URI
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.Try
 
+object EntityResolverConnector {
+  val configKey: String = "entity-resolver"
+}
+
+class UnexpectedOptOutResponse(taxId: TaxIdentifier, status: Int, body: String)
+    extends RuntimeException(s"Tax ID $taxId returned unexpectd status code $status with body '$body'")
+
 @Singleton
 class EntityResolverConnector @Inject() (httpClient: HttpClientV2, val servicesConfig: ServicesConfig) {
 
   val logger = Logger(getClass)
   implicit val ef: Format[Entity] = Entity.formats
-
-  val serviceUrl: String = servicesConfig.baseUrl("entity-resolver")
+  lazy val serviceUrl: String = servicesConfig.baseUrl(EntityResolverConnector.configKey)
 
   def sanitize(input: String): String =
     input.replaceAll("[^a-zA-Z0-9-_~]", "")
@@ -47,14 +53,14 @@ class EntityResolverConnector @Inject() (httpClient: HttpClientV2, val servicesC
   def getTaxIdentifiers(
     taxId: TaxIdentifier
   )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[TaxIdentifier]] = {
-    def warnNotOptedOut(message: String) = s"getTaxIdentifiersTaxId $message"
     val regime: String = taxId.regime
     val value: String = sanitize(taxId.value)
-    val response =
+    val eventualMaybeEntity =
       httpClient
         .get(new URI(s"$serviceUrl/entity-resolver?taxRegime=$regime&taxId=$value").toURL)
         .execute[Option[Entity]]
-    response
+
+    eventualMaybeEntity
       .map(
         _.fold(Seq.empty[TaxIdentifier])(entity =>
           Seq(
@@ -64,26 +70,15 @@ class EntityResolverConnector @Inject() (httpClient: HttpClientV2, val servicesC
           ).flatten
         )
       )
-      .recover {
-        case ex: BadRequestException =>
-          warnNotOptedOut(ex.message)
-          Seq.empty
-        case ex @ UpstreamErrorResponse(_, Status.NOT_FOUND, _, _) =>
-          warnNotOptedOut(ex.message)
-          Seq.empty
-        case ex @ UpstreamErrorResponse(_, Status.CONFLICT, _, _) =>
-          warnNotOptedOut(ex.message)
-          Seq.empty
-        case ex =>
-          warnNotOptedOut(ex.getMessage)
-          Seq.empty
+      .recover { case ex =>
+        logger.error(s"Failed getting tax identifiers for $taxId", ex)
+        Seq.empty
       }
   }
 
   def getTaxIdentifiers(
     preferenceDetails: PreferenceDetails
   )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[TaxIdentifier]] = {
-    def warnNotOptedOut(message: String) = s"getTaxIdentifiersPreferenceDetails $message"
     val response =
       httpClient
         .get(new URI(s"$serviceUrl/entity-resolver?entityId=${preferenceDetails.entityId.get}").toURL)
@@ -98,19 +93,8 @@ class EntityResolverConnector @Inject() (httpClient: HttpClientV2, val servicesC
           ).flatten
         )
       )
-      .recover {
-        case ex: BadRequestException =>
-          warnNotOptedOut(ex.message)
-          Seq.empty
-        case ex @ UpstreamErrorResponse(_, Status.NOT_FOUND, _, _) =>
-          warnNotOptedOut(ex.message)
-          Seq.empty
-        case ex @ UpstreamErrorResponse(_, Status.CONFLICT, _, _) =>
-          warnNotOptedOut(ex.message)
-          Seq.empty
-        case ex =>
-          warnNotOptedOut(ex.getMessage)
-          Seq.empty
+      .recover { case ex =>
+        Seq.empty
       }
   }
 
@@ -123,23 +107,14 @@ class EntityResolverConnector @Inject() (httpClient: HttpClientV2, val servicesC
     httpClient
       .get(new URI(s"$serviceUrl/portal/preferences/$regime/$value").toURL)
       .execute[Option[PreferenceDetails]]
-      .recover {
-        case ex: BadRequestException =>
-          warnNotOptedOut(ex.message)
-          None
-        case ex @ UpstreamErrorResponse(_, Status.NOT_FOUND, _, _) =>
-          warnNotOptedOut(ex.message)
-          None
-        case ex @ UpstreamErrorResponse(_, Status.CONFLICT, _, _) =>
-          warnNotOptedOut(ex.message)
-          None
-        case ex =>
-          warnNotOptedOut(ex.getMessage)
-          None
+      .recover { case ex =>
+        warnNotOptedOut(ex.getMessage)
+        None
       }
   }
 
   def optOut(taxId: TaxIdentifier)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[OptOutResult] = {
+
     def warnNotOptedOut(status: Int): Unit =
       logger.warn(s"Unable to manually opt-out ${taxId.name} user with id ${taxId.value}. Status: $status")
 
@@ -160,10 +135,11 @@ class EntityResolverConnector @Inject() (httpClient: HttpClientV2, val servicesC
             Future.successful(PreferenceNotFound)
 
           case Status.PRECONDITION_FAILED =>
+            warnNotOptedOut(httpResponse.status)
             Future.successful(PreferenceNotFound)
 
           case _ =>
-            val exception = new RuntimeException(s"Unexpected opt out response for $taxId - $httpResponse")
+            val exception = new UnexpectedOptOutResponse(taxId, httpResponse.status, httpResponse.body)
             logger.error(exception.getMessage, exception)
             Future.failed(exception)
         }

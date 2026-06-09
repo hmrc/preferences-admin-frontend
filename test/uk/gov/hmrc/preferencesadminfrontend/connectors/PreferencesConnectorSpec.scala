@@ -16,95 +16,122 @@
 
 package uk.gov.hmrc.preferencesadminfrontend.connectors
 
-import org.apache.pekko.actor.ActorSystem
-import org.mockito.Mockito.when
-import org.scalatest.EitherValues
-import org.scalatest.concurrent.ScalaFutures
-import org.scalatestplus.mockito.MockitoSugar.mock
-import org.scalatestplus.play.PlaySpec
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.Configuration
-import uk.gov.hmrc.http.client.{ HttpClientV2, RequestBuilder }
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+import com.github.tomakehurst.wiremock.client.WireMock
+import play.api.http.Status
+import play.api.libs.json.Json
+import uk.gov.hmrc.http.{ HeaderCarrier, UpstreamErrorResponse }
+import uk.gov.hmrc.preferencesadminfrontend.controllers.model
+import uk.gov.hmrc.preferencesadminfrontend.controllers.model.EmailRequest
+import uk.gov.hmrc.preferencesadminfrontend.utils.ConnectorBaseSpec
 
-import java.net.{ URI, URL }
-import org.mockito.ArgumentMatchers.any
-import uk.gov.hmrc.hmrcfrontend.views.Aliases.Event
-import uk.gov.hmrc.http.{ BadRequestException, HeaderCarrier }
-
-import scala.concurrent.Future
+import java.time.ZonedDateTime
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class PreferencesConnectorSpec extends PlaySpec with ScalaFutures with EitherValues with GuiceOneAppPerSuite {
+class PreferencesConnectorSpec extends ConnectorBaseSpec(PreferencesConnector.configKey) {
+
+  trait TestCase {
+    implicit val hc: HeaderCarrier = HeaderCarrier()
+    val preferencesConnector: PreferencesConnector = app.injector.instanceOf[PreferencesConnector]
+  }
 
   "getPreferencesByEmail" must {
+    val email = "test@example.com"
+
+    def stubGetPreferencesByEmail(email: String, statusCode: Int, response: String): Unit =
+      wireMockServer.stubFor(
+        WireMock
+          .post(WireMock.urlPathEqualTo(s"/preferences/find-by-email"))
+          .withRequestBody(WireMock.equalToJson(Json.toJson(EmailRequest(email)).toString))
+          .willReturn(
+            WireMock
+              .aResponse()
+              .withStatus(statusCode)
+              .withBody(response)
+          )
+      )
+
     "return a list of PreferenceDetails on success" in new TestCase {
-      val expectedPath: URL = new URI(s"$serviceUrl/preferences/find-by-email").toURL
+      val mockResponseList: Seq[PreferenceDetails] = List(
+        PreferenceDetails(genericPaperless = true, genericUpdatedAt = None, isPaperless = None, email = None)
+      )
 
-      when(mockHttpClient.post(expectedPath)).thenReturn(mockRequestBuilder)
-      when(mockRequestBuilder.withBody(any)(any, any, any)).thenReturn(mockRequestBuilder)
-      when(mockRequestBuilder.execute[List[PreferenceDetails]](any, any))
-        .thenReturn(Future.successful(mockResponseList))
+      val mockResponseListJson: String =
+        """[
+          | {
+          |    "termsAndConditions" : {
+          |      "generic" : {
+          |         "accepted" : true
+          |      }
+          |    }
+          | }
+          |]
+          |""".stripMargin.trim
 
-      val result: Seq[PreferenceDetails] = connector.getPreferencesByEmail(email).futureValue
+      stubGetPreferencesByEmail(email, 200, mockResponseListJson)
+
+      val result: Seq[PreferenceDetails] = preferencesConnector.getPreferencesByEmail(email).futureValue
 
       result mustBe mockResponseList
     }
 
-    "return an empty list if the service returns a BadRequestException" in new TestCase {
-      val expectedPath: URL = new URI(s"$serviceUrl/preferences/find-by-email").toURL
-
-      when(mockHttpClient.post(expectedPath)).thenReturn(mockRequestBuilder)
-      when(mockRequestBuilder.withBody(any)(any, any, any)).thenReturn(mockRequestBuilder)
-
-      when(mockRequestBuilder.execute[List[PreferenceDetails]](any, any))
-        .thenReturn(Future.failed(BadRequestException("Bad Request")))
-
-      val result: Seq[PreferenceDetails] = connector.getPreferencesByEmail(email).futureValue
+    "return an empty list if the service returns a BAD_REQUEST" in new TestCase {
+      stubGetPreferencesByEmail(email, Status.BAD_REQUEST, "")
+      val result: Seq[PreferenceDetails] = preferencesConnector.getPreferencesByEmail(email).futureValue
 
       result mustBe Nil
     }
+
+    "returns an error if the server returns a non success non BAD_REQUEST response" in new TestCase {
+      stubGetPreferencesByEmail(email, Status.INTERNAL_SERVER_ERROR, "")
+      val throwable = preferencesConnector.getPreferencesByEmail(email).failed.futureValue
+
+      throwable mustBe a[UpstreamErrorResponse]
+    }
+
   }
 
   "getPreferencesEvents" must {
+    val entityId = "some-entity-id"
+    def stubGetPreferencesEvents(entityId: String, statusCode: Int, response: String): Unit =
+      wireMockServer.stubFor(
+        WireMock
+          .get(WireMock.urlEqualTo(s"/preferences-admin/events/$entityId"))
+          .willReturn(
+            WireMock
+              .aResponse()
+              .withStatus(statusCode)
+              .withBody(response)
+          )
+      )
+
     "return a list of events when successful" in new TestCase {
-      val entityId = "some-entity-id"
-      val expectedPath: URL = new URI(s"$serviceUrl/preferences-admin/events/$entityId").toURL
+      val zonedDateTime: ZonedDateTime = ZonedDateTime.parse("2026-06-25T16:10:33.203539+01:00[Europe/London]")
+      val mockEvents: Seq[model.Event] = List(
+        uk.gov.hmrc.preferencesadminfrontend.controllers.model
+          .Event(eventType = "testEvent", emailAddress = None, timestamp = zonedDateTime, viaMobileApp = true)
+      )
 
-      when(mockHttpClient.get(expectedPath)).thenReturn(mockRequestBuilder)
+      val eventsJson = s"""[
+                          | {
+                          |   "eventType": "testEvent",
+                          |   "timestamp": "${zonedDateTime.toString}",
+                          |   "viaMobileApp": true
+                          | }
+                          |]""".stripMargin
 
-      when(mockRequestBuilder.execute[List[Event]](any, any))
-        .thenReturn(Future.successful(mockEvents))
+      stubGetPreferencesEvents(entityId, 200, eventsJson)
 
-      val result = connector.getPreferencesEvents(entityId).futureValue
+      val result = preferencesConnector.getPreferencesEvents(entityId).futureValue
 
       result mustBe mockEvents
     }
+
+    "return an error on a non success status code" in new TestCase {
+      stubGetPreferencesEvents(entityId, Status.BAD_REQUEST, "[]")
+      val throwable = preferencesConnector.getPreferencesEvents(entityId).failed.futureValue
+
+      throwable mustBe a[UpstreamErrorResponse]
+    }
   }
 
-  trait TestCase {
-
-    val email = "test@example.com"
-
-    val mockResponseList: Seq[PreferenceDetails] = List(
-      PreferenceDetails(genericPaperless = true, genericUpdatedAt = None, isPaperless = None, email = None)
-    )
-
-    val mockEvents: Seq[Event] = List(
-      Event("Title", "10am", "Content")
-    )
-
-    implicit val hc: HeaderCarrier = HeaderCarrier()
-
-    val mockHttpClient: HttpClientV2 = mock[HttpClientV2]
-    val mockRequestBuilder: RequestBuilder = mock[RequestBuilder]
-
-    val servicesConfig: ServicesConfig = app.injector.instanceOf[ServicesConfig]
-    val serviceUrl: String = servicesConfig.baseUrl("preferences")
-
-    val mockConfig: Configuration = mock[Configuration]
-    val mockActorSystem: ActorSystem = mock[ActorSystem]
-
-    val connector = new PreferencesConnector(mockHttpClient, mockConfig, servicesConfig, mockActorSystem)
-  }
 }
