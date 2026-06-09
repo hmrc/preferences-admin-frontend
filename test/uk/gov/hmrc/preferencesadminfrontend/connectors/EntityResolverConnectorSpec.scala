@@ -290,34 +290,28 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
     "return true if status is OK (user is opted out)" in new TestCase {
       val expectedPath = url"$entityResolverserviceUrl/entity-resolver-admin/manual-opt-out/sa/${sautr.value}"
 
-      val result = entityConnectorPostMock(expectedPath).optOut(sautr).futureValue
+      val result = entityConnectorPostMock(expectedPath, Status.OK).optOut(sautr).futureValue
 
       result mustBe OptedOut
     }
 
     "return false if CONFLICT" in new TestCase {
       val expectedPath = url"$entityResolverserviceUrl/entity-resolver-admin/manual-opt-out/sa/${sautr.value}"
-
-      val error = UpstreamErrorResponse("", Status.CONFLICT, Status.CONFLICT)
-      val result = entityConnectorPostMock(expectedPath, error).optOut(sautr).futureValue
+      val result = entityConnectorPostMock(expectedPath, Status.CONFLICT).optOut(sautr).futureValue
 
       result mustBe AlreadyOptedOut
     }
 
     "return false if NOT_FOUND" in new TestCase {
       val expectedPath = url"$entityResolverserviceUrl/entity-resolver-admin/manual-opt-out/sa/${sautr.value}"
-
-      val error = UpstreamErrorResponse("", Status.NOT_FOUND, Status.NOT_FOUND)
-      val result = entityConnectorPostMock(expectedPath, error).optOut(sautr).futureValue
+      val result = entityConnectorPostMock(expectedPath, Status.NOT_FOUND).optOut(sautr).futureValue
 
       result mustBe PreferenceNotFound
     }
 
     "return false if PRECONDITION_FAILED" in new TestCase {
       val expectedPath = url"$entityResolverserviceUrl/entity-resolver-admin/manual-opt-out/sa/${sautr.value}"
-
-      val error = UpstreamErrorResponse("", Status.PRECONDITION_FAILED, Status.PRECONDITION_FAILED)
-      val result = entityConnectorPostMock(expectedPath, error).optOut(sautr).futureValue
+      val result = entityConnectorPostMock(expectedPath, Status.PRECONDITION_FAILED).optOut(sautr).futureValue
 
       result mustBe PreferenceNotFound
     }
@@ -360,17 +354,6 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
         result mustBe None
       }
     }
-
-    "optOut" should {
-      "handle NotFoundException specifically" in new TestCase {
-        val expectedPath = url"$entityResolverserviceUrl/entity-resolver-admin/manual-opt-out/sa/${sautr.value}"
-        val result = entityConnectorPostMock(expectedPath, new uk.gov.hmrc.http.NotFoundException("404"))
-          .optOut(sautr)
-          .futureValue
-        result mustBe PreferenceNotFound
-      }
-    }
-
   }
 
   class TestCase {
@@ -414,17 +397,6 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with GuiceO
 
       when(mockHttp.get(eql(expectedPath))(any)).thenReturn(requestBuilder)
       when(requestBuilder.execute[HttpResponse](any, any)).thenReturn(Future.failed(error))
-
-      new EntityResolverConnector(mockHttp, servicesConfig)
-    }
-
-    def entityConnectorPostMock(expectedPath: URL): EntityResolverConnector = {
-      lazy val mockResponse = mock[HttpResponse]
-      val mockHttp: HttpClientV2 = mock[HttpClientV2]
-      val requestBuilder: RequestBuilder = mock[RequestBuilder]
-
-      when(mockHttp.post(eql(expectedPath))(any)).thenReturn(requestBuilder)
-      when(requestBuilder.execute[HttpResponse](any, any)).thenReturn(Future.successful(mockResponse))
 
       new EntityResolverConnector(mockHttp, servicesConfig)
     }

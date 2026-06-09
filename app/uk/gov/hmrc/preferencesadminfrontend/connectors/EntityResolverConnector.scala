@@ -146,20 +146,27 @@ class EntityResolverConnector @Inject() (httpClient: HttpClientV2, val servicesC
     httpClient
       .post(new URI(s"$serviceUrl/entity-resolver-admin/manual-opt-out/${taxId.regime}/${taxId.value}").toURL)
       .execute[HttpResponse]
-      .map(_ => OptedOut)
-      .recover {
-        case _: NotFoundException =>
-          warnNotOptedOut(404)
-          PreferenceNotFound
-        case ex @ UpstreamErrorResponse(_, Status.CONFLICT, _, _) =>
-          warnNotOptedOut(ex.statusCode)
-          AlreadyOptedOut
-        case ex @ UpstreamErrorResponse(_, Status.NOT_FOUND, _, _) =>
-          warnNotOptedOut(ex.statusCode)
-          PreferenceNotFound
-        case ex @ UpstreamErrorResponse(_, Status.PRECONDITION_FAILED, _, _) =>
-          warnNotOptedOut(ex.statusCode)
-          PreferenceNotFound
+      .flatMap { httpResponse =>
+        httpResponse.status match {
+          case Status.OK =>
+            Future.successful(OptedOut)
+
+          case Status.CONFLICT =>
+            warnNotOptedOut(httpResponse.status)
+            Future.successful(AlreadyOptedOut)
+
+          case Status.NOT_FOUND =>
+            warnNotOptedOut(httpResponse.status)
+            Future.successful(PreferenceNotFound)
+
+          case Status.PRECONDITION_FAILED =>
+            Future.successful(PreferenceNotFound)
+
+          case _ =>
+            val exception = new RuntimeException(s"Unexpected opt out response for $taxId - $httpResponse")
+            logger.error(exception.getMessage, exception)
+            Future.failed(exception)
+        }
       }
   }
 

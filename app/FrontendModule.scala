@@ -14,11 +14,21 @@
  * limitations under the License.
  */
 
-import com.google.inject.AbstractModule
-import uk.gov.hmrc.preferencesadminfrontend.config.{ AppConfig, FrontendAppConfig }
+import com.google.inject.{ AbstractModule, Provides }
+import play.api.Configuration
+import uk.gov.hmrc.preferencesadminfrontend.config.{ AppConfig, BulkOptOutsConfig, FrontendAppConfig }
 
 class FrontendModule extends AbstractModule {
 
   override def configure(): Unit =
     bind(classOf[AppConfig]).to(classOf[FrontendAppConfig]).asEagerSingleton()
+
+  @Provides protected def provideFeatureSwitch(configuration: Configuration): BulkOptOutsConfig = {
+    val bulOptOutsConfigObject = configuration.get[Configuration]("bulkOptOuts")
+
+    BulkOptOutsConfig(
+      maxUploadEntries = bulOptOutsConfigObject.get("maxUploadEntries"),
+      maxOptOutsPerSecond = bulOptOutsConfigObject.get("maxOptOutsPerSecond")
+    )
+  }
 }
