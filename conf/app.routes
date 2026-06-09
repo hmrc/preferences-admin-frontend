@@ -26,10 +26,6 @@ POST        /message-brake/approve/confirmation         uk.gov.hmrc.preferencesa
 POST        /message-brake/reject/confirmation          uk.gov.hmrc.preferencesadminfrontend.controllers.MessageBrakeController.confirmRejectBatch()
 GET         /csv-upload                                 uk.gov.hmrc.preferencesadminfrontend.controllers.CsvUploadController.showUploadPage()
 POST        /csv-upload/confirmation                    uk.gov.hmrc.preferencesadminfrontend.controllers.CsvUploadController.upload()
-GET         /csv-upload-bulk-opt-outs                   uk.gov.hmrc.preferencesadminfrontend.controllers.CsvUploadController.showBulkOptOutsUploadPage
-POST        /csv-upload-bulk-opt-outs/confirmation      uk.gov.hmrc.preferencesadminfrontend.controllers.CsvUploadController.uploadBulkOptOuts()
-
-
 # Temporaty endpoits to migrate MDTP to ETMP
 GET         /migration                              uk.gov.hmrc.preferencesadminfrontend.controllers.MessageController.show()
 POST        /migration                               uk.gov.hmrc.preferencesadminfrontend.controllers.MessageController.check()
