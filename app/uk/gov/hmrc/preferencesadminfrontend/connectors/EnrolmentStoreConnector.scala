@@ -32,13 +32,17 @@ import java.net.URI
 import javax.inject.{ Inject, Singleton }
 import scala.concurrent.{ ExecutionContext, Future }
 
+object EnrolmentStoreConnector {
+  val configKey: String = "enrolment-store"
+}
+
 @Singleton
 class EnrolmentStoreConnector @Inject() (httpClient: HttpClientV2, val servicesConfig: ServicesConfig)(implicit
   ec: ExecutionContext
 ) {
 
   val logger = Logger(getClass)
-  def serviceUrl: String = servicesConfig.baseUrl("enrolment-store")
+  lazy val serviceUrl: String = servicesConfig.baseUrl(EnrolmentStoreConnector.configKey)
 
   def getUserIds(taxIdentifier: TaxIdentifier)(implicit hc: HeaderCarrier): Future[Either[String, List[String]]] =
     (for {

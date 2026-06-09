@@ -32,6 +32,8 @@ import javax.inject.{ Inject, Singleton }
 import scala.concurrent.{ ExecutionContext, Future }
 
 object ChannelPreferencesConnector {
+  val configKey: String = "channel-preferences"
+
   final case class StatusUpdate(enrolment: String, status: Boolean)
 
   object StatusUpdate {
@@ -40,10 +42,10 @@ object ChannelPreferencesConnector {
 }
 
 @Singleton
-class ChannelPreferencesConnector @Inject() (httpClient: HttpClientV2, val servicesConfig: ServicesConfig)(implicit
+class ChannelPreferencesConnector @Inject() (httpClient: HttpClientV2, servicesConfig: ServicesConfig)(implicit
   ec: ExecutionContext
 ) {
-  def serviceUrl: String = servicesConfig.baseUrl("channel-preferences")
+  val serviceUrl: String = servicesConfig.baseUrl(ChannelPreferencesConnector.configKey)
 
   def updateStatus(statusUpdate: StatusUpdate)(implicit hc: HeaderCarrier): Future[Either[String, Unit]] =
     httpClient

@@ -20,6 +20,7 @@ import org.apache.pekko.actor.ActorSystem
 
 import javax.inject.{ Inject, Singleton }
 import play.api.Configuration
+import play.api.http.Status
 import play.api.libs.json.{ Format, Json }
 import play.api.libs.ws.writeableOf_JsValue
 import uk.gov.hmrc.http.*
@@ -27,8 +28,13 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.http.HttpReads.Implicits.*
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.preferencesadminfrontend.controllers.model.{ EmailRequest, Event }
+
 import java.net.URI
 import scala.concurrent.{ ExecutionContext, Future }
+
+object PreferencesConnector {
+  val configKey = "preferences"
+}
 
 @Singleton
 class PreferencesConnector @Inject() (
@@ -40,7 +46,7 @@ class PreferencesConnector @Inject() (
 
   implicit val ef: Format[Entity] = Entity.formats
 
-  def serviceUrl: String = servicesConfig.baseUrl("preferences")
+  def serviceUrl: String = servicesConfig.baseUrl(PreferencesConnector.configKey)
 
   def getPreferencesByEmail(
     email: String
@@ -49,7 +55,7 @@ class PreferencesConnector @Inject() (
       .post(new URI(s"$serviceUrl/preferences/find-by-email").toURL)
       .withBody(Json.toJson(EmailRequest(email)))
       .execute[List[PreferenceDetails]]
-      .recover { case _: BadRequestException =>
+      .recover { case ex @ UpstreamErrorResponse(_, Status.BAD_REQUEST, _, _) =>
         Nil
       }
 

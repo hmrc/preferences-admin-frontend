@@ -29,12 +29,16 @@ import play.api.libs.ws.writeableOf_JsValue
 import java.net.URI
 import scala.concurrent.{ ExecutionContext, Future }
 
+object MessageConnector {
+  val configKey: String = "secure-message"
+}
+
 @Singleton
 class MessageConnector @Inject() (httpClient: HttpClientV2, val servicesConfig: ServicesConfig)(implicit
   ec: ExecutionContext
 ) {
 
-  private val serviceUrl: String = s"${servicesConfig.baseUrl("secure-message")}/secure-messaging"
+  private val serviceUrl: String = s"${servicesConfig.baseUrl(MessageConnector.configKey)}/secure-messaging"
 
   def getAllowlist()(implicit hc: HeaderCarrier): Future[HttpResponse] =
     httpClient
@@ -62,13 +66,14 @@ class MessageConnector @Inject() (httpClient: HttpClientV2, val servicesConfig: 
         HttpResponse(BAD_GATEWAY, e.getMessage)
       }
 
-  def getGmcBatches()(implicit hc: HeaderCarrier): Future[HttpResponse] =
+  def getGmcBatches()(implicit hc: HeaderCarrier): Future[HttpResponse] = {
     httpClient
       .get(new URI(s"$serviceUrl/admin/message/brake/gmc/batches").toURL)
       .execute[HttpResponse]
       .recover { case e: Exception =>
         HttpResponse(BAD_GATEWAY, e.getMessage)
       }
+  }
 
   def getRandomMessagePreview(batch: GmcBatch)(implicit hc: HeaderCarrier): Future[HttpResponse] =
     httpClient
