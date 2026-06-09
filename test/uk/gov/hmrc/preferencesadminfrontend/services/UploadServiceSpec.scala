@@ -31,7 +31,7 @@ import uk.gov.hmrc.preferencesadminfrontend.services.model.csv.CsvData
 
 import java.nio.file.{ Files, Path }
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ Future, TimeoutException }
 
 class UploadServiceSpec extends PlaySpec with MockitoSugar with ScalaFutures {
 
@@ -96,18 +96,17 @@ class UploadServiceSpec extends PlaySpec with MockitoSugar with ScalaFutures {
       verifyNoInteractions(mockConnector)
     }
 
-    "fail the entire stream processing if a downstream call fails" in {
+    "not fail the entire stream processing if a downstream call timeout" in {
       val records = List(CsvData("1", "2", "3"), CsvData("4", "5", "6"))
 
       when(mockConnector.process(any[CsvData])(any[HeaderCarrier]))
+        .thenReturn(Future.failed(new TimeoutException("Downstream timeout!")))
         .thenReturn(Future.successful(Ok("Success")))
-        .thenReturn(Future.failed(new RuntimeException("Downstream crash!")))
 
       val resultFuture = serviceUnderTest.process(records)
 
-      whenReady(resultFuture.failed) { exception =>
-        exception mustBe a[RuntimeException]
-        exception.getMessage mustBe "Downstream crash!"
+      whenReady(resultFuture) { result =>
+        result must include("Processed 2 records successfully.")
       }
     }
 
