@@ -18,16 +18,18 @@ package uk.gov.hmrc.preferencesadminfrontend.services
 
 import org.apache.pekko.stream.Materializer
 import org.apache.pekko.stream.scaladsl.*
+import play.api.Logging
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.preferencesadminfrontend.connectors.ChannelPreferencesConnector
 import uk.gov.hmrc.preferencesadminfrontend.services.model.csv.CsvData
-
 import java.nio.file.Path
 import javax.inject.Inject
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{ ExecutionContext, Future }
+import scala.util.{ Failure, Success }
 
-class UploadService @Inject() (channelPreferencesConnector: ChannelPreferencesConnector, csvReader: CsvReader) {
+class UploadService @Inject() (channelPreferencesConnector: ChannelPreferencesConnector, csvReader: CsvReader)
+    extends Logging {
 
   def readFromFile(path: Path)(implicit mat: Materializer): Future[List[CsvData]] = {
     val extractCsvData: PartialFunction[Any, CsvData] = {
@@ -46,12 +48,17 @@ class UploadService @Inject() (channelPreferencesConnector: ChannelPreferencesCo
     Source(records)
       .throttle(LimitR, 1.second)
       .mapAsync(parallelism = 2) { record =>
-        channelPreferencesConnector.process(record)
+        channelPreferencesConnector.process(record).onComplete {
+          case Success(_) =>
+            logger.info(s"Processing succeeded for ${record.mtditsaid} record.")
+          case Failure(e) =>
+            logger.error(s"Processing failed for ${record.mtditsaid} record: ${e.getMessage}")
+        }
+        Future.successful("Dispatched records for processing!")
       }
       .runWith(Sink.ignore)
       .map { _ =>
         s"Processed ${records.size} records successfully."
       }
   }
-
 }
