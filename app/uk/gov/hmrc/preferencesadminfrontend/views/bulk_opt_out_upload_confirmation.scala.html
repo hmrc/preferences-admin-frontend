@@ -17,7 +17,7 @@
 @import java.time.format.DateTimeFormatter
 @import java.util.Locale
 
-@this(layout: Layout, govukBreadcrumbs: GovukBreadcrumbs)
+@this(layout: Layout, govukBreadcrumbs: GovukBreadcrumbs, govukWarningText : GovukWarningText)
 
 @(
     successfullyOptedOutNinos: List[String],
@@ -29,6 +29,46 @@
 @layout(pageTitle = "Bulk Upload Opt Out Confirmation") {
     <div id="file-upload-confirmation">
         <h2 class="govuk-heading-m">File Upload Confirmation</h2>
+     <p class="govuk-body">Successfully opted out @successfullyOptedOutNinos.length records</p>
+
+     @if(alreadyOptedOutNinos.nonEmpty){
+      @govukWarningText(WarningText(
+       iconFallbackText = Some("Warning"),
+       content = Text("The following uploaded entries were already opted out")
+      ))
+
+      <ul class="govuk-task-list">
+      @for(alreadyOptedOutNino <- alreadyOptedOutNinos){
+       <li class="govuk-task-list__item">@alreadyOptedOutNino</li>
+      }
+      </ul>
+     }
+
+     @if(notFoundNinos.nonEmpty){
+      @govukWarningText(WarningText(
+       iconFallbackText = Some("Warning"),
+       content = Text("The following uploaded entries were not found")
+      ))
+
+      <ul class="govuk-task-list">
+      @for(notFoundNino <- notFoundNinos){
+       <li class="govuk-task-list__item">@notFoundNino</li>
+      }
+      </ul>
+     }
+
+     @if(failedCallNinos.nonEmpty){
+      @govukWarningText(WarningText(
+       iconFallbackText = Some("Warning"),
+       content = Text("The following entries failed for unexpected reasons")
+      ))
+
+      <ul class="govuk-task-list">
+      @for(failedCallNino <- failedCallNinos){
+       <li class="govuk-task-list__item">@failedCallNino</li>
+      }
+      </ul>
+     }
 
     </div>
 }

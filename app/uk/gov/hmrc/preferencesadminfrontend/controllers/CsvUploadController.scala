@@ -36,7 +36,7 @@ class CsvUploadController @Inject() (
   csvUpload: csv_upload,
   csvUploadConfirm: csv_upload_confirmation,
   csvUploadBulkOptOuts: csv_upload_bulk_opt_outs,
-  bulkOptOutUploadConfirmation: bulk_opt_out_upload_confirmation,
+  csvUploadBulkOptOutUploadConfirmation: bulk_opt_out_upload_confirmation,
   uploadService: UploadService,
   bulkUploadOptOutsService: BulkUploadOptOutsService,
   mcc: MessagesControllerComponents
@@ -96,9 +96,8 @@ class CsvUploadController @Inject() (
           Future.successful(Ok(csvUploadBulkOptOuts(errors, uploaededFileHadNoEntries = false)))
         } else {
           val successfulEntries = errorOrOptOutList.collect { case Right(success) => success }
-          bulkUploadOptOutsService.processBulkOptOuts(successfulEntries).map {
-            bulkOptOutResults: List[BulkOptOutResult] =>
-              showBulkOptOutConfirmation(bulkOptOutResults)
+          bulkUploadOptOutsService.processBulkOptOuts(successfulEntries).map { bulkOptOutResults =>
+            showBulkOptOutConfirmation(bulkOptOutResults)
           }
         }
       }
@@ -120,7 +119,7 @@ class CsvUploadController @Inject() (
     }
 
     Ok(
-      bulkOptOutUploadConfirmation(
+      csvUploadBulkOptOutUploadConfirmation(
         successfullyOptedOutNinos = successfullyOptedOutNinos,
         alreadyOptedOutNinos = alreadyOptedOutNinos,
         notFoundNinos = notFoundNinos,
