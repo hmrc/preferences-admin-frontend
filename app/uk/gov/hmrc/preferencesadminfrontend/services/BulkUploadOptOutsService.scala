@@ -17,15 +17,23 @@
 package uk.gov.hmrc.preferencesadminfrontend.services
 
 import org.apache.pekko.stream.Materializer
-import play.api.libs.json.Json
-import play.api.mvc.Result
-import play.api.mvc.Results.Ok
+import org.apache.pekko.stream.scaladsl.{ Sink, Source }
+import play.api.Logging
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.preferencesadminfrontend.connectors.{ EntityResolverConnector, OptOutResult }
+import uk.gov.hmrc.preferencesadminfrontend.services.model.TaxIdentifier
 
 import java.nio.file.Path
 import javax.inject.Inject
+import scala.concurrent.duration.DurationInt
 import scala.concurrent.{ ExecutionContext, Future }
 
-class BulkUploadOptOutsService @Inject() (csvReader: CsvReader)(implicit ec: ExecutionContext) {
+sealed trait BulkOptOutResult
+case class FailedCallBulkOptOutResult(nino: String) extends BulkOptOutResult
+case class ProcessedBulkOptOutResult(nino: String, optOutResult: OptOutResult) extends BulkOptOutResult
+
+class BulkUploadOptOutsService @Inject() (csvReader: CsvReader, entityResolverConnector: EntityResolverConnector)
+    extends Logging {
 
   def readNinoBulkOptOutsFromFile(
     path: Path
@@ -48,9 +56,25 @@ class BulkUploadOptOutsService @Inject() (csvReader: CsvReader)(implicit ec: Exe
     csvReader.readFromFile(path, extractCsvData)
   }
 
-  def processBulkOptOuts(records: List[String])(implicit ec: ExecutionContext): Future[Result] =
-    Future.successful {
-      val jsonPayload = Json.toJson(records)
-      Ok(s"Processing ${records.size} records.\n${Json.prettyPrint(jsonPayload)}")
-    }
+  def processBulkOptOuts(
+    ninos: List[String]
+  )(implicit ec: ExecutionContext, mat: Materializer, hc: HeaderCarrier): Future[List[BulkOptOutResult]] = {
+    val LimitR = 10
+    Source(ninos)
+      .throttle(LimitR, 1.second)
+      .mapAsync(parallelism = 2) { nino =>
+        entityResolverConnector
+          .optOut(TaxIdentifier.ninoIdentifier(nino))
+          .map { optOutResult =>
+            ProcessedBulkOptOutResult(nino, optOutResult)
+          }
+          .recover { case error =>
+            logger.error(s"Bulk opt out processing failed for nino $nino record", error)
+            FailedCallBulkOptOutResult(nino)
+          }
+      }
+      .runWith(Sink.seq)
+      .map(_.toList)
+
+  }
 }

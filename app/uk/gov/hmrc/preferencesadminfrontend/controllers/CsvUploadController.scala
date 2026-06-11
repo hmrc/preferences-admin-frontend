@@ -23,7 +23,8 @@ import play.api.libs.Files
 import play.api.mvc.*
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
-import uk.gov.hmrc.preferencesadminfrontend.services.{ BulkUploadOptOutsService, UploadService }
+import uk.gov.hmrc.preferencesadminfrontend.connectors.{ AlreadyOptedOut, OptedOut, PreferenceNotFound }
+import uk.gov.hmrc.preferencesadminfrontend.services.{ BulkOptOutResult, BulkUploadOptOutsService, FailedCallBulkOptOutResult, ProcessedBulkOptOutResult, UploadService }
 import uk.gov.hmrc.preferencesadminfrontend.views.html.*
 
 import javax.inject.{ Inject, Singleton }
@@ -35,6 +36,7 @@ class CsvUploadController @Inject() (
   csvUpload: csv_upload,
   csvUploadConfirm: csv_upload_confirmation,
   csvUploadBulkOptOuts: csv_upload_bulk_opt_outs,
+  bulkOptOutUploadConfirmation: bulk_opt_out_upload_confirmation,
   uploadService: UploadService,
   bulkUploadOptOutsService: BulkUploadOptOutsService,
   mcc: MessagesControllerComponents
@@ -93,8 +95,29 @@ class CsvUploadController @Inject() (
         if (errors.nonEmpty) {
           Future.successful(Ok(csvUploadBulkOptOuts(errors, uploaededFileHadNoEntries = false)))
         } else {
-          val succesfulEntries = errorOrOptOutList.collect { case Right(success) => success }
-          bulkUploadOptOutsService.processBulkOptOuts(succesfulEntries)
+          val successfulEntries = errorOrOptOutList.collect { case Right(success) => success }
+          bulkUploadOptOutsService.processBulkOptOuts(successfulEntries).map { bulkOptOutResults =>
+            val failedCallNinos = bulkOptOutResults.collect { case failedCall: FailedCallBulkOptOutResult =>
+              failedCall.nino
+            }
+            val successfullyOptedOutNinos =
+              bulkOptOutResults.collect { case ProcessedBulkOptOutResult(nino, OptedOut) => nino }
+            val alreadyOptedOutNinos =
+              bulkOptOutResults.collect { case ProcessedBulkOptOutResult(nino, AlreadyOptedOut) => nino }
+            val notFoundNinos = bulkOptOutResults.collect { case ProcessedBulkOptOutResult(nino, PreferenceNotFound) =>
+              nino
+            }
+
+            Ok(
+              bulkOptOutUploadConfirmation(
+                successfullyOptedOutNinos = successfullyOptedOutNinos,
+                alreadyOptedOutNinos = alreadyOptedOutNinos,
+                notFoundNinos = notFoundNinos,
+                failedCallNinos = failedCallNinos
+              )
+            )
+
+          }
         }
       }
     }

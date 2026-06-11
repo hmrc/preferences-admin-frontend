@@ -57,7 +57,7 @@ class UploadService @Inject() (channelPreferencesConnector: ChannelPreferencesCo
         Future.successful("Dispatched records for processing!")
       }
       .runWith(Sink.ignore)
-      .map { _ =>
+      .map { a =>
         s"Processed ${records.size} records successfully."
       }
   }
