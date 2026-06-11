@@ -31,6 +31,8 @@ class FormIdsSpec extends PlaySpec {
           "LPP1B_ITSA",
           "LPP2_ITSA",
           "LPP4_ITSA",
+          "LPP5_ITSA",
+          "LPP6_ITSA",
           "PAR1_ITSA",
           "ITSAORM1",
           "PL3"
