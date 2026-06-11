@@ -18,59 +18,112 @@ package uk.gov.hmrc.preferencesadminfrontend.services
 
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.stream.Materializer
+import org.mockito.ArgumentMatchers.*
+import org.mockito.Mockito.*
 import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.time.SpanSugar.convertIntToGrainOfTime
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
-import play.api.test.Helpers.*
-import uk.gov.hmrc.preferencesadminfrontend.services.model.CsvData
+import play.api.mvc.Results.{ BadRequest, InternalServerError, Ok }
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.preferencesadminfrontend.connectors.ChannelPreferencesConnector
+import uk.gov.hmrc.preferencesadminfrontend.services.model.csv.CsvData
 
 import java.nio.file.{ Files, Path }
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ Future, TimeoutException }
 
 class UploadServiceSpec extends PlaySpec with MockitoSugar with ScalaFutures {
 
   implicit val system: ActorSystem = ActorSystem("UploadServiceSpec")
   implicit val mat: Materializer = Materializer(system)
+  implicit val hc: HeaderCarrier = HeaderCarrier()
+  implicit val defaultPatience: PatienceConfig = PatienceConfig(timeout = 5.seconds, interval = 100.millis)
+  val mockConnector: ChannelPreferencesConnector = mock[ChannelPreferencesConnector]
+  val serviceUnderTest = new UploadService(mockConnector, new CsvReader)
 
-  val service = new UploadService()
+  "UploadService.readFromFile" should {
+    "successfully parse a valid CSV file and skip invalid rows" in {
+      val csvContent =
+        """data1, data2, data3
+          |
+          |invalidLine1, invalidLine2
+          |data4, data5, data6
+          |""".stripMargin
 
-  "UploadService" should {
+      val tempFile: Path = Files.createTempFile("test-upload", ".csv")
+      Files.write(tempFile, csvContent.getBytes("UTF-8"))
 
-    "readFromFile" should {
-      "successfully parse a valid CSV file and skip invalid rows" in {
-        val csvContent =
-          """data1, data2, data3
-            |
-            |invalidLine1, invalidLine2
-            |data4, data5, data6
-            |""".stripMargin
+      try {
+        val resultFuture: Future[List[CsvData]] = serviceUnderTest.readFromFile(tempFile)
+        whenReady(resultFuture) { records =>
+          records must have size 2
+          records.head mustBe CsvData("data1", "data2", "data3")
+          records(1) mustBe CsvData("data4", "data5", "data6")
+        }
+      } finally Files.deleteIfExists(tempFile)
+    }
+  }
 
-        val tempFile: Path = Files.createTempFile("test-upload", ".csv")
-        Files.write(tempFile, csvContent.getBytes("UTF-8"))
+  "UploadService.process" should {
 
-        try {
-          val resultFuture: Future[List[CsvData]] = service.readFromFile(tempFile)
-          whenReady(resultFuture) { records =>
-            records must have size 2
-            records.head mustBe CsvData("data1", "data2", "data3")
-            records(1) mustBe CsvData("data4", "data5", "data6")
-          }
-        } finally Files.deleteIfExists(tempFile)
+    "successfully process all records and return an Ok result" in {
+      val records = List(CsvData("1", "2", "3"), CsvData("4", "5", "6"), CsvData("A", "B", "C"))
+
+      when(mockConnector.process(any[CsvData])(any[HeaderCarrier]))
+        .thenReturn(Future.successful(Ok("Success")))
+
+      val resultFuture = serviceUnderTest.process(records)
+
+      whenReady(resultFuture) { result =>
+        result must include("Processed 3 records successfully.")
+      }
+
+      verify(mockConnector, times(3)).process(any[CsvData])(any[HeaderCarrier])
+    }
+
+    "handle an empty list of records gracefully" in {
+      reset(mockConnector)
+
+      val records = List.empty[CsvData]
+
+      val resultFuture = serviceUnderTest.process(records)
+
+      whenReady(resultFuture) { result =>
+        result must include("Processed 0 records successfully.")
+      }
+
+      verifyNoInteractions(mockConnector)
+    }
+
+    "not fail the entire stream processing if a downstream call timeout" in {
+      val records = List(CsvData("1", "2", "3"), CsvData("4", "5", "6"))
+
+      when(mockConnector.process(any[CsvData])(any[HeaderCarrier]))
+        .thenReturn(Future.failed(new TimeoutException("Downstream timeout!")))
+        .thenReturn(Future.successful(Ok("Success")))
+
+      val resultFuture = serviceUnderTest.process(records)
+
+      whenReady(resultFuture) { result =>
+        result must include("Processed 2 records successfully.")
       }
     }
 
-    "process" should {
-      "return Ok when all records are processed successfully" in {
-        val records = List(
-          CsvData("A", "B", "C"),
-          CsvData("X", "Y", "Z")
-        )
+    "not fail the entire stream processing if a downstream call returns error status" in {
+      val records = List(CsvData("1", "2", "3"), CsvData("4", "5", "6"), CsvData("A", "B", "C"))
 
-        val resultFuture = service.process(records)
-        status(resultFuture) mustBe OK
-        contentAsString(resultFuture) mustBe "Processing 2 records."
+      when(mockConnector.process(any[CsvData])(any[HeaderCarrier]))
+        .thenReturn(Future.successful(BadRequest("error")))
+        .thenReturn(Future.successful(Ok("success")))
+        .thenReturn(Future.successful(InternalServerError("failed")))
+
+      val resultFuture = serviceUnderTest.process(records)
+
+      whenReady(resultFuture) { result =>
+        result must include("Processed 3 records successfully.")
       }
     }
+
   }
 }

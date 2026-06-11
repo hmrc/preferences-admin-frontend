@@ -24,9 +24,7 @@ import play.api.mvc.*
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
 import uk.gov.hmrc.preferencesadminfrontend.services.UploadService
-import uk.gov.hmrc.preferencesadminfrontend.services.model.CsvData
 import uk.gov.hmrc.preferencesadminfrontend.views.html.*
-
 import javax.inject.{ Inject, Singleton }
 import scala.concurrent.{ ExecutionContext, Future }
 
@@ -34,6 +32,7 @@ import scala.concurrent.{ ExecutionContext, Future }
 class CsvUploadController @Inject() (
   authorisedAction: AuthorisedAction,
   csvUpload: csv_upload,
+  csvUploadConfirm: csv_upload_confirmation,
   uploadService: UploadService,
   mcc: MessagesControllerComponents
 )(implicit appConfig: AppConfig, ec: ExecutionContext, actorSystem: ActorSystem)
@@ -45,15 +44,19 @@ class CsvUploadController @Inject() (
     Future.successful(Ok(csvUpload()))
   }
 
-  def upload(): Action[MultipartFormData[Files.TemporaryFile]] = Action.async(parse.multipartFormData) { request =>
-    request.body
-      .file("csvFile")
-      .map { filePart =>
-        val path = filePart.ref.path
-        uploadService.readFromFile(path).flatMap(uploadService.process)
-      }
-      .getOrElse {
-        Future.successful(BadRequest("File missing or incorrect data supplied!"))
-      }
+  def upload(): Action[MultipartFormData[Files.TemporaryFile]] = Action.async(parse.multipartFormData) {
+    implicit request =>
+      request.body
+        .file("csvFile")
+        .map { filePart =>
+          val path = filePart.ref.path
+          uploadService
+            .readFromFile(path)
+            .flatMap(uploadService.process)
+            .map(msg => Ok(csvUploadConfirm(msg)))
+        }
+        .getOrElse {
+          Future.successful(BadRequest(csvUploadConfirm("File missing or incorrect data supplied!")))
+        }
   }
 }

@@ -28,7 +28,6 @@ import play.api.i18n.MessagesApi
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.Files.TemporaryFile
 import play.api.mvc.MultipartFormData.FilePart
-import play.api.mvc.Results.Ok
 import play.api.mvc.{ MultipartFormData, Result }
 import play.api.test.FakeRequest
 import play.api.test.Helpers.*
@@ -99,8 +98,8 @@ class CsvUploadControllerSpec
       )
       when(mockUploadService.readFromFile(any())(any()))
         .thenReturn(Future.successful(Nil))
-      when(mockUploadService.process(any())(any()))
-        .thenReturn(Future.successful(Ok("success")))
+      when(mockUploadService.process(any())(any(), any(), any()))
+        .thenReturn(Future.successful("success"))
 
       val request = FakeRequest("POST", "/multi-search/results")
         .withSession(User.sessionKey -> "admin")

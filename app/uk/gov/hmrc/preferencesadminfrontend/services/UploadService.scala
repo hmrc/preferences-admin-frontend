@@ -18,45 +18,47 @@ package uk.gov.hmrc.preferencesadminfrontend.services
 
 import org.apache.pekko.stream.Materializer
 import org.apache.pekko.stream.scaladsl.*
-import org.apache.pekko.util.ByteString
-import play.api.libs.json.Json
-import play.api.mvc.*
-import play.api.mvc.Results.Ok
-import uk.gov.hmrc.preferencesadminfrontend.services.model.CsvData
-
+import play.api.Logging
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.preferencesadminfrontend.connectors.ChannelPreferencesConnector
+import uk.gov.hmrc.preferencesadminfrontend.services.model.csv.CsvData
 import java.nio.file.Path
 import javax.inject.Inject
+import scala.concurrent.duration.DurationInt
 import scala.concurrent.{ ExecutionContext, Future }
+import scala.util.{ Failure, Success }
 
-class UploadService @Inject() {
+class UploadService @Inject() (channelPreferencesConnector: ChannelPreferencesConnector, csvReader: CsvReader)
+    extends Logging {
 
-  private val FrameLength = 1024
-  private val AllowTruncation = true
-
-  def readFromFile(path: Path)(implicit mat: Materializer): Future[List[CsvData]] =
-    FileIO
-      .fromPath(path)
-      .via(Framing.delimiter(ByteString("\n"), FrameLength, AllowTruncation))
-      .map(_.utf8String.trim)
-      .filter(_.nonEmpty)
-      .collect {
-        case line if line.split(",").map(_.trim).length >= 3 =>
-          val cols = line.split(",").map(_.trim)
-          CsvData(cols(0), cols(1), cols(2))
-      }
-      .runWith(Sink.seq)
-      .map(_.toList)(mat.executionContext)
-
-  def process(records: List[CsvData])(implicit ec: ExecutionContext): Future[Result] = {
-    val processingFutures = records.map { record =>
-      val jsonPayload = Json.toJson(record)
-      Future.successful(s"jsonpayload $jsonPayload to be posted")
+  def readFromFile(path: Path)(implicit mat: Materializer): Future[List[CsvData]] = {
+    val extractCsvData: PartialFunction[Any, CsvData] = {
+      case line: String if line.split(",").map(_.trim).length >= 3 =>
+        val cols = line.split(",").map(_.trim)
+        CsvData(cols(0), cols(1), cols(2))
     }
 
-    Future
-      .sequence(processingFutures)
+    csvReader.readFromFile(path, extractCsvData)
+  }
+
+  def process(
+    records: List[CsvData]
+  )(implicit ec: ExecutionContext, hc: HeaderCarrier, mat: Materializer): Future[String] = {
+    val LimitR = 10
+    Source(records)
+      .throttle(LimitR, 1.second)
+      .mapAsync(parallelism = 2) { record =>
+        channelPreferencesConnector.process(record).onComplete {
+          case Success(_) =>
+            logger.info(s"Processing succeeded for ${record.mtditsaid} record.")
+          case Failure(e) =>
+            logger.error(s"Processing failed for ${record.mtditsaid} record: ${e.getMessage}")
+        }
+        Future.successful("Dispatched records for processing!")
+      }
+      .runWith(Sink.ignore)
       .map { _ =>
-        Ok(s"Processing ${processingFutures.size} records.")
+        s"Processed ${records.size} records successfully."
       }
   }
 }

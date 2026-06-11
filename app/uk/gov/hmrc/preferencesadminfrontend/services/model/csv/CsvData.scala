@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.preferencesadminfrontend.services.model
+package uk.gov.hmrc.preferencesadminfrontend.services.model.csv
 
 import play.api.libs.json.*
 
-case class CsvData(nino: String, utr: String, itsaId: String)
+case class CsvData(nino: String, sautr: String, mtditsaid: String)
 
 object CsvData {
   implicit val format: OFormat[CsvData] = Json.format[CsvData]

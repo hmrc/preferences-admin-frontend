@@ -29,8 +29,9 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.preferencesadminfrontend.connectors.ChannelPreferencesConnector.StatusUpdate
 import uk.gov.hmrc.http.HttpReads.Implicits.readRaw
 import uk.gov.hmrc.http.client.{ HttpClientV2, RequestBuilder }
+import uk.gov.hmrc.preferencesadminfrontend.services.model.csv.CsvData
 
-import java.net.URI
+import java.net.{ URI, URL }
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -38,7 +39,7 @@ class ChannelPreferencesConnectorSpec extends PlaySpec with ScalaFutures with Ei
 
   "updateStatus" must {
     "return right SentStatus.Sent upon success" in new TestCase {
-      when(httpClient.post(expectedPath)).thenReturn(requestBuilder)
+      when(httpClient.post(statusUrl)).thenReturn(requestBuilder)
       when(requestBuilder.withBody(any)(any, any, any)).thenReturn(requestBuilder)
       when(requestBuilder.execute[HttpResponse]).thenReturn(Future.successful(httpResponse(OK, "ITSA-GREAT-DAY")))
 
@@ -48,7 +49,7 @@ class ChannelPreferencesConnectorSpec extends PlaySpec with ScalaFutures with Ei
     }
 
     "return left upstream error message upon a failure response" in new TestCase {
-      when(httpClient.post(expectedPath)).thenReturn(requestBuilder)
+      when(httpClient.post(statusUrl)).thenReturn(requestBuilder)
       when(requestBuilder.withBody(any)(any, any, any)).thenReturn(requestBuilder)
       when(requestBuilder.execute[HttpResponse]).thenReturn(Future.successful(httpResponse(Bad, "ITSA-BAD-DAY")))
 
@@ -57,6 +58,30 @@ class ChannelPreferencesConnectorSpec extends PlaySpec with ScalaFutures with Ei
         .futureValue
         .left
         .value mustBe s"upstream error when sending status update, $Bad ITSA-BAD-DAY"
+    }
+  }
+
+  "process" must {
+    "return right status upon success" in new TestCase {
+      when(httpClient.post(processUrl)).thenReturn(requestBuilder)
+      when(requestBuilder.withBody(any)(any, any, any)).thenReturn(requestBuilder)
+      when(requestBuilder.execute[HttpResponse]).thenReturn(Future.successful(httpResponse(OK, "sucess")))
+
+      channelPreferencesConnector
+        .process(CsvData("1", "2", "3"))(headerCarrier)
+        .futureValue mustBe Right(())
+    }
+
+    "return left upstream error message upon a failure response" in new TestCase {
+      when(httpClient.post(processUrl)).thenReturn(requestBuilder)
+      when(requestBuilder.withBody(any)(any, any, any)).thenReturn(requestBuilder)
+      when(requestBuilder.execute[HttpResponse]).thenReturn(Future.successful(httpResponse(Bad, "error")))
+
+      channelPreferencesConnector
+        .process(CsvData("1", "2", "3"))(headerCarrier)
+        .futureValue
+        .left
+        .value mustBe s"upstream error when sending the request, $Bad error"
     }
   }
 
@@ -100,7 +125,8 @@ class ChannelPreferencesConnectorSpec extends PlaySpec with ScalaFutures with Ei
     val channelPreferencesConnector = new ChannelPreferencesConnector(httpClient, servicesConfig)
 
     val channelPreferencesServiceUrl: String = app.injector.instanceOf[ServicesConfig].baseUrl("channel-preferences")
-    val expectedPath = new URI(s"$channelPreferencesServiceUrl/channel-preferences/preference/itsa/status").toURL
+    val statusUrl: URL = new URI(s"$channelPreferencesServiceUrl/channel-preferences/preference/itsa/status").toURL
+    val processUrl: URL = new URI(s"$channelPreferencesServiceUrl/channel-preferences/process").toURL
 
     def httpResponse(status: Int, body: String): HttpResponse = HttpResponse(
       status = status,
