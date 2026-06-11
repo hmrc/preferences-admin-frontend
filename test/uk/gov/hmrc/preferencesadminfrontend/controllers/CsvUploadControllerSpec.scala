@@ -154,7 +154,7 @@ class CsvUploadControllerSpec
 
       when(mockTemporaryFile.path).thenReturn(mockPath)
 
-      when(mockBulkOptOutsService.readBulkOptOutsFromFile(any())(any()))
+      when(mockBulkOptOutsService.readNinoBulkOptOutsFromFile(any())(any()))
         .thenReturn(
           Future.successful(
             List(
@@ -196,7 +196,7 @@ class CsvUploadControllerSpec
 
       when(mockTemporaryFile.path).thenReturn(mockPath)
 
-      when(mockBulkOptOutsService.readBulkOptOutsFromFile(any())(any()))
+      when(mockBulkOptOutsService.readNinoBulkOptOutsFromFile(any())(any()))
         .thenReturn(
           Future.successful(List.empty)
         )
@@ -230,7 +230,7 @@ class CsvUploadControllerSpec
         files = Seq(filePart),
         badParts = Seq.empty
       )
-      when(mockBulkOptOutsService.readBulkOptOutsFromFile(any())(any()))
+      when(mockBulkOptOutsService.readNinoBulkOptOutsFromFile(any())(any()))
         .thenReturn(
           Future.successful(
             List(

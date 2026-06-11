@@ -17,10 +17,9 @@
 package uk.gov.hmrc.preferencesadminfrontend.services
 
 import org.apache.pekko.stream.Materializer
+import play.api.libs.json.Json
 import play.api.mvc.Result
 import play.api.mvc.Results.Ok
-import play.api.libs.json.Json
-import uk.gov.hmrc.preferencesadminfrontend.services.model.csv.{ CvBulkOptOutCsvData, CvBulkOptOutIdentifierType, EmailIdentifierType }
 
 import java.nio.file.Path
 import javax.inject.Inject
@@ -28,61 +27,31 @@ import scala.concurrent.{ ExecutionContext, Future }
 
 class BulkUploadOptOutsService @Inject() (csvReader: CsvReader) {
 
-  def readBulkOptOutsFromFile(
+  def readNinoBulkOptOutsFromFile(
     path: Path
-  )(implicit mat: Materializer): Future[List[Either[String, CvBulkOptOutCsvData]]] = {
-    val extractCsvData: PartialFunction[Any, Either[String, CvBulkOptOutCsvData]] = {
+  )(implicit mat: Materializer): Future[List[Either[String, String]]] = {
+    val extractCsvData: PartialFunction[Any, Either[String, String]] = {
       case line: String if line.split(",").map(_.trim).length >= 1 =>
         val cols = line.split(",").map(_.trim)
-        val typeText = cols(0)
+        val ninoValue = cols(0)
         val doesNotHaveExtraCoulmnValues = !cols.zipWithIndex.exists { case (value, index) =>
-          index > 1 & value.nonEmpty
+          index > 0 & value.nonEmpty
         }
 
-        CvBulkOptOutIdentifierType.fromString(typeText) match {
-          case Some(identifierType: CvBulkOptOutIdentifierType)
-              if cols.length > 1 && cols(1).nonEmpty && doesNotHaveExtraCoulmnValues =>
-            processIdentifiedLine(line, identifierType, cols(1))
-
-          case _ =>
-            Left(line)
+        if (doesNotHaveExtraCoulmnValues) {
+          Right(ninoValue)
+        } else {
+          Left(s"$line")
         }
+
     }
 
     csvReader.readFromFile(path, extractCsvData)
   }
 
-  private def processIdentifiedLine(
-    line: String,
-    identifierType: CvBulkOptOutIdentifierType,
-    value: String
-  ): Either[String, CvBulkOptOutCsvData] =
-    identifierType match {
-      case EmailIdentifierType =>
-        validateEmail(value) match {
-          case Left(invalidEmail) =>
-            Left(s"$line (invalid email address)")
-          case Right(validEmail) =>
-            Right(CvBulkOptOutCsvData(identifierType, validEmail))
-        }
-      case _ =>
-        Right(CvBulkOptOutCsvData(identifierType, value))
-
-    }
-
-  private def validateEmail(value: String): Either[String, String] = {
-    val validEmail = """^([a-zA-Z0-9.!#$%&’'*+/=?^_`{|}~-]+)@([a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*)$""".r
-
-    value match {
-      case validEmail(_, _) => Right(value)
-      case invalidEmail     => Left(invalidEmail)
-    }
-  }
-
-  def processBulkOptOuts(records: List[CvBulkOptOutCsvData])(implicit ec: ExecutionContext): Future[Result] =
+  def processBulkOptOuts(records: List[String])(implicit ec: ExecutionContext): Future[Result] =
     Future.successful {
       val jsonPayload = Json.toJson(records)
       Ok(s"Processing ${records.size} records.\n${Json.prettyPrint(jsonPayload)}")
     }
-
 }

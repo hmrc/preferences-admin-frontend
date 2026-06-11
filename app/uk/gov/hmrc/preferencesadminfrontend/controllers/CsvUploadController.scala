@@ -83,7 +83,7 @@ class CsvUploadController @Inject() (
     filePart: MultipartFormData.FilePart[Files.TemporaryFile]
   )(implicit request: Request[_]) = {
     val path = filePart.ref.path
-    val eventualErrorsOrOptOutDataList = bulkUploadOptOutsService.readBulkOptOutsFromFile(path)
+    val eventualErrorsOrOptOutDataList = bulkUploadOptOutsService.readNinoBulkOptOutsFromFile(path)
 
     eventualErrorsOrOptOutDataList.flatMap { errorOrOptOutList =>
       if (errorOrOptOutList.isEmpty) {

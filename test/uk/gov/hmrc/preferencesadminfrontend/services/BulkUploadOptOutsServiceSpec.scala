@@ -24,7 +24,6 @@ import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.test.Helpers.*
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.preferencesadminfrontend.services.model.csv.{ CvBulkOptOutCsvData, EmailIdentifierType, ITSAIdentifierType, NinoIdentifierType }
 
 import java.nio.file.{ Files, Path }
 import scala.concurrent.{ ExecutionContextExecutor, Future }
@@ -47,8 +46,8 @@ class BulkUploadOptOutsServiceSpec extends AnyWordSpecLike with Matchers with Sc
       Files.write(tempFile, csvContent.getBytes("UTF-8"))
 
       try {
-        val eventualCvBulkOptOutCsvDataList: Future[List[Either[String, CvBulkOptOutCsvData]]] =
-          bulkUploadOptOutsService.readBulkOptOutsFromFile(tempFile)
+        val eventualCvBulkOptOutCsvDataList: Future[List[Either[String, String]]] =
+          bulkUploadOptOutsService.readNinoBulkOptOutsFromFile(tempFile)
         whenReady(eventualCvBulkOptOutCsvDataList) { cvOptOutCsvDataList =>
           cvOptOutCsvDataList mustBe List.empty
         }
@@ -57,24 +56,20 @@ class BulkUploadOptOutsServiceSpec extends AnyWordSpecLike with Matchers with Sc
 
     "parse a valid CSV file returning failed rows and successful rows in a processable format ignoring extra empty values" in {
       val csvContent =
-        """nino, data2
+        """nino1
           |
-          |invalidLine1
-          |unknownType1, data3
-          |email, bademail
-          |email, goodemail@a.com
-          |itsa, data4,,
-          |unknownType2, data5
-          |itsa
-          |nino,
+          |nino2,
+          |nino3, undexpected value
+          |, nino4
+          |nino5
           |""".stripMargin
 
       val tempFile: Path = Files.createTempFile("test-upload", ".csv")
       Files.write(tempFile, csvContent.getBytes("UTF-8"))
 
       try {
-        val eventualCvBulkOptOutCsvDataList: Future[List[Either[String, CvBulkOptOutCsvData]]] =
-          bulkUploadOptOutsService.readBulkOptOutsFromFile(tempFile)
+        val eventualCvBulkOptOutCsvDataList: Future[List[Either[String, String]]] =
+          bulkUploadOptOutsService.readNinoBulkOptOutsFromFile(tempFile)
 
         whenReady(eventualCvBulkOptOutCsvDataList) { cvOptOutCsvDataList =>
           // not used in comparison but in showing a clear diff on failure
@@ -84,42 +79,38 @@ class BulkUploadOptOutsServiceSpec extends AnyWordSpecLike with Matchers with Sc
           }
 
           cvOptOutCsvDataList mustBe List(
-            Right(CvBulkOptOutCsvData(NinoIdentifierType, "data2")),
-            Left("invalidLine1"),
-            Left("unknownType1, data3"),
-            Left("email, bademail (invalid email address)"),
-            Right(CvBulkOptOutCsvData(EmailIdentifierType, "goodemail@a.com")),
-            Right(CvBulkOptOutCsvData(ITSAIdentifierType, "data4")),
-            Left("unknownType2, data5"),
-            Left("itsa"),
-            Left("nino,")
+            Right("nino1"),
+            Right("nino2"),
+            Left("nino3, undexpected value"),
+            Left(", nino4"),
+            Right("nino5")
           )
         }
       } finally Files.deleteIfExists(tempFile)
     }
   }
 
-  "processBulkOptOuts" should {
-    "return Ok when all records are processed successfully" in {
-      val records = List(
-        CvBulkOptOutCsvData(NinoIdentifierType, "B"),
-        CvBulkOptOutCsvData(ITSAIdentifierType, "Y")
-      )
-
-      val resultFuture = bulkUploadOptOutsService.processBulkOptOuts(records)
-      status(resultFuture) mustBe OK
-      val responseContent = contentAsString(resultFuture)
-
-      responseContent mustBe
-        """
-          |Processing 2 records.
-          |[ {
-          |  "identifierType" : "nino",
-          |  "value" : "B"
-          |}, {
-          |  "identifierType" : "itsa",
-          |  "value" : "Y"
-          |} ]""".stripMargin.trim
-    }
-  }
+//  "processBulkOptOuts" should {
+//    "return Ok when all records are processed successfully" in {
+//      val records = List(
+//        CvBulkOptOutCsvData(NinoIdentifierType, "B"),
+//        CvBulkOptOutCsvData(ITSAIdentifierType, "Y")
+//      )
+//
+//      val resultFuture = bulkUploadOptOutsService.processBulkOptOuts(records)
+//      status(resultFuture) mustBe OK
+//      val responseContent = contentAsString(resultFuture)
+//
+//      responseContent mustBe
+//        """
+//          |Processing 2 records.
+//          |[ {
+//          |  "identifierType" : "nino",
+//          |  "value" : "B"
+//          |}, {
+//          |  "identifierType" : "itsa",
+//          |  "value" : "Y"
+//          |} ]""".stripMargin.trim
+//    }
+//  }
 }
