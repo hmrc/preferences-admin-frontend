@@ -59,7 +59,7 @@ class BulkUploadOptOutsServiceSpec extends AnyWordSpecLike with Matchers with Sc
         """nino1
           |
           |nino2,
-          |nino3, undexpected value
+          |nino3, unexpected value
           |, nino4
           |nino5
           |""".stripMargin
@@ -81,7 +81,7 @@ class BulkUploadOptOutsServiceSpec extends AnyWordSpecLike with Matchers with Sc
           cvOptOutCsvDataList mustBe List(
             Right("nino1"),
             Right("nino2"),
-            Left("nino3, undexpected value"),
+            Left("nino3, unexpected value"),
             Left(", nino4"),
             Right("nino5")
           )

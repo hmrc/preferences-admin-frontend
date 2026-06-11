@@ -25,7 +25,7 @@ import java.nio.file.Path
 import javax.inject.Inject
 import scala.concurrent.{ ExecutionContext, Future }
 
-class BulkUploadOptOutsService @Inject() (csvReader: CsvReader) {
+class BulkUploadOptOutsService @Inject() (csvReader: CsvReader)(implicit ec: ExecutionContext) {
 
   def readNinoBulkOptOutsFromFile(
     path: Path
@@ -41,9 +41,8 @@ class BulkUploadOptOutsService @Inject() (csvReader: CsvReader) {
         if (doesNotHaveExtraCoulmnValues) {
           Right(ninoValue)
         } else {
-          Left(s"$line")
+          Left(line)
         }
-
     }
 
     csvReader.readFromFile(path, extractCsvData)
