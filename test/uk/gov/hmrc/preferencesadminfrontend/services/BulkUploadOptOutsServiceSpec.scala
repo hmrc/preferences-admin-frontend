@@ -24,7 +24,9 @@ import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatestplus.mockito.MockitoSugar
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.preferencesadminfrontend.connectors.EntityResolverConnector
+import uk.gov.hmrc.preferencesadminfrontend.connectors.{ AlreadyOptedOut, EntityResolverConnector, OptOutResult, OptedOut, PreferenceNotFound }
+import org.mockito.Mockito.{ never, verify, when }
+import uk.gov.hmrc.preferencesadminfrontend.services.model.TaxIdentifier
 
 import java.nio.file.{ Files, Path }
 import scala.concurrent.{ ExecutionContextExecutor, Future }
@@ -40,6 +42,12 @@ class BulkUploadOptOutsServiceSpec
 
   private val mockEntityResolverConnector: EntityResolverConnector = mock[EntityResolverConnector]
   private val bulkUploadOptOutsService = new BulkUploadOptOutsService(new CsvReader, mockEntityResolverConnector)
+
+  // not used in comparison but in showing a clear diff on failure
+  private implicit val prettifier: Prettifier = {
+    case entries: Seq[_] => entries.mkString(",\n").stripSuffix("\n")
+    case o: Any          => o.toString
+  }
 
   "readBulkOptOutsFromFile" should {
     "parse an empty csv file returning an empty list" in {
@@ -71,49 +79,97 @@ class BulkUploadOptOutsServiceSpec
       Files.write(tempFile, csvContent.getBytes("UTF-8"))
 
       try {
-        val eventualCvBulkOptOutCsvDataList: Future[List[Either[String, String]]] =
-          bulkUploadOptOutsService.readNinoBulkOptOutsFromFile(tempFile)
+        val cvOptOutCsvDataList =
+          bulkUploadOptOutsService.readNinoBulkOptOutsFromFile(tempFile).futureValue
 
-        whenReady(eventualCvBulkOptOutCsvDataList) { cvOptOutCsvDataList =>
-          // not used in comparison but in showing a clear diff on failure
-          implicit val prettifier: Prettifier = {
-            case entries: List[_] => entries.mkString(",\n").stripSuffix("\n")
-            case o: Any           => o.toString
-          }
+        cvOptOutCsvDataList mustBe List(
+          Right("nino1"),
+          Right("nino2"),
+          Left("nino3, unexpected value"),
+          Left(", nino4"),
+          Right("nino5")
+        )
 
-          cvOptOutCsvDataList mustBe List(
-            Right("nino1"),
-            Right("nino2"),
-            Left("nino3, unexpected value"),
-            Left(", nino4"),
-            Right("nino5")
-          )
-        }
       } finally Files.deleteIfExists(tempFile)
     }
   }
 
-//  "processBulkOptOuts" should {
-//    "return Ok when all records are processed successfully" in {
-//      val records = List(
-//        CvBulkOptOutCsvData(NinoIdentifierType, "B"),
-//        CvBulkOptOutCsvData(ITSAIdentifierType, "Y")
-//      )
-//
-//      val resultFuture = bulkUploadOptOutsService.processBulkOptOuts(records)
-//      status(resultFuture) mustBe OK
-//      val responseContent = contentAsString(resultFuture)
-//
-//      responseContent mustBe
-//        """
-//          |Processing 2 records.
-//          |[ {
-//          |  "identifierType" : "nino",
-//          |  "value" : "B"
-//          |}, {
-//          |  "identifierType" : "itsa",
-//          |  "value" : "Y"
-//          |} ]""".stripMargin.trim
-//    }
-//  }
+  "processBulkOptOuts" should {
+    "return an empty list when no ninos are passed" in {
+      val ninos = List()
+      val results: Seq[BulkOptOutResult] = bulkUploadOptOutsService.processBulkOptOuts(ninos).futureValue
+
+      results mustBe List.empty
+    }
+
+    "return informative results handling errors gracefully" in {
+      val ninos = List(
+        "nino1",
+        "nino2",
+        "nino3",
+        "nino4",
+        "nino5",
+        "nino6",
+        "nino7",
+        "nino8",
+        "nino9",
+        "nino10"
+      )
+
+      type PossibleOutCome = OptOutResult | Throwable
+
+      def createResult(possibleOutCome: PossibleOutCome): Future[OptOutResult] =
+        possibleOutCome match {
+          case optOutResult: OptOutResult => Future.successful(optOutResult)
+          case error: Throwable           => Future.failed(error)
+        }
+
+      when(mockEntityResolverConnector.optOut(TaxIdentifier.ninoIdentifier("nino1")))
+        .thenReturn(createResult(OptedOut))
+
+      when(mockEntityResolverConnector.optOut(TaxIdentifier.ninoIdentifier("nino2")))
+        .thenReturn(createResult(AlreadyOptedOut))
+
+      when(mockEntityResolverConnector.optOut(TaxIdentifier.ninoIdentifier("nino3")))
+        .thenReturn(createResult(AlreadyOptedOut))
+
+      when(mockEntityResolverConnector.optOut(TaxIdentifier.ninoIdentifier("nino4")))
+        .thenReturn(createResult(PreferenceNotFound))
+
+      when(mockEntityResolverConnector.optOut(TaxIdentifier.ninoIdentifier("nino5")))
+        .thenReturn(createResult(PreferenceNotFound))
+
+      val error1 = new RuntimeException("error1")
+      when(mockEntityResolverConnector.optOut(TaxIdentifier.ninoIdentifier("nino6")))
+        .thenReturn(createResult(error1))
+
+      when(mockEntityResolverConnector.optOut(TaxIdentifier.ninoIdentifier("nino7")))
+        .thenReturn(createResult(OptedOut))
+
+      val error2 = new RuntimeException("error2")
+      when(mockEntityResolverConnector.optOut(TaxIdentifier.ninoIdentifier("nino8")))
+        .thenReturn(createResult(error2))
+
+      when(mockEntityResolverConnector.optOut(TaxIdentifier.ninoIdentifier("nino9")))
+        .thenReturn(createResult(OptedOut))
+
+      when(mockEntityResolverConnector.optOut(TaxIdentifier.ninoIdentifier("nino10")))
+        .thenReturn(createResult(PreferenceNotFound))
+
+      val results: Seq[BulkOptOutResult] = bulkUploadOptOutsService.processBulkOptOuts(ninos).futureValue
+      results mustBe List(
+        ProcessedBulkOptOutResult("nino1", OptedOut),
+        ProcessedBulkOptOutResult("nino2", AlreadyOptedOut),
+        ProcessedBulkOptOutResult("nino3", AlreadyOptedOut),
+        ProcessedBulkOptOutResult("nino4", PreferenceNotFound),
+        ProcessedBulkOptOutResult("nino5", PreferenceNotFound),
+        FailedCallBulkOptOutResult("nino6"),
+        ProcessedBulkOptOutResult("nino7", OptedOut),
+        FailedCallBulkOptOutResult("nino8"),
+        ProcessedBulkOptOutResult("nino9", OptedOut),
+        ProcessedBulkOptOutResult("nino10", PreferenceNotFound)
+      )
+    }
+
+  }
 }

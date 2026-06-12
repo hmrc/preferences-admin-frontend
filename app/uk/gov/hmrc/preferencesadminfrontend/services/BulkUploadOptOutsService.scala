@@ -68,8 +68,8 @@ class BulkUploadOptOutsService @Inject() (csvReader: CsvReader, entityResolverCo
           .map { optOutResult =>
             ProcessedBulkOptOutResult(nino, optOutResult)
           }
-          .recover { case error =>
-            logger.error(s"Bulk opt out processing failed for nino $nino record", error)
+          .recover { case throwable: Throwable =>
+            logger.error(s"Bulk opt out processing failed for nino $nino record", throwable)
             FailedCallBulkOptOutResult(nino)
           }
       }
