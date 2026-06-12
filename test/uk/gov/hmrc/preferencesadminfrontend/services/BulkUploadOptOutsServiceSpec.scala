@@ -22,13 +22,15 @@ import org.scalactic.Prettifier
 import org.scalatest.concurrent.{ IntegrationPatience, ScalaFutures }
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
-import play.api.test.Helpers.*
+import org.scalatestplus.mockito.MockitoSugar
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.preferencesadminfrontend.connectors.EntityResolverConnector
 
 import java.nio.file.{ Files, Path }
 import scala.concurrent.{ ExecutionContextExecutor, Future }
 
-class BulkUploadOptOutsServiceSpec extends AnyWordSpecLike with Matchers with ScalaFutures with IntegrationPatience {
+class BulkUploadOptOutsServiceSpec
+    extends AnyWordSpecLike with Matchers with ScalaFutures with IntegrationPatience with MockitoSugar {
 
   implicit val system: ActorSystem = ActorSystem("UploadServiceSpec")
 
@@ -36,7 +38,8 @@ class BulkUploadOptOutsServiceSpec extends AnyWordSpecLike with Matchers with Sc
   implicit val executionContext: ExecutionContextExecutor = mat.executionContext
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  private val bulkUploadOptOutsService = new BulkUploadOptOutsService(new CsvReader)
+  private val mockEntityResolverConnector: EntityResolverConnector = mock[EntityResolverConnector]
+  private val bulkUploadOptOutsService = new BulkUploadOptOutsService(new CsvReader, mockEntityResolverConnector)
 
   "readBulkOptOutsFromFile" should {
     "parse an empty csv file returning an empty list" in {
