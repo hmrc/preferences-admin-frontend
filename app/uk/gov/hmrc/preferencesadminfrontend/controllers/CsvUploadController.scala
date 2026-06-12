@@ -43,6 +43,8 @@ class CsvUploadController @Inject() (
 )(implicit appConfig: AppConfig, ec: ExecutionContext, actorSystem: ActorSystem)
     extends FrontendController(mcc) with I18nSupport with Logging with RoleAuthorisedAction(authorisedAction) {
 
+  private val maxBulkOptOutCount: Int = 100
+
   override def role: Role = Role.Admin
 
   val showUploadPage: Action[AnyContent] = authorisedAction { implicit request => _ =>
@@ -69,6 +71,7 @@ class CsvUploadController @Inject() (
     Future.successful(
       Ok(
         csvUploadBulkOptOuts(
+          maxUploads = maxBulkOptOutCount,
           errors = List.empty,
           uploadedFileHadNoEntries = false,
           tooManyEntriesWereUploadedCount = 0
@@ -88,6 +91,7 @@ class CsvUploadController @Inject() (
           Future.successful(
             Ok(
               csvUploadBulkOptOuts(
+                maxBulkOptOutCount,
                 errors = List.empty,
                 uploadedFileHadNoEntries = true,
                 tooManyEntriesWereUploadedCount = 0
@@ -108,6 +112,7 @@ class CsvUploadController @Inject() (
         Future.successful(
           Ok(
             csvUploadBulkOptOuts(
+              maxUploads = maxBulkOptOutCount,
               errors = List.empty,
               uploadedFileHadNoEntries = true,
               tooManyEntriesWereUploadedCount = 0
@@ -116,18 +121,28 @@ class CsvUploadController @Inject() (
         )
       } else {
         val errors = errorOrOptOutList.collect { case Left(error) => error }
-        if (errors.nonEmpty) {
+        val successfulEntries = errorOrOptOutList.collect { case Right(success) => success }
+        val uploadedCount = errorOrOptOutList.length
+        val hasTooManyUploads = uploadedCount > maxBulkOptOutCount
+
+        if (errors.nonEmpty || hasTooManyUploads) {
+          val tooManyEntriesWereUploadedCount = if (hasTooManyUploads) {
+            uploadedCount
+          } else {
+            0
+          }
+
           Future.successful(
             Ok(
               csvUploadBulkOptOuts(
-                errors,
+                maxUploads = maxBulkOptOutCount,
+                errors = errors,
                 uploadedFileHadNoEntries = false,
-                tooManyEntriesWereUploadedCount = 0
+                tooManyEntriesWereUploadedCount = tooManyEntriesWereUploadedCount
               )
             )
           )
         } else {
-          val successfulEntries = errorOrOptOutList.collect { case Right(success) => success }
           bulkUploadOptOutsService.processBulkOptOuts(successfulEntries).map { bulkOptOutResults =>
             showBulkOptOutConfirmation(bulkOptOutResults)
           }

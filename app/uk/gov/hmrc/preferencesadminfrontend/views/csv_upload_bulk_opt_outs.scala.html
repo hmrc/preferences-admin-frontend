@@ -18,6 +18,7 @@
 
 @this(layout: Layout, govukBreadcrumbs: GovukBreadcrumbs, form: FormWithCSRF,govukWarningText : GovukWarningText)
 @(
+    maxUploads: Int,
     errors:List[String],
     uploadedFileHadNoEntries: Boolean,
     tooManyEntriesWereUploadedCount : Int
@@ -30,7 +31,7 @@
         @form(action = routes.CsvUploadController.uploadBulkOptOuts(), Symbol("enctype")-> "multipart/form-data") {
             <div class="govuk-form-group">
                 <label class="govuk-heading-m" for="csv-upload">
-                    Upload a CSV file For Bulk Opt Outs (Maximum 100)
+                    Upload a CSV file For Bulk Opt Outs (Maximum @maxUploads)
                 </label>
 
                 @if(tooManyEntriesWereUploadedCount > 0){
