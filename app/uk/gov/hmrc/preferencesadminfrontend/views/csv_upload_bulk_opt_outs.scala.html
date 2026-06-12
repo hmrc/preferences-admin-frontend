@@ -17,7 +17,11 @@
 @import uk.gov.hmrc.preferencesadminfrontend.controllers.routes
 
 @this(layout: Layout, govukBreadcrumbs: GovukBreadcrumbs, form: FormWithCSRF,govukWarningText : GovukWarningText)
-@(errors:List[String], uploaededFileHadNoEntries: Boolean)(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
+@(
+    errors:List[String],
+    uploadedFileHadNoEntries: Boolean,
+    tooManyEntriesWereUploadedCount : Int
+)(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
 
 @layout(pageTitle = "CSV Bulk Opt Outs Upload Page") {
     <div class="govuk-button-group">
@@ -26,8 +30,15 @@
         @form(action = routes.CsvUploadController.uploadBulkOptOuts(), Symbol("enctype")-> "multipart/form-data") {
             <div class="govuk-form-group">
                 <label class="govuk-heading-m" for="csv-upload">
-                    Upload a CSV file For Bulk Opt Outs
+                    Upload a CSV file For Bulk Opt Outs (Maximum 100)
                 </label>
+
+                @if(tooManyEntriesWereUploadedCount > 0){
+                    @govukWarningText(WarningText(
+                        iconFallbackText = Some("Warning"),
+                        content = Text(s"Too many entries were uploaded ($tooManyEntriesWereUploadedCount)")
+                    ))
+                }
 
                 @if(errors.nonEmpty){
                     <div class="govuk-body">
@@ -44,7 +55,7 @@
                     </div>
                 }
 
-                @if(uploaededFileHadNoEntries){
+                @if(uploadedFileHadNoEntries){
                     @govukWarningText(WarningText(
                         iconFallbackText = Some("Warning"),
                         content = Text("The uploaded file had no entries")

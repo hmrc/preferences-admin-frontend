@@ -66,7 +66,15 @@ class CsvUploadController @Inject() (
   }
 
   val showBulkOptOutsUploadPage: Action[AnyContent] = authorisedAction { implicit request => _ =>
-    Future.successful(Ok(csvUploadBulkOptOuts(errors = List.empty, uploaededFileHadNoEntries = false)))
+    Future.successful(
+      Ok(
+        csvUploadBulkOptOuts(
+          errors = List.empty,
+          uploadedFileHadNoEntries = false,
+          tooManyEntriesWereUploadedCount = 0
+        )
+      )
+    )
   }
 
   def uploadBulkOptOuts(): Action[MultipartFormData[Files.TemporaryFile]] = Action.async(parse.multipartFormData) {
@@ -77,7 +85,15 @@ class CsvUploadController @Inject() (
           processOptOutFileUpload(filePart)
         }
         .getOrElse {
-          Future.successful(Ok(csvUploadBulkOptOuts(errors = List.empty, uploaededFileHadNoEntries = true)))
+          Future.successful(
+            Ok(
+              csvUploadBulkOptOuts(
+                errors = List.empty,
+                uploadedFileHadNoEntries = true,
+                tooManyEntriesWereUploadedCount = 0
+              )
+            )
+          )
         }
   }
 
@@ -89,11 +105,27 @@ class CsvUploadController @Inject() (
 
     eventualErrorOrPotentialOptOuts.flatMap { errorOrOptOutList =>
       if (errorOrOptOutList.isEmpty) {
-        Future.successful(Ok(csvUploadBulkOptOuts(errors = List.empty, uploaededFileHadNoEntries = true)))
+        Future.successful(
+          Ok(
+            csvUploadBulkOptOuts(
+              errors = List.empty,
+              uploadedFileHadNoEntries = true,
+              tooManyEntriesWereUploadedCount = 0
+            )
+          )
+        )
       } else {
         val errors = errorOrOptOutList.collect { case Left(error) => error }
         if (errors.nonEmpty) {
-          Future.successful(Ok(csvUploadBulkOptOuts(errors, uploaededFileHadNoEntries = false)))
+          Future.successful(
+            Ok(
+              csvUploadBulkOptOuts(
+                errors,
+                uploadedFileHadNoEntries = false,
+                tooManyEntriesWereUploadedCount = 0
+              )
+            )
+          )
         } else {
           val successfulEntries = errorOrOptOutList.collect { case Right(success) => success }
           bulkUploadOptOutsService.processBulkOptOuts(successfulEntries).map { bulkOptOutResults =>
