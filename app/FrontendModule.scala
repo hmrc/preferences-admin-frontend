@@ -23,7 +23,7 @@ class FrontendModule extends AbstractModule {
   override def configure(): Unit =
     bind(classOf[AppConfig]).to(classOf[FrontendAppConfig]).asEagerSingleton()
 
-  @Provides protected def provideFeatureSwitch(configuration: Configuration): BulkOptOutsConfig = {
+  @Provides protected def provideBulkOptOutsConfig(configuration: Configuration): BulkOptOutsConfig = {
     val bulOptOutsConfigObject = configuration.get[Configuration]("bulkOptOuts")
 
     BulkOptOutsConfig(
