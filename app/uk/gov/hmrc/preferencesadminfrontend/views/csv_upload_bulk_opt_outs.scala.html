@@ -21,6 +21,7 @@
     maxUploads: Int,
     errors:List[String],
     uploadedFileHadNoEntries: Boolean,
+    uploadedFileWasInvalid: Boolean,
     tooManyEntriesWereUploadedCount : Int
 )(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
 
@@ -45,12 +46,22 @@
                     Upload a CSV file For Bulk Opt Outs (Maximum @maxUploads)
                 </label>
 
+                @if(uploadedFileWasInvalid ){
+                    @govukWarningText(WarningText(
+                        iconFallbackText = Some("Warning"),
+                        content = Text(s"The uploaded file could not be processed")
+                    ))
+                }
+
+
                 @if(tooManyEntriesWereUploadedCount > 0){
                     @govukWarningText(WarningText(
                         iconFallbackText = Some("Warning"),
                         content = Text(s"Too many entries were uploaded ($tooManyEntriesWereUploadedCount)")
                     ))
                 }
+
+
 
                 @if(errors.nonEmpty){
                     <div class="govuk-body">

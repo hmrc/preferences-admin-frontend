@@ -17,6 +17,7 @@
 package uk.gov.hmrc.preferencesadminfrontend.services
 
 import org.apache.pekko.stream.Materializer
+import org.apache.pekko.stream.scaladsl.Framing.FramingException
 import org.apache.pekko.stream.scaladsl.{ Sink, Source }
 import play.api.Logging
 import uk.gov.hmrc.domain.Nino
@@ -39,11 +40,12 @@ class BulkUploadOptOutsService @Inject() (
   csvReader: CsvReader,
   entityResolverConnector: EntityResolverConnector,
   bulkOptOutsConfig: BulkOptOutsConfig
-) extends Logging {
+)(implicit ec: ExecutionContext)
+    extends Logging {
 
   def readNinoBulkOptOutsFromFile(
     path: Path
-  )(implicit mat: Materializer): Future[List[Either[String, String]]] = {
+  )(implicit mat: Materializer): Future[Either[FramingException, List[Either[String, String]]]] = {
     val extractCsvData: PartialFunction[Any, Either[String, String]] = {
       case line: String if line.split(",").map(_.trim).length >= 1 =>
         val cols = line.split(",").map(_.trim)
@@ -59,7 +61,10 @@ class BulkUploadOptOutsService @Inject() (
         }
     }
 
-    csvReader.readFromFile(path, extractCsvData)
+    csvReader
+      .readFromFile(path, extractCsvData)
+      .map(Right[FramingException, List[Either[String, String]]].apply)
+      .recover { case e: FramingException => Left(e) }
   }
 
   def processBulkOptOuts(

@@ -17,6 +17,7 @@
 package uk.gov.hmrc.preferencesadminfrontend.controllers
 
 import org.apache.pekko.stream.Materializer
+import org.apache.pekko.stream.scaladsl.Framing.FramingException
 import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.*
 import org.mockito.Mockito.*
@@ -123,12 +124,32 @@ class CsvUploadControllerSpec
       contentType(result) mustBe Some("text/html")
       charset(result) mustBe Some("utf-8")
       status(result) mustBe OK
+
+      extractBulkOptOutErrors(contentAsString(result)) mustBe List.empty
     }
 
     "redirect to login page for non-admin user" in new TestCase {
       val result: Future[Result] =
         controller.showBulkOptOutsUploadPage()(FakeRequest("GET", "/decode"))
       status(result) mustBe Status.SEE_OTHER
+
+    }
+  }
+
+  def extractBulkOptOutErrors(body: String): List[String] = {
+    val possibleErrorMessages = List(
+      "The following uploaded entries were already opted out",
+      "The following uploaded entries were not found",
+      "The following uploaded entries were invalid",
+      "The following entries failed for unexpected reasons",
+      "The uploaded file had no entries",
+      "Too many entries were uploaded",
+      "The uploaded file could not be processed"
+    )
+
+    possibleErrorMessages.collect {
+      case possibleError if body.contains(possibleError) =>
+        possibleError
     }
   }
 
@@ -149,7 +170,7 @@ class CsvUploadControllerSpec
       status(result) mustBe BAD_REQUEST
     }
 
-    "return 200 but display errors when some could not be validated" in new TestCase {
+    "return 200 but display a message saying the file could not be processed when it fails processing" in new TestCase {
       val mockTemporaryFile = mock[TemporaryFile]
       val mockPath = mock[Path]
 
@@ -158,11 +179,8 @@ class CsvUploadControllerSpec
       when(mockBulkOptOutsService.readNinoBulkOptOutsFromFile(any())(any()))
         .thenReturn(
           Future.successful(
-            List(
-              Right("nino1"),
-              Left("error1,sss"),
-              Right("nino2"),
-              Left("error2,sss")
+            Left(
+              new FramingException("failed reading file")
             )
           )
         )
@@ -182,36 +200,12 @@ class CsvUploadControllerSpec
       status(result) mustBe OK
       val body: String = contentAsString(result)
 
-      extractNulkOptOutErrors(body) mustBe List(
-        "The following uploaded entries were invalid"
+      extractBulkOptOutErrors(body) mustBe List(
+        "The uploaded file could not be processed"
       )
-
-      body must include("error1,sss")
-      body must include("error2,sss")
-
-      body must not include "nino1"
-      body must not include "nino2"
-
     }
 
-    def extractNulkOptOutErrors(body: String): List[String] = {
-      val possibleErrorMessages = List(
-        "The following uploaded entries were already opted out",
-        "The following uploaded entries were not found",
-        "The following uploaded entries were invalid",
-        "The following entries failed for unexpected reasons",
-        "The uploaded file had no entries",
-        "Too many entries were uploaded"
-      )
-
-      possibleErrorMessages.collect {
-        case possibleError if body.contains(possibleError) =>
-          possibleError
-      }
-
-    }
-
-    "return 200 but display no entries were found if file was empty" in new TestCase {
+    "return 200 but display errors when some could not be validated" in new TestCase {
       val mockTemporaryFile = mock[TemporaryFile]
       val mockPath = mock[Path]
 
@@ -219,7 +213,16 @@ class CsvUploadControllerSpec
 
       when(mockBulkOptOutsService.readNinoBulkOptOutsFromFile(any())(any()))
         .thenReturn(
-          Future.successful(List.empty)
+          Future.successful(
+            Right(
+              List(
+                Right("nino1"),
+                Left("error1,sss"),
+                Right("nino2"),
+                Left("error2,sss")
+              )
+            )
+          )
         )
 
       val formData = MultipartFormData[TemporaryFile](
@@ -237,7 +240,45 @@ class CsvUploadControllerSpec
       status(result) mustBe OK
       val body: String = contentAsString(result)
 
-      extractNulkOptOutErrors(body) mustBe List(
+      extractBulkOptOutErrors(body) mustBe List(
+        "The following uploaded entries were invalid"
+      )
+
+      body must include("error1,sss")
+      body must include("error2,sss")
+
+      body must not include "nino1"
+      body must not include "nino2"
+
+    }
+
+    "return 200 but display no entries were found if file was empty" in new TestCase {
+      val mockTemporaryFile = mock[TemporaryFile]
+      val mockPath = mock[Path]
+
+      when(mockTemporaryFile.path).thenReturn(mockPath)
+
+      when(mockBulkOptOutsService.readNinoBulkOptOutsFromFile(any())(any()))
+        .thenReturn(
+          Future.successful(Right(List.empty))
+        )
+
+      val formData = MultipartFormData[TemporaryFile](
+        dataParts = Map.empty,
+        files = Seq(filePart),
+        badParts = Seq.empty
+      )
+
+      val request = FakeRequest("", "")
+        .withSession(User.sessionKey -> "admin")
+        .withBody(formData)
+
+      val result = controller.uploadBulkOptOuts()(request)
+
+      status(result) mustBe OK
+      val body: String = contentAsString(result)
+
+      extractBulkOptOutErrors(body) mustBe List(
         "The uploaded file had no entries"
       )
     }
@@ -254,7 +295,7 @@ class CsvUploadControllerSpec
 
       when(mockBulkOptOutsService.readNinoBulkOptOutsFromFile(any())(any()))
         .thenReturn(
-          Future.successful(ninos.map(Right.apply))
+          Future.successful(Right(ninos.map(Right.apply)))
         )
 
       val formData = MultipartFormData[TemporaryFile](
@@ -272,7 +313,7 @@ class CsvUploadControllerSpec
       status(result) mustBe OK
       val body: String = contentAsString(result)
 
-      extractNulkOptOutErrors(body) mustBe List(
+      extractBulkOptOutErrors(body) mustBe List(
         "Too many entries were uploaded"
       )
     }
@@ -299,7 +340,7 @@ class CsvUploadControllerSpec
       when(mockBulkOptOutsService.readNinoBulkOptOutsFromFile(any())(any()))
         .thenReturn(
           Future.successful(
-            ninos.map(Right.apply)
+            Right(ninos.map(Right.apply))
           )
         )
 
@@ -319,7 +360,7 @@ class CsvUploadControllerSpec
       status(result) mustBe OK
       val body: String = contentAsString(result)
 
-      extractNulkOptOutErrors(body) mustBe expectedErrors
+      extractBulkOptOutErrors(body) mustBe expectedErrors
       body must include(s"Successfully opted out $successCount records")
     }
 

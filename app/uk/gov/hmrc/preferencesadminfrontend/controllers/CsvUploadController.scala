@@ -16,8 +16,10 @@
 
 package uk.gov.hmrc.preferencesadminfrontend.controllers
 
+import cats.data.EitherT
 import org.apache.pekko.actor.ActorSystem
-import play.api.Logging
+import org.apache.pekko.stream.scaladsl.Framing
+import play.api.{ Logger, Logging }
 import play.api.i18n.I18nSupport
 import play.api.libs.Files
 import play.api.mvc.*
@@ -29,7 +31,6 @@ import uk.gov.hmrc.preferencesadminfrontend.views.html.*
 
 import javax.inject.{ Inject, Singleton }
 import scala.concurrent.{ ExecutionContext, Future }
-
 @Singleton
 class CsvUploadController @Inject() (
   authorisedAction: AuthorisedAction,
@@ -73,6 +74,7 @@ class CsvUploadController @Inject() (
           maxUploads = bulkOptOutsConfig.maxUploadEntries,
           errors = List.empty,
           uploadedFileHadNoEntries = false,
+          uploadedFileWasInvalid = false,
           tooManyEntriesWereUploadedCount = 0
         )
       )
@@ -84,7 +86,27 @@ class CsvUploadController @Inject() (
       request.body
         .file("csvFile")
         .map { filePart =>
-          processOptOutFileUpload(filePart)
+          val path = filePart.ref.path
+          val eventualErrorOrPotentialOptOuts = bulkUploadOptOutsService.readNinoBulkOptOutsFromFile(path)
+
+          eventualErrorOrPotentialOptOuts.flatMap {
+            case Left(framingException: Framing.FramingException) =>
+              logger.error("Failed uploading bulk opt outs file", framingException)
+
+              Future.successful(
+                Ok(
+                  csvUploadBulkOptOuts(
+                    maxUploads = bulkOptOutsConfig.maxUploadEntries,
+                    errors = List.empty,
+                    uploadedFileHadNoEntries = false,
+                    uploadedFileWasInvalid = true,
+                    tooManyEntriesWereUploadedCount = 0
+                  )
+                )
+              )
+            case Right(errorOrOptOutList) =>
+              processOptOutFileUpload(errorOrOptOutList)
+          }
         }
         .getOrElse {
           Future.successful(
@@ -93,6 +115,7 @@ class CsvUploadController @Inject() (
                 bulkOptOutsConfig.maxUploadEntries,
                 errors = List.empty,
                 uploadedFileHadNoEntries = true,
+                uploadedFileWasInvalid = false,
                 tooManyEntriesWereUploadedCount = 0
               )
             )
@@ -101,54 +124,50 @@ class CsvUploadController @Inject() (
   }
 
   private def processOptOutFileUpload(
-    filePart: MultipartFormData.FilePart[Files.TemporaryFile]
-  )(implicit request: Request[_]) = {
-    val path = filePart.ref.path
-    val eventualErrorOrPotentialOptOuts = bulkUploadOptOutsService.readNinoBulkOptOutsFromFile(path)
+    errorOrOptOutList: List[Either[String, String]]
+  )(implicit request: Request[_]): Future[Result] =
+    if (errorOrOptOutList.isEmpty) {
+      Future.successful(
+        Ok(
+          csvUploadBulkOptOuts(
+            maxUploads = bulkOptOutsConfig.maxUploadEntries,
+            errors = List.empty,
+            uploadedFileHadNoEntries = true,
+            uploadedFileWasInvalid = false,
+            tooManyEntriesWereUploadedCount = 0
+          )
+        )
+      )
+    } else {
+      val errors = errorOrOptOutList.collect { case Left(error) => error }
+      val successfulEntries = errorOrOptOutList.collect { case Right(success) => success }
+      val uploadedCount = errorOrOptOutList.length
+      val hasTooManyUploads = uploadedCount > bulkOptOutsConfig.maxUploadEntries
 
-    eventualErrorOrPotentialOptOuts.flatMap { errorOrOptOutList =>
-      if (errorOrOptOutList.isEmpty) {
+      if (errors.nonEmpty || hasTooManyUploads) {
+        val tooManyEntriesWereUploadedCount = if (hasTooManyUploads) {
+          uploadedCount
+        } else {
+          0
+        }
+
         Future.successful(
           Ok(
             csvUploadBulkOptOuts(
               maxUploads = bulkOptOutsConfig.maxUploadEntries,
-              errors = List.empty,
-              uploadedFileHadNoEntries = true,
-              tooManyEntriesWereUploadedCount = 0
+              errors = errors,
+              uploadedFileHadNoEntries = false,
+              uploadedFileWasInvalid = false,
+              tooManyEntriesWereUploadedCount = tooManyEntriesWereUploadedCount
             )
           )
         )
       } else {
-        val errors = errorOrOptOutList.collect { case Left(error) => error }
-        val successfulEntries = errorOrOptOutList.collect { case Right(success) => success }
-        val uploadedCount = errorOrOptOutList.length
-        val hasTooManyUploads = uploadedCount > bulkOptOutsConfig.maxUploadEntries
-
-        if (errors.nonEmpty || hasTooManyUploads) {
-          val tooManyEntriesWereUploadedCount = if (hasTooManyUploads) {
-            uploadedCount
-          } else {
-            0
-          }
-
-          Future.successful(
-            Ok(
-              csvUploadBulkOptOuts(
-                maxUploads = bulkOptOutsConfig.maxUploadEntries,
-                errors = errors,
-                uploadedFileHadNoEntries = false,
-                tooManyEntriesWereUploadedCount = tooManyEntriesWereUploadedCount
-              )
-            )
-          )
-        } else {
-          bulkUploadOptOutsService.processBulkOptOuts(successfulEntries).map { bulkOptOutResults =>
-            showBulkOptOutConfirmation(bulkOptOutResults)
-          }
+        bulkUploadOptOutsService.processBulkOptOuts(successfulEntries).map { bulkOptOutResults =>
+          showBulkOptOutConfirmation(bulkOptOutResults)
         }
       }
     }
-  }
 
   private def showBulkOptOutConfirmation(
     bulkOptOutResults: List[BulkOptOutResult]
