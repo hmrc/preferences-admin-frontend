@@ -16,10 +16,9 @@
 
 package uk.gov.hmrc.preferencesadminfrontend.controllers
 
-import cats.data.EitherT
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.stream.scaladsl.Framing
-import play.api.{ Logger, Logging }
+import play.api.Logging
 import play.api.i18n.I18nSupport
 import play.api.libs.Files
 import play.api.mvc.*
