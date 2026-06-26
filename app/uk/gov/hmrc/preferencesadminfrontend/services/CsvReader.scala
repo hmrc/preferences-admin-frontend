@@ -24,9 +24,13 @@ import java.nio.file.Path
 import javax.inject.Inject
 import scala.concurrent.Future
 
+object CsvReader {
+  val FrameLength: Int = 1024
+}
+
 class CsvReader @Inject() {
 
-  private val FrameLength = 1024
+  private val FrameLength = CsvReader.FrameLength
   private val AllowTruncation = true
 
   def readFromFile[A](path: Path, collectFilter: PartialFunction[Any, A])(implicit

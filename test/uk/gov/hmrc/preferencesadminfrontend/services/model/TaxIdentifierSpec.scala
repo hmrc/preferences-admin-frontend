@@ -25,7 +25,7 @@ class TaxIdentifierSpec extends PlaySpec {
       val ex = intercept[RuntimeException] {
         TaxIdentifier("invalid", "123").regime
       }
-      ex.getMessage mustBe "Invalid tax id name"
+      ex.getMessage mustBe "Invalid tax id name 'invalid'"
     }
   }
 

@@ -27,6 +27,7 @@ import org.scalatestplus.play.PlaySpec
 import play.api.mvc.Results.{ BadRequest, InternalServerError, Ok }
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.preferencesadminfrontend.connectors.ChannelPreferencesConnector
+import uk.gov.hmrc.preferencesadminfrontend.services.model.*
 import uk.gov.hmrc.preferencesadminfrontend.services.model.csv.CsvData
 
 import java.nio.file.{ Files, Path }
