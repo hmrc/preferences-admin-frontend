@@ -46,7 +46,7 @@
      @if(alreadyOptedOutNinos.nonEmpty){
       @govukWarningText(WarningText(
        iconFallbackText = Some("Warning"),
-       content = Text("The following uploaded entries were already opted out")
+       content = Text("The following uploaded entries were not fully opted in")
       ))
 
       <ul class="govuk-task-list">

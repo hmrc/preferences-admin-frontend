@@ -138,7 +138,7 @@ class CsvUploadControllerSpec
 
   def extractBulkOptOutErrors(body: String): List[String] = {
     val possibleErrorMessages = List(
-      "The following uploaded entries were already opted out",
+      "The following uploaded entries were not fully opted in",
       "The following uploaded entries were not found",
       "The following uploaded entries were invalid",
       "The following entries failed for unexpected reasons",
@@ -393,7 +393,7 @@ class CsvUploadControllerSpec
           ProcessedBulkOptOutResult("nino1", AlreadyOptedOut),
           ProcessedBulkOptOutResult("nino2", AlreadyOptedOut)
         ),
-        expectedErrors = List("The following uploaded entries were already opted out"),
+        expectedErrors = List("The following uploaded entries were not fully opted in"),
         successCount = 0
       )
     }
@@ -463,7 +463,7 @@ class CsvUploadControllerSpec
           ProcessedBulkOptOutResult("nino8", OptedOut)
         ),
         expectedErrors = List(
-          "The following uploaded entries were already opted out",
+          "The following uploaded entries were not fully opted in",
           "The following uploaded entries were not found",
           "The following entries failed for unexpected reasons"
         ),
