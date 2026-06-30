@@ -28,23 +28,6 @@ import uk.gov.hmrc.preferencesadminfrontend.utils.ConnectorBaseSpec
 
 class EnrolmentStoreConnectorSpec extends ConnectorBaseSpec(EnrolmentStoreConnector.configKey) {
 
-  trait Scope {
-    val saUtr = "MY-UTR"
-    val taxId: TaxIdentifier = TaxIdentifier("sautr", saUtr)
-
-    val principalUserId: String = "6696231619140440"
-    val principalUserIds: PrincipalUserIds = Json
-      .parse("""{
-               |  "principalUserIds": [
-               |      "6696231619140440"
-               |  ]
-               |}""".stripMargin)
-      .as[PrincipalUserIds]
-    val userState: UserState = UserState(Activated)
-    implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
-    val enrolmentStoreConnector: EnrolmentStoreConnector = app.injector.instanceOf[EnrolmentStoreConnector]
-  }
-
   "getUserIds" must {
 
     def stubGetUserIds(id: String, statusCode: Int, response: String): Unit =
@@ -141,6 +124,25 @@ class EnrolmentStoreConnectorSpec extends ConnectorBaseSpec(EnrolmentStoreConnec
         s"upstream error when checking enrolment state, ${Status.INTERNAL_SERVER_ERROR} SERVER_ERROR"
       )
     }
+  }
+
+  trait Scope {
+    val saUtr = "MY-UTR"
+    val taxId: TaxIdentifier = TaxIdentifier("sautr", saUtr)
+
+    val principalUserId: String = "6696231619140440"
+    val principalUserIds: PrincipalUserIds = Json
+      .parse("""{
+               |  "principalUserIds": [
+               |      "6696231619140440"
+               |  ]
+               |}""".stripMargin)
+      .as[PrincipalUserIds]
+    val userState: UserState = UserState(Activated)
+    implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
+
+    val enrolmentStoreConnector: EnrolmentStoreConnector =
+      app.injector.instanceOf[EnrolmentStoreConnector]
   }
 
 }

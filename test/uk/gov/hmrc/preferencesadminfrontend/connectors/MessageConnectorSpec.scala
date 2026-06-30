@@ -29,20 +29,6 @@ import scala.concurrent.Future
 
 class MessageConnectorSpec extends ConnectorBaseSpec(MessageConnector.configKey) {
 
-  implicit val hc: HeaderCarrier = HeaderCarrier()
-
-  trait TestCase {
-    val gmcBatchApprovalV4 = GmcBatchApproval(
-      "123456789",
-      "SA359",
-      "2017-03-16",
-      "newMessageAlert_SA359",
-      "some reason"
-    )
-
-    val messageConnector: MessageConnector = app.injector.instanceOf[MessageConnector]
-  }
-
   "GMC Batches Admin" should {
     def testServerFailureCall(call: => Future[HttpResponse])(implicit position: Position): Unit = {
       wireMockServer.stubFor(
@@ -83,7 +69,7 @@ class MessageConnectorSpec extends ConnectorBaseSpec(MessageConnector.configKey)
             .willReturn(
               WireMock
                 .aResponse()
-                .withStatus(200)
+                .withStatus(Status.OK)
                 .withBody("get gmc batches response")
             )
         )
@@ -121,7 +107,7 @@ class MessageConnectorSpec extends ConnectorBaseSpec(MessageConnector.configKey)
             .willReturn(
               WireMock
                 .aResponse()
-                .withStatus(200)
+                .withStatus(Status.OK)
                 .withBody("message preview response")
             )
         )
@@ -283,6 +269,20 @@ class MessageConnectorSpec extends ConnectorBaseSpec(MessageConnector.configKey)
           testServerFailureCall(messageConnector.deleteFormIdFromAllowlist(entry))
         }
       }
+    }
+
+    trait TestCase {
+      implicit val hc: HeaderCarrier = HeaderCarrier()
+
+      val gmcBatchApprovalV4 = GmcBatchApproval(
+        "123456789",
+        "SA359",
+        "2017-03-16",
+        "newMessageAlert_SA359",
+        "some reason"
+      )
+
+      val messageConnector: MessageConnector = app.injector.instanceOf[MessageConnector]
     }
   }
 

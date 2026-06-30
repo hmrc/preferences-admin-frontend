@@ -31,11 +31,6 @@ import scala.concurrent.Future
 
 class ChannelPreferencesConnectorSpec extends ConnectorBaseSpec(ChannelPreferencesConnector.configKey) {
 
-  trait TestCase {
-    implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
-    val channelPreferencesConnector: ChannelPreferencesConnector = app.injector.instanceOf[ChannelPreferencesConnector]
-  }
-
   def testServerFailureCall(call: => Future[Either[String, Unit]])(implicit position: Position): Unit = {
     wireMockServer.stubFor(
       WireMock
@@ -63,7 +58,7 @@ class ChannelPreferencesConnectorSpec extends ConnectorBaseSpec(ChannelPreferenc
     val statusUpdate: StatusUpdate = StatusUpdate("ITSA-NICE-DAY", true)
 
     "return right SentStatus.Sent upon success" in new TestCase {
-      stubUpdateStatus(statusUpdate, 200, "")
+      stubUpdateStatus(statusUpdate, Status.OK, "")
 
       channelPreferencesConnector
         .updateStatus(statusUpdate)(headerCarrier)
@@ -126,6 +121,13 @@ class ChannelPreferencesConnectorSpec extends ConnectorBaseSpec(ChannelPreferenc
           .process(csvData)(headerCarrier)
       )
     }
+
+  }
+
+  trait TestCase {
+    implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
+    val channelPreferencesConnector: ChannelPreferencesConnector =
+      app.injector.instanceOf[ChannelPreferencesConnector]
   }
 
   "StatusUpdate" must {

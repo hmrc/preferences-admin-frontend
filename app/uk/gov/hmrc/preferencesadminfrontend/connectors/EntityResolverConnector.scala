@@ -94,6 +94,7 @@ class EntityResolverConnector @Inject() (httpClient: HttpClientV2, val servicesC
         )
       )
       .recover { case ex =>
+        logger.error(s"Failed getting tax identifiers for $preferenceDetails", ex)
         Seq.empty
       }
   }
@@ -101,14 +102,13 @@ class EntityResolverConnector @Inject() (httpClient: HttpClientV2, val servicesC
   def getPreferenceDetails(
     taxId: TaxIdentifier
   )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[PreferenceDetails]] = {
-    def warnNotOptedOut(message: String) = s"getTaxIdentifiersPreferenceDetails $message"
     val regime = taxId.regime
     val value = sanitize(taxId.value)
     httpClient
       .get(new URI(s"$serviceUrl/portal/preferences/$regime/$value").toURL)
       .execute[Option[PreferenceDetails]]
       .recover { case ex =>
-        warnNotOptedOut(ex.getMessage)
+        logger.error(s"Failed getting preference details for $taxId", ex)
         None
       }
   }
