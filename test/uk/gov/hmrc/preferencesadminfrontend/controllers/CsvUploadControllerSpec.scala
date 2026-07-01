@@ -138,6 +138,7 @@ class CsvUploadControllerSpec
 
   def extractBulkOptOutErrors(body: String): List[String] = {
     val possibleErrorMessages = List(
+      "The following uploaded entries were in an invalid Nino format",
       "The following uploaded entries were not fully opted in",
       "The following uploaded entries were not found",
       "The following uploaded entries were invalid",
@@ -436,6 +437,25 @@ class CsvUploadControllerSpec
       )
     }
 
+    "return 200 when only valid entries were parsed but failed due to an invalid formatted Nino value" in new TestCase {
+      val ninos = List(
+        "nino1",
+        "nino2"
+      )
+
+      testValidParsing(
+        controller = controller,
+        mockBulkOptOutsService = mockBulkOptOutsService,
+        ninos = ninos,
+        serverResponse = List(
+          InvalidNinoBulkOptOutResult("nino1"),
+          InvalidNinoBulkOptOutResult("nino2")
+        ),
+        expectedErrors = List("The following uploaded entries were in an invalid Nino format"),
+        successCount = 0
+      )
+    }
+
     "return 200 and display all combinations of reponses" in new TestCase {
       val ninos = List(
         "nino1",
@@ -445,7 +465,8 @@ class CsvUploadControllerSpec
         "nino5",
         "nino6",
         "nino7",
-        "nino8"
+        "nino8",
+        "nino9"
       )
 
       testValidParsing(
@@ -456,13 +477,16 @@ class CsvUploadControllerSpec
           ProcessedBulkOptOutResult("nino1", PreferenceNotFound),
           ProcessedBulkOptOutResult("nino2", OptedOut),
           FailedCallBulkOptOutResult("nino3"),
+          FailedCallBulkOptOutResult("nino3"),
           FailedCallBulkOptOutResult("nino4"),
           ProcessedBulkOptOutResult("nino5", AlreadyOptedOut),
           ProcessedBulkOptOutResult("nino6", AlreadyOptedOut),
           ProcessedBulkOptOutResult("nino7", OptedOut),
-          ProcessedBulkOptOutResult("nino8", OptedOut)
+          ProcessedBulkOptOutResult("nino8", OptedOut),
+          InvalidNinoBulkOptOutResult("nino9")
         ),
         expectedErrors = List(
+          "The following uploaded entries were in an invalid Nino format",
           "The following uploaded entries were not fully opted in",
           "The following uploaded entries were not found",
           "The following entries failed for unexpected reasons"
