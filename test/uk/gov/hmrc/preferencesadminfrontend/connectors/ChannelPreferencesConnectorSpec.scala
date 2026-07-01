@@ -100,7 +100,7 @@ class ChannelPreferencesConnectorSpec extends ConnectorBaseSpec(ChannelPreferenc
       )
 
     "return right status upon success" in new TestCase {
-      stubProcess(csvData, 200, "")
+      stubProcess(csvData, Status.OK, "")
 
       channelPreferencesConnector
         .process(csvData)(headerCarrier)

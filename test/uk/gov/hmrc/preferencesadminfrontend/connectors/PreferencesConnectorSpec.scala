@@ -67,7 +67,7 @@ class PreferencesConnectorSpec extends ConnectorBaseSpec(PreferencesConnector.co
           |]
           |""".stripMargin.trim
 
-      stubGetPreferencesByEmail(email, 200, mockResponseListJson)
+      stubGetPreferencesByEmail(email, Status.OK, mockResponseListJson)
 
       val result: Seq[PreferenceDetails] = preferencesConnector.getPreferencesByEmail(email).futureValue
 
@@ -119,7 +119,7 @@ class PreferencesConnectorSpec extends ConnectorBaseSpec(PreferencesConnector.co
                           | }
                           |]""".stripMargin
 
-      stubGetPreferencesEvents(entityId, 200, eventsJson)
+      stubGetPreferencesEvents(entityId, Status.OK, eventsJson)
 
       val result = preferencesConnector.getPreferencesEvents(entityId).futureValue
 
