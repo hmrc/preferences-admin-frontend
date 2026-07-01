@@ -16,32 +16,49 @@
 
 package uk.gov.hmrc.preferencesadminfrontend.connectors
 
-import org.mockito.Mockito.when
-import org.mockito.ArgumentMatchers.any
-import org.scalatest.EitherValues
-import org.scalatest.concurrent.ScalaFutures
-import org.scalatestplus.mockito.MockitoSugar.mock
-import org.scalatestplus.play.PlaySpec
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import com.github.tomakehurst.wiremock.client.WireMock
+import com.github.tomakehurst.wiremock.http.Fault
+import org.scalactic.source.Position
+import play.api.http.Status
 import play.api.libs.json.{ JsSuccess, Json }
-import uk.gov.hmrc.http.{ HeaderCarrier, HttpResponse }
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+import play.shaded.ahc.org.asynchttpclient.exception.RemotelyClosedException
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.preferencesadminfrontend.connectors.ChannelPreferencesConnector.StatusUpdate
-import uk.gov.hmrc.http.HttpReads.Implicits.readRaw
-import uk.gov.hmrc.http.client.{ HttpClientV2, RequestBuilder }
 import uk.gov.hmrc.preferencesadminfrontend.services.model.csv.CsvData
+import uk.gov.hmrc.preferencesadminfrontend.utils.ConnectorBaseSpec
 
-import java.net.{ URI, URL }
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class ChannelPreferencesConnectorSpec extends PlaySpec with ScalaFutures with EitherValues with GuiceOneAppPerSuite {
+class ChannelPreferencesConnectorSpec extends ConnectorBaseSpec(ChannelPreferencesConnector.configKey) {
+
+  def testServerFailureCall(call: => Future[Either[String, Unit]])(implicit position: Position): Unit = {
+    wireMockServer.stubFor(
+      WireMock
+        .any(WireMock.anyUrl())
+        .willReturn(WireMock.aResponse().withFault(Fault.RANDOM_DATA_THEN_CLOSE))
+    )
+
+    val result: Throwable = call.failed.futureValue
+    result mustBe a[RemotelyClosedException]
+  }
 
   "updateStatus" must {
+    def stubUpdateStatus(statusUpdate: StatusUpdate, statusCode: Int, responseText: String): Unit =
+      wireMockServer.stubFor(
+        WireMock
+          .post(WireMock.urlEqualTo(s"/channel-preferences/preference/itsa/status"))
+          .withRequestBody(WireMock.equalToJson(Json.toJson(statusUpdate).toString))
+          .willReturn(
+            WireMock
+              .aResponse()
+              .withStatus(statusCode)
+              .withBody(responseText)
+          )
+      )
+    val statusUpdate: StatusUpdate = StatusUpdate("ITSA-NICE-DAY", true)
+
     "return right SentStatus.Sent upon success" in new TestCase {
-      when(httpClient.post(statusUrl)).thenReturn(requestBuilder)
-      when(requestBuilder.withBody(any)(any, any, any)).thenReturn(requestBuilder)
-      when(requestBuilder.execute[HttpResponse]).thenReturn(Future.successful(httpResponse(OK, "ITSA-GREAT-DAY")))
+      stubUpdateStatus(statusUpdate, Status.OK, "")
 
       channelPreferencesConnector
         .updateStatus(statusUpdate)(headerCarrier)
@@ -49,40 +66,68 @@ class ChannelPreferencesConnectorSpec extends PlaySpec with ScalaFutures with Ei
     }
 
     "return left upstream error message upon a failure response" in new TestCase {
-      when(httpClient.post(statusUrl)).thenReturn(requestBuilder)
-      when(requestBuilder.withBody(any)(any, any, any)).thenReturn(requestBuilder)
-      when(requestBuilder.execute[HttpResponse]).thenReturn(Future.successful(httpResponse(Bad, "ITSA-BAD-DAY")))
+      stubUpdateStatus(statusUpdate, Status.BAD_REQUEST, "bad update status request")
 
       channelPreferencesConnector
         .updateStatus(statusUpdate)(headerCarrier)
-        .futureValue
-        .left
-        .value mustBe s"upstream error when sending status update, $Bad ITSA-BAD-DAY"
+        .futureValue mustBe Left(
+        s"upstream error when sending status update, ${Status.BAD_REQUEST} bad update status request"
+      )
+    }
+
+    "return a failed future on server problems" in new TestCase {
+      testServerFailureCall(
+        channelPreferencesConnector
+          .updateStatus(statusUpdate)(headerCarrier)
+      )
     }
   }
 
   "process" must {
+    val csvData: CsvData = CsvData("1", "2", "3")
+
+    def stubProcess(csvData: CsvData, statusCode: Int, responseText: String): Unit =
+      wireMockServer.stubFor(
+        WireMock
+          .post(WireMock.urlEqualTo(s"/channel-preferences/process"))
+          .withRequestBody(WireMock.equalToJson(Json.toJson(csvData).toString))
+          .willReturn(
+            WireMock
+              .aResponse()
+              .withStatus(statusCode)
+              .withBody(responseText)
+          )
+      )
+
     "return right status upon success" in new TestCase {
-      when(httpClient.post(processUrl)).thenReturn(requestBuilder)
-      when(requestBuilder.withBody(any)(any, any, any)).thenReturn(requestBuilder)
-      when(requestBuilder.execute[HttpResponse]).thenReturn(Future.successful(httpResponse(OK, "sucess")))
+      stubProcess(csvData, Status.OK, "")
 
       channelPreferencesConnector
-        .process(CsvData("1", "2", "3"))(headerCarrier)
+        .process(csvData)(headerCarrier)
         .futureValue mustBe Right(())
     }
 
     "return left upstream error message upon a failure response" in new TestCase {
-      when(httpClient.post(processUrl)).thenReturn(requestBuilder)
-      when(requestBuilder.withBody(any)(any, any, any)).thenReturn(requestBuilder)
-      when(requestBuilder.execute[HttpResponse]).thenReturn(Future.successful(httpResponse(Bad, "error")))
+      stubProcess(csvData, Status.BAD_REQUEST, "bad process request")
 
       channelPreferencesConnector
-        .process(CsvData("1", "2", "3"))(headerCarrier)
-        .futureValue
-        .left
-        .value mustBe s"upstream error when sending the request, $Bad error"
+        .process(csvData)(headerCarrier)
+        .futureValue mustBe Left(s"upstream error when sending the request, ${Status.BAD_REQUEST} bad process request")
     }
+
+    "return a failed future on server problems" in new TestCase {
+      testServerFailureCall(
+        channelPreferencesConnector
+          .process(csvData)(headerCarrier)
+      )
+    }
+
+  }
+
+  trait TestCase {
+    implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
+    val channelPreferencesConnector: ChannelPreferencesConnector =
+      app.injector.instanceOf[ChannelPreferencesConnector]
   }
 
   "StatusUpdate" must {
@@ -110,28 +155,4 @@ class ChannelPreferencesConnectorSpec extends PlaySpec with ScalaFutures with Ei
     }
   }
 
-  trait TestCase {
-    val OK = 200
-    val Bad = 400
-    val enrolment = "ITSA-NICE-DAY"
-    val status = true
-    val statusUpdate: StatusUpdate = StatusUpdate(enrolment, status)
-
-    implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
-    val httpClient: HttpClientV2 = mock[HttpClientV2]
-    val requestBuilder: RequestBuilder = mock[RequestBuilder]
-    val servicesConfig: ServicesConfig = app.injector.instanceOf[ServicesConfig]
-
-    val channelPreferencesConnector = new ChannelPreferencesConnector(httpClient, servicesConfig)
-
-    val channelPreferencesServiceUrl: String = app.injector.instanceOf[ServicesConfig].baseUrl("channel-preferences")
-    val statusUrl: URL = new URI(s"$channelPreferencesServiceUrl/channel-preferences/preference/itsa/status").toURL
-    val processUrl: URL = new URI(s"$channelPreferencesServiceUrl/channel-preferences/process").toURL
-
-    def httpResponse(status: Int, body: String): HttpResponse = HttpResponse(
-      status = status,
-      body = body,
-      headers = Map.empty
-    )
-  }
 }
