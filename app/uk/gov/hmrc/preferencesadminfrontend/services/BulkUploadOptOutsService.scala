@@ -32,8 +32,13 @@ import scala.concurrent.duration.DurationInt
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.Try
 
-sealed trait BulkOptOutResult
-case class FailedCallBulkOptOutResult(nino: String) extends BulkOptOutResult
+sealed trait BulkOptOutResult {
+  val nino: String
+}
+sealed trait HasFailedBulkOptOutResult extends BulkOptOutResult
+
+case class InvalidNinoBulkOptOutResult(nino: String) extends HasFailedBulkOptOutResult
+case class FailedCallBulkOptOutResult(nino: String) extends HasFailedBulkOptOutResult
 case class ProcessedBulkOptOutResult(nino: String, optOutResult: OptOutResult) extends BulkOptOutResult
 
 class BulkUploadOptOutsService @Inject() (
@@ -54,7 +59,7 @@ class BulkUploadOptOutsService @Inject() (
           index > 0 & value.nonEmpty
         }
 
-        if (hasValue && Try(Nino(ninoValue)).isSuccess) {
+        if (hasValue) {
           Right(ninoValue)
         } else {
           Left(line)
@@ -69,8 +74,16 @@ class BulkUploadOptOutsService @Inject() (
 
   def processBulkOptOuts(
     ninos: List[String]
-  )(implicit ec: ExecutionContext, mat: Materializer, hc: HeaderCarrier): Future[List[BulkOptOutResult]] =
-    Source(ninos)
+  )(implicit ec: ExecutionContext, mat: Materializer, hc: HeaderCarrier): Future[List[BulkOptOutResult]] = {
+    val invalidAndValidNinos: List[Either[String, String]] = ninos.map { nino =>
+      if (Try(Nino(nino)).isSuccess) {
+        Right(nino)
+      } else {
+        Left(nino)
+      }
+    }
+
+    Source(invalidAndValidNinos.collect { case Right(validNino) => validNino })
       .throttle(bulkOptOutsConfig.maxOptOutsPerSecond, 1.second)
       .mapAsync(parallelism = 2) { nino =>
         entityResolverConnector
@@ -84,5 +97,11 @@ class BulkUploadOptOutsService @Inject() (
           }
       }
       .runWith(Sink.seq)
-      .map(_.toList)
+      .map { results =>
+        invalidAndValidNinos.collect { case Left(invalidFormattedNino) =>
+          InvalidNinoBulkOptOutResult(invalidFormattedNino)
+        }
+          ++ results.toList
+      }
+  }
 }
