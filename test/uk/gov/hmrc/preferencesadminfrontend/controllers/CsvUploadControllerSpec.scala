@@ -144,7 +144,7 @@ class CsvUploadControllerSpec
       "The following entries failed for unexpected reasons",
       "The uploaded file had no entries",
       "Too many entries were uploaded",
-      "The uploaded file could not be processed"
+      "Invalid File Format. The uploaded file format could not be processed. Please enter a valid .csv file format."
     )
 
     possibleErrorMessages.collect {
@@ -201,7 +201,7 @@ class CsvUploadControllerSpec
       val body: String = contentAsString(result)
 
       extractBulkOptOutErrors(body) mustBe List(
-        "The uploaded file could not be processed"
+        "Invalid File Format. The uploaded file format could not be processed. Please enter a valid .csv file format."
       )
     }
 

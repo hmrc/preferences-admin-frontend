@@ -49,7 +49,7 @@
                 @if(uploadedFileWasInvalid ){
                     @govukWarningText(WarningText(
                         iconFallbackText = Some("Warning"),
-                        content = Text(s"The uploaded file could not be processed")
+                        content = Text(s"Invalid File Format. The uploaded file format could not be processed. Please enter a valid .csv file format.")
                     ))
                 }
 
