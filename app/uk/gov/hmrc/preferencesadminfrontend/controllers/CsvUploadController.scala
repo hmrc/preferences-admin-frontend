@@ -36,7 +36,7 @@ class CsvUploadController @Inject() (
   csvUpload: csv_upload,
   csvUploadConfirm: csv_upload_confirmation,
   csvUploadBulkOptOuts: csv_upload_bulk_opt_outs,
-  csvUploadBulkOptOutConfirmation: cvs_upload_bulk_opt_confirmation,
+  csvUploadBulkOptOutConfirmation: csv_upload_bulk_opt_confirmation,
   uploadService: UploadService,
   bulkUploadOptOutsService: BulkUploadOptOutsService,
   bulkOptOutsConfig: BulkOptOutsConfig,
@@ -176,8 +176,12 @@ class CsvUploadController @Inject() (
     }
     val successfullyOptedOutNinos =
       bulkOptOutResults.collect { case ProcessedBulkOptOutResult(nino, OptedOut) => nino }
+
+    val invalidFormatNinos = bulkOptOutResults.collect { case InvalidNinoBulkOptOutResult(nino) => nino }
+
     val alreadyOptedOutNinos =
       bulkOptOutResults.collect { case ProcessedBulkOptOutResult(nino, AlreadyOptedOut) => nino }
+
     val notFoundNinos = bulkOptOutResults.collect { case ProcessedBulkOptOutResult(nino, PreferenceNotFound) =>
       nino
     }
@@ -185,6 +189,7 @@ class CsvUploadController @Inject() (
     Ok(
       csvUploadBulkOptOutConfirmation(
         successfullyOptedOutNinos = successfullyOptedOutNinos,
+        invalidFormatNinos = invalidFormatNinos,
         alreadyOptedOutNinos = alreadyOptedOutNinos,
         notFoundNinos = notFoundNinos,
         failedCallNinos = failedCallNinos

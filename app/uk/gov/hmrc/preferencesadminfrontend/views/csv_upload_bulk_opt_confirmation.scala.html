@@ -21,6 +21,7 @@
 
 @(
     successfullyOptedOutNinos: List[String],
+    invalidFormatNinos : List[String],
     alreadyOptedOutNinos: List[String],
     notFoundNinos: List[String],
   failedCallNinos: Seq[String]
@@ -42,6 +43,19 @@
 
     <div id="file-upload-confirmation">
         <h2 class="govuk-heading-m">File Upload Confirmation</h2>
+
+     @if(invalidFormatNinos.nonEmpty){
+      @govukWarningText(WarningText(
+       iconFallbackText = Some("Warning"),
+       content = Text("The following uploaded entries were in an invalid Nino format")
+      ))
+
+      <ul class="govuk-task-list">
+      @for(invalidFormatNino <- invalidFormatNinos){
+       <li class="govuk-task-list__item">@invalidFormatNino</li>
+      }
+      </ul>
+     }
 
      @if(alreadyOptedOutNinos.nonEmpty){
       @govukWarningText(WarningText(

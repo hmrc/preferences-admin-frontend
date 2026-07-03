@@ -22,7 +22,6 @@ import org.apache.pekko.stream.scaladsl.Framing
 import org.apache.pekko.stream.scaladsl.Framing.FramingException
 import org.mockito.Mockito.when
 import org.scalactic.Prettifier
-import org.scalactic.source.Position
 import org.scalatest.concurrent.{ IntegrationPatience, ScalaFutures }
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
@@ -107,8 +106,7 @@ class BulkUploadOptOutsServiceSpec
           |YY336119B,
           |YY336119A, unexpected value
           |, YY336119A
-          |YY336119C,
-          |invalidformat
+          |YY336119C
           |""".stripMargin
 
       val tempFile: Path = Files.createTempFile("test-upload", ".csv")
@@ -124,8 +122,7 @@ class BulkUploadOptOutsServiceSpec
             Right("YY336119B"),
             Left("YY336119A, unexpected value"),
             Left(", YY336119A"),
-            Right("YY336119C"),
-            Left("invalidformat")
+            Right("YY336119C")
           )
         )
 
@@ -142,17 +139,20 @@ class BulkUploadOptOutsServiceSpec
     }
 
     "return informative results handling errors gracefully" in {
+
       val ninos = List(
-        "nino1",
-        "nino2",
-        "nino3",
-        "nino4",
-        "nino5",
-        "nino6",
-        "nino7",
-        "nino8",
-        "nino9",
-        "nino10"
+        "AA090601A",
+        "AA090602A",
+        "invalidformat1",
+        "AA090603A",
+        "AA090604A",
+        "AA090605A",
+        "AA090606A",
+        "AA090607A",
+        "invalidformat2",
+        "AA090608A",
+        "AA090609A",
+        "AA090601B"
       )
 
       type PossibleOutCome = OptOutResult | Throwable
@@ -163,48 +163,50 @@ class BulkUploadOptOutsServiceSpec
           case error: Throwable           => Future.failed(error)
         }
 
-      when(mockEntityResolverConnector.optOut(TaxIdentifier.ninoIdentifier("nino1")))
+      when(mockEntityResolverConnector.optOut(TaxIdentifier.ninoIdentifier("AA090601A")))
         .thenReturn(createResult(OptedOut))
 
-      when(mockEntityResolverConnector.optOut(TaxIdentifier.ninoIdentifier("nino2")))
+      when(mockEntityResolverConnector.optOut(TaxIdentifier.ninoIdentifier("AA090602A")))
         .thenReturn(createResult(AlreadyOptedOut))
 
-      when(mockEntityResolverConnector.optOut(TaxIdentifier.ninoIdentifier("nino3")))
+      when(mockEntityResolverConnector.optOut(TaxIdentifier.ninoIdentifier("AA090603A")))
         .thenReturn(createResult(AlreadyOptedOut))
 
-      when(mockEntityResolverConnector.optOut(TaxIdentifier.ninoIdentifier("nino4")))
+      when(mockEntityResolverConnector.optOut(TaxIdentifier.ninoIdentifier("AA090604A")))
         .thenReturn(createResult(PreferenceNotFound))
 
-      when(mockEntityResolverConnector.optOut(TaxIdentifier.ninoIdentifier("nino5")))
+      when(mockEntityResolverConnector.optOut(TaxIdentifier.ninoIdentifier("AA090605A")))
         .thenReturn(createResult(PreferenceNotFound))
 
-      when(mockEntityResolverConnector.optOut(TaxIdentifier.ninoIdentifier("nino6")))
+      when(mockEntityResolverConnector.optOut(TaxIdentifier.ninoIdentifier("AA090606A")))
         .thenReturn(createResult(new RuntimeException("error1")))
 
-      when(mockEntityResolverConnector.optOut(TaxIdentifier.ninoIdentifier("nino7")))
+      when(mockEntityResolverConnector.optOut(TaxIdentifier.ninoIdentifier("AA090607A")))
         .thenReturn(createResult(OptedOut))
 
-      when(mockEntityResolverConnector.optOut(TaxIdentifier.ninoIdentifier("nino8")))
+      when(mockEntityResolverConnector.optOut(TaxIdentifier.ninoIdentifier("AA090608A")))
         .thenReturn(createResult(new RuntimeException("error2")))
 
-      when(mockEntityResolverConnector.optOut(TaxIdentifier.ninoIdentifier("nino9")))
+      when(mockEntityResolverConnector.optOut(TaxIdentifier.ninoIdentifier("AA090609A")))
         .thenReturn(createResult(OptedOut))
 
-      when(mockEntityResolverConnector.optOut(TaxIdentifier.ninoIdentifier("nino10")))
+      when(mockEntityResolverConnector.optOut(TaxIdentifier.ninoIdentifier("AA090601B")))
         .thenReturn(createResult(PreferenceNotFound))
 
       val results: Seq[BulkOptOutResult] = bulkUploadOptOutsService.processBulkOptOuts(ninos).futureValue
       results mustBe List(
-        ProcessedBulkOptOutResult("nino1", OptedOut),
-        ProcessedBulkOptOutResult("nino2", AlreadyOptedOut),
-        ProcessedBulkOptOutResult("nino3", AlreadyOptedOut),
-        ProcessedBulkOptOutResult("nino4", PreferenceNotFound),
-        ProcessedBulkOptOutResult("nino5", PreferenceNotFound),
-        FailedCallBulkOptOutResult("nino6"),
-        ProcessedBulkOptOutResult("nino7", OptedOut),
-        FailedCallBulkOptOutResult("nino8"),
-        ProcessedBulkOptOutResult("nino9", OptedOut),
-        ProcessedBulkOptOutResult("nino10", PreferenceNotFound)
+        InvalidNinoBulkOptOutResult("invalidformat1"),
+        InvalidNinoBulkOptOutResult("invalidformat2"),
+        ProcessedBulkOptOutResult("AA090601A", OptedOut),
+        ProcessedBulkOptOutResult("AA090602A", AlreadyOptedOut),
+        ProcessedBulkOptOutResult("AA090603A", AlreadyOptedOut),
+        ProcessedBulkOptOutResult("AA090604A", PreferenceNotFound),
+        ProcessedBulkOptOutResult("AA090605A", PreferenceNotFound),
+        FailedCallBulkOptOutResult("AA090606A"),
+        ProcessedBulkOptOutResult("AA090607A", OptedOut),
+        FailedCallBulkOptOutResult("AA090608A"),
+        ProcessedBulkOptOutResult("AA090609A", OptedOut),
+        ProcessedBulkOptOutResult("AA090601B", PreferenceNotFound)
       )
     }
 
