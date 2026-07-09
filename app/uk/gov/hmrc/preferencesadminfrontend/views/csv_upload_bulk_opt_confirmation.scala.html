@@ -24,7 +24,8 @@
     invalidFormatNinos : List[String],
     alreadyOptedOutNinos: List[String],
     notFoundNinos: List[String],
-  failedCallNinos: Seq[String]
+    failedCallNinos: Seq[String],
+    duplicateValidUploads : List[String]
 )(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
 
 @layout(pageTitle = "Bulk Upload Opt Out Confirmation") {
@@ -43,6 +44,20 @@
 
     <div id="file-upload-confirmation">
         <h2 class="govuk-heading-m">File Upload Confirmation</h2>
+
+     @if(duplicateValidUploads.nonEmpty){
+      @govukWarningText(WarningText(
+       iconFallbackText = Some("Warning"),
+       content = Text("The following uploaded entries were duplicates, so were attempted once")
+      ))
+
+      <ul class="govuk-task-list">
+      @for(duplicateValidUpload <- duplicateValidUploads){
+       <li class="govuk-task-list__item">@duplicateValidUpload</li>
+      }
+      </ul>
+     }
+
 
      @if(invalidFormatNinos.nonEmpty){
       @govukWarningText(WarningText(

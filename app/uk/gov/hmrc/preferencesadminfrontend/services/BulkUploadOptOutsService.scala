@@ -25,6 +25,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.preferencesadminfrontend.config.BulkOptOutsConfig
 import uk.gov.hmrc.preferencesadminfrontend.connectors.{ EntityResolverConnector, OptOutResult }
 import uk.gov.hmrc.preferencesadminfrontend.services.model.TaxIdentifier
+import uk.gov.hmrc.preferencesadminfrontend.services.model.csv.UploadedBulKOptOutNinos
 
 import java.nio.file.Path
 import javax.inject.Inject
@@ -50,7 +51,7 @@ class BulkUploadOptOutsService @Inject() (
 
   def readNinoBulkOptOutsFromFile(
     path: Path
-  )(implicit mat: Materializer): Future[Either[FramingException, List[Either[String, String]]]] = {
+  )(implicit mat: Materializer): Future[Either[FramingException, UploadedBulKOptOutNinos]] = {
     val extractCsvData: PartialFunction[Any, Either[String, String]] = {
       case line: String if line.split(",").map(_.trim).length >= 1 =>
         val cols = line.split(",").map(_.trim)
@@ -68,7 +69,9 @@ class BulkUploadOptOutsService @Inject() (
 
     csvReader
       .readFromFile(path, extractCsvData)
-      .map(Right[FramingException, List[Either[String, String]]].apply)
+      .map { a =>
+        Right[FramingException, UploadedBulKOptOutNinos](UploadedBulKOptOutNinos(a))
+      }
       .recover { case e: FramingException => Left(e) }
   }
 

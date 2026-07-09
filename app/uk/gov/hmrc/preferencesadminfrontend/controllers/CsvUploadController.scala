@@ -26,6 +26,7 @@ import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.preferencesadminfrontend.config.{ AppConfig, BulkOptOutsConfig }
 import uk.gov.hmrc.preferencesadminfrontend.connectors.{ AlreadyOptedOut, OptedOut, PreferenceNotFound }
 import uk.gov.hmrc.preferencesadminfrontend.services.*
+import uk.gov.hmrc.preferencesadminfrontend.services.model.csv.UploadedBulKOptOutNinos
 import uk.gov.hmrc.preferencesadminfrontend.views.html.*
 
 import javax.inject.{ Inject, Singleton }
@@ -123,9 +124,9 @@ class CsvUploadController @Inject() (
   }
 
   private def processOptOutFileUpload(
-    errorOrOptOutList: List[Either[String, String]]
+    uploadedBulKOptOutNinos: UploadedBulKOptOutNinos
   )(implicit request: Request[_]): Future[Result] =
-    if (errorOrOptOutList.isEmpty) {
+    if (uploadedBulKOptOutNinos.distinctErrorOrOptOuts.isEmpty) {
       Future.successful(
         Ok(
           csvUploadBulkOptOuts(
@@ -138,9 +139,10 @@ class CsvUploadController @Inject() (
         )
       )
     } else {
-      val errors = errorOrOptOutList.collect { case Left(error) => error }
-      val successfulEntries = errorOrOptOutList.collect { case Right(success) => success }
-      val uploadedCount = errorOrOptOutList.length
+      val distinctErrorOrOptOutList = uploadedBulKOptOutNinos.distinctErrorOrOptOuts.toList
+      val errors = distinctErrorOrOptOutList.collect { case Left(error) => error }
+      val successfulEntries = distinctErrorOrOptOutList.collect { case Right(success) => success }
+      val uploadedCount = distinctErrorOrOptOutList.length
       val hasTooManyUploads = uploadedCount > bulkOptOutsConfig.maxUploadEntries
 
       if (errors.nonEmpty || hasTooManyUploads) {
@@ -163,13 +165,15 @@ class CsvUploadController @Inject() (
         )
       } else {
         bulkUploadOptOutsService.processBulkOptOuts(successfulEntries).map { bulkOptOutResults =>
-          showBulkOptOutConfirmation(bulkOptOutResults)
+          val duplicateValidUploads = uploadedBulKOptOutNinos.duplicateValid
+          showBulkOptOutConfirmation(bulkOptOutResults, duplicateValidUploads)
         }
       }
     }
 
   private def showBulkOptOutConfirmation(
-    bulkOptOutResults: List[BulkOptOutResult]
+    bulkOptOutResults: List[BulkOptOutResult],
+    duplicateValidUploads: List[String]
   )(implicit request: Request[_]): Result = {
     val failedCallNinos = bulkOptOutResults.collect { case failedCall: FailedCallBulkOptOutResult =>
       failedCall.nino
@@ -192,7 +196,8 @@ class CsvUploadController @Inject() (
         invalidFormatNinos = invalidFormatNinos,
         alreadyOptedOutNinos = alreadyOptedOutNinos,
         notFoundNinos = notFoundNinos,
-        failedCallNinos = failedCallNinos
+        failedCallNinos = failedCallNinos,
+        duplicateValidUploads = duplicateValidUploads
       )
     )
   }

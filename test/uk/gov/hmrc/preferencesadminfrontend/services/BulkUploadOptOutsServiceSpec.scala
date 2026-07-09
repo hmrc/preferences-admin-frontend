@@ -18,7 +18,6 @@ package uk.gov.hmrc.preferencesadminfrontend.services
 
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.stream.Materializer
-import org.apache.pekko.stream.scaladsl.Framing
 import org.apache.pekko.stream.scaladsl.Framing.FramingException
 import org.mockito.Mockito.when
 import org.scalactic.Prettifier
@@ -30,6 +29,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.preferencesadminfrontend.config.BulkOptOutsConfig
 import uk.gov.hmrc.preferencesadminfrontend.connectors.*
 import uk.gov.hmrc.preferencesadminfrontend.services.model.TaxIdentifier
+import uk.gov.hmrc.preferencesadminfrontend.services.model.csv.UploadedBulKOptOutNinos
 
 import java.nio.file.{ Files, Path }
 import scala.concurrent.{ ExecutionContextExecutor, Future }
@@ -74,8 +74,7 @@ class BulkUploadOptOutsServiceSpec
       Files.write(tempFile, csvContent.getBytes("UTF-8"))
 
       try {
-        val eventualErrorOrCvBulkOptOutCsvDataList
-          : Future[Either[Framing.FramingException, List[Either[String, String]]]] =
+        val eventualErrorOrCvBulkOptOutCsvDataList =
           bulkUploadOptOutsService.readNinoBulkOptOutsFromFile(tempFile)
         whenReady(eventualErrorOrCvBulkOptOutCsvDataList) { errorOrCvOptOutCsvDataList =>
           errorOrCvOptOutCsvDataList.left.map(_.getClass) mustBe Left(classOf[FramingException])
@@ -91,10 +90,10 @@ class BulkUploadOptOutsServiceSpec
       Files.write(tempFile, csvContent.getBytes("UTF-8"))
 
       try {
-        val eventualCvBulkOptOutCsvDataList: Future[Either[Framing.FramingException, List[Either[String, String]]]] =
+        val eventualCvBulkOptOutCsvDataList =
           bulkUploadOptOutsService.readNinoBulkOptOutsFromFile(tempFile)
         whenReady(eventualCvBulkOptOutCsvDataList) { cvOptOutCsvDataList =>
-          cvOptOutCsvDataList mustBe Right(List.empty)
+          cvOptOutCsvDataList mustBe Right(UploadedBulKOptOutNinos.empty)
         }
       } finally Files.deleteIfExists(tempFile)
     }
@@ -117,12 +116,14 @@ class BulkUploadOptOutsServiceSpec
           bulkUploadOptOutsService.readNinoBulkOptOutsFromFile(tempFile).futureValue
 
         cvOptOutCsvDataList mustBe Right(
-          List(
-            Right("YY336119A"),
-            Right("YY336119B"),
-            Left("YY336119A, unexpected value"),
-            Left(", YY336119A"),
-            Right("YY336119C")
+          UploadedBulKOptOutNinos(
+            List(
+              Right("YY336119A"),
+              Right("YY336119B"),
+              Left("YY336119A, unexpected value"),
+              Left(", YY336119A"),
+              Right("YY336119C")
+            )
           )
         )
 
@@ -132,7 +133,7 @@ class BulkUploadOptOutsServiceSpec
 
   "processBulkOptOuts" should {
     "return an empty list when no ninos are passed" in {
-      val ninos = List()
+      val ninos = List.empty
       val results: Seq[BulkOptOutResult] = bulkUploadOptOutsService.processBulkOptOuts(ninos).futureValue
 
       results mustBe List.empty
