@@ -63,7 +63,7 @@ class LoginController @Inject() (
         userData =>
           if (loginService.isAuthorised(userData)) {
             auditConnector.sendEvent(createLoginEvent(userData.username, true))
-            val sessionUpdated = updateSessionWithLoggedInUserRoleAndTimeStamp(request, userData)
+            val sessionUpdated = updateSessionParamByLoggedInUserRoleAndTimeStamp(request, userData)
 
             Future.successful(Redirect(routes.HomeController.showHomePage()).withSession(sessionUpdated))
           } else {
@@ -75,7 +75,7 @@ class LoginController @Inject() (
       )
   }
 
-  private def updateSessionWithLoggedInUserRoleAndTimeStamp(request: MessagesRequest[AnyContent], userData: User) =
+  private def updateSessionParamByLoggedInUserRoleAndTimeStamp(request: MessagesRequest[AnyContent], userData: User) =
     request.session
       + (User.sessionKey -> userData.username)
       + ("ts"            -> Instant.now.toEpochMilli.toString)
