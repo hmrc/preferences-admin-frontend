@@ -17,7 +17,6 @@
 package uk.gov.hmrc.preferencesadminfrontend.controllers
 
 import org.apache.pekko.stream.Materializer
-import org.apache.pekko.util.ByteString
 import org.mockito.ArgumentMatchers.*
 import org.mockito.Mockito.*
 import org.scalatest.concurrent.ScalaFutures
@@ -27,8 +26,6 @@ import play.api.Application
 import play.api.http.*
 import play.api.i18n.MessagesApi
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.streams.Accumulator
-import play.api.mvc.{ Action, AnyContent, AnyContentAsFormUrlEncoded, Request, RequestHeader, Result }
 import play.api.test.CSRFTokenHelper.*
 import play.api.test.FakeRequest
 import play.api.test.Helpers.*

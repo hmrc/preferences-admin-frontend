@@ -37,24 +37,27 @@
                 <a class="govuk-link govuk-task-list__link" href="/paperless/admin/search">Paperless Admin</a>
             </li>
             @if(TemplateHelper.validateRole(request.session, "isAdmin")) {
-            <li class="govuk-task-list__item govuk-task-list__item--with-link">
-                <a class="govuk-link govuk-task-list__link" href="/paperless/admin/message-brake">Message Brake</a>
-            </li>
-            <li class="govuk-task-list__item govuk-task-list__item--with-link">
-                <a class="govuk-link govuk-task-list__link" href="/paperless/admin/allowlist">Message Brake Allowlist</a>
-            </li>
-            <li class="govuk-task-list__item govuk-task-list__item--with-link">
-                <a class="govuk-link govuk-task-list__link" href="/paperless/admin/decode">Message Decode</a>
-            </li>
-            <li class="govuk-task-list__item govuk-task-list__item--with-link">
-                <a class="govuk-link govuk-task-list__link" href="/paperless/admin/multi-search">Multi Search</a>
-            </li>
-            <li class="govuk-task-list__item govuk-task-list__item--with-link">
-                <a class="govuk-link govuk-task-list__link" href="/paperless/admin/csv-upload">File Upload Id Updates</a>
-            </li>
-            <li class="govuk-task-list__item govuk-task-list__item--with-link">
-                <a class="govuk-link govuk-task-list__link" href="/paperless/admin/csv-upload-bulk-opt-outs">Bulk Opt Out</a>
-            </li>
+                <li class="govuk-task-list__item govuk-task-list__item--with-link">
+                    <a class="govuk-link govuk-task-list__link" href="/paperless/admin/message-brake">Message Brake</a>
+                </li>
+                <li class="govuk-task-list__item govuk-task-list__item--with-link">
+                    <a class="govuk-link govuk-task-list__link" href="/paperless/admin/allowlist">Message Brake Allowlist</a>
+                </li>
+                <li class="govuk-task-list__item govuk-task-list__item--with-link">
+                    <a class="govuk-link govuk-task-list__link" href="/paperless/admin/decode">Message Decode</a>
+                </li>
+                <li class="govuk-task-list__item govuk-task-list__item--with-link">
+                    <a class="govuk-link govuk-task-list__link" href="/paperless/admin/multi-search">Multi Search</a>
+                </li>
+                <li class="govuk-task-list__item govuk-task-list__item--with-link">
+                    <a class="govuk-link govuk-task-list__link" href="/paperless/admin/csv-upload">File Upload Id Updates</a>
+                </li>
+            }
+
+            @if(TemplateHelper.validateRole(request.session, "isAdmin") || TemplateHelper.validateRole(request.session, "isGeneric")) {
+                <li class="govuk-task-list__item govuk-task-list__item--with-link">
+                    <a class="govuk-link govuk-task-list__link" href="/paperless/admin/csv-upload-bulk-opt-outs">Bulk Opt Out</a>
+                </li>
             }
         </ul>
     </div>
