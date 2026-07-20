@@ -54,20 +54,20 @@ class CsvUploadControllerSpec
   "showUploadPage (GET /csv-upload)" should {
     "return 200" in new TestCase {
       val result: Future[Result] =
-        controller.showUploadPage()(FakeRequest("GET", "/decode").withSession(User.sessionKey -> "admin"))
+        controller.showUploadPage()(FakeRequest("GET", "/decode").withSession(User.sessionKey -> "genericUser"))
       status(result) mustBe Status.OK
     }
 
     "return HTML" in new TestCase {
       val result: Future[Result] =
-        controller.showUploadPage()(FakeRequest("GET", "/decode").withSession(User.sessionKey -> "admin"))
+        controller.showUploadPage()(FakeRequest("GET", "/decode").withSession(User.sessionKey -> "genericUser"))
       contentType(result) mustBe Some("text/html")
       charset(result) mustBe Some("utf-8")
     }
 
-    "redirect to login page for non-admin user" in new TestCase {
+    "redirect to login page for sols user" in new TestCase {
       val result: Future[Result] =
-        controller.showUploadPage()(FakeRequest("GET", "/decode").withSession(User.sessionKey -> "user"))
+        controller.showUploadPage()(FakeRequest("GET", "/decode").withSession(User.sessionKey -> "solsOnlyUser"))
       status(result) mustBe Status.SEE_OTHER
     }
   }
@@ -119,7 +119,7 @@ class CsvUploadControllerSpec
   "showBulkOptOutsUploadPage (GET /csv-upload-bulk-opt-outs)" should {
     "return HTML" in new TestCase {
       val result: Future[Result] =
-        controller.showBulkOptOutsUploadPage()(FakeRequest("", "").withSession(User.sessionKey -> "admin"))
+        controller.showBulkOptOutsUploadPage()(FakeRequest("", "").withSession(User.sessionKey -> "genericUser"))
 
       contentType(result) mustBe Some("text/html")
       charset(result) mustBe Some("utf-8")

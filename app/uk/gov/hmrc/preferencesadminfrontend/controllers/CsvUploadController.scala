@@ -44,7 +44,7 @@ class CsvUploadController @Inject() (
 )(implicit appConfig: AppConfig, ec: ExecutionContext, actorSystem: ActorSystem)
     extends FrontendController(mcc) with I18nSupport with Logging with RoleAuthorisedAction(authorisedAction) {
 
-  override def role: Role = Role.Admin
+  override def role: Role = Role.Generic
 
   val showUploadPage: Action[AnyContent] = authorisedAction { implicit request => _ =>
     Future.successful(Ok(csvUpload()))
