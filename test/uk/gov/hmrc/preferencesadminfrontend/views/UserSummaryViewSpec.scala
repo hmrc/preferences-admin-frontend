@@ -361,7 +361,7 @@ class UserSummaryViewSpec extends PlaySpec with GuiceOneAppPerSuite {
 
       val doc = asDocument(html)
       doc.text must include(
-        "20 July 2026 02:30:45 pm"
+        "20 July 2026 02:30:45 PM"
       )
     }
 
