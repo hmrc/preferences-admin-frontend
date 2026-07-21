@@ -94,10 +94,10 @@
             )
         )
 
-    @if(validateRole(request.session, "isAdmin")) {
+    @if(validateRole(request.session, "isAdmin") || validateRole(request.session, "isSols")) {
         @govukSummaryList(SummaryList(Seq(SummaryListRow(key = Key(content = Text("Optin/Optout route")), value = Value(content = Text(preference.route.toString))))))
     }
-        <h2 class="govuk-heading-m"></h2>
+    <h2 class="govuk-heading-m"></h2>
     @if(validateRole(request.session, "isAdmin") || validateRole(request.session, "isSols")) {
         <table class="govuk-table">
             <caption class="govuk-table__caption govuk-table__caption--m">Preference History</caption>
