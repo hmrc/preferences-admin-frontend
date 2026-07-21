@@ -98,6 +98,22 @@ class LoginControllerSpec extends PlaySpec with GuiceOneAppPerSuite with SpecBas
       session(result).data must contain("isSols" -> "true")
     }
 
+    "Set the session param for generic user role" in new MessageBrakeControllerTestCase {
+      val fakeRequest =
+        FakeRequest(routes.LoginController.loginAction())
+          .withFormUrlEncodedBody("username" -> "solsUser", "password" -> "pwd")
+          .withCSRFToken
+
+      val result = loginController.loginAction()(fakeRequest)
+
+      status(result) mustBe Status.SEE_OTHER
+      headers(result) must contain("Location" -> "/paperless/admin/home")
+      session(result).data must contain("userId" -> "solsUser")
+      session(result).data must contain("isAdmin" -> "false")
+      session(result).data must contain("isSols" -> "true")
+      session(result).data must contain("isGeneric" -> "true")
+    }
+
     "Return unauthorised if credentials are not correct" in new MessageBrakeControllerTestCase {
       val fakeRequest =
         FakeRequest(routes.LoginController.loginAction())

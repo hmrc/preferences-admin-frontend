@@ -40,7 +40,7 @@
         )
     ))
     <h1 class="govuk-heading-l">Bulk Opt Out</h1>
-        @form(action = routes.CsvUploadController.uploadBulkOptOuts(), Symbol("enctype")-> "multipart/form-data") {
+        @form(action = routes.CsvUploadBulkOptOutsController.uploadBulkOptOuts(), Symbol("enctype")-> "multipart/form-data") {
             <div class="govuk-form-group">
                 <label class="govuk-heading-m" for="csv-upload">
                     Upload a CSV file For Bulk Opt Outs (Maximum @maxUploads Ninos)

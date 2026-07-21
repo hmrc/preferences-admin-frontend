@@ -29,7 +29,7 @@ import uk.gov.hmrc.play.audit.model.DataEvent
 import uk.gov.hmrc.play.bootstrap.config.AppName
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
-import uk.gov.hmrc.preferencesadminfrontend.controllers.Role.{ Admin, SolsGeneric }
+import uk.gov.hmrc.preferencesadminfrontend.controllers.Role.{ Admin, Generic, SolsGeneric }
 import uk.gov.hmrc.preferencesadminfrontend.controllers.model.User
 import uk.gov.hmrc.preferencesadminfrontend.services.LoginService
 import uk.gov.hmrc.preferencesadminfrontend.views.html.login
@@ -63,35 +63,40 @@ class LoginController @Inject() (
         userData =>
           if (loginService.isAuthorised(userData)) {
             auditConnector.sendEvent(createLoginEvent(userData.username, true))
-            val sessionUpdated =
-              request.session
-                + (User.sessionKey -> userData.username)
-                + ("ts"            -> Instant.now.toEpochMilli.toString)
-                + ("isAdmin"       -> loginService.hasRequiredRole(userData, Admin).toString)
-                + ("isSols"        -> loginService.hasRequiredRole(userData, SolsGeneric).toString)
+            val sessionUpdated = updateSessionParamByLoggedInUserRoleAndTimeStamp(request, userData)
+
             Future.successful(Redirect(routes.HomeController.showHomePage()).withSession(sessionUpdated))
           } else {
             auditConnector.sendEvent(createLoginEvent(userData.username, false))
             val userFormWithErrors = userForm.fill(userData).withGlobalError("error.credentials.invalid")
+
             Future.successful(Unauthorized(loginView(userFormWithErrors)))
           }
       )
   }
 
-  def logoutAction() = authorisedAction.async { implicit request => user =>
+  private def updateSessionParamByLoggedInUserRoleAndTimeStamp(request: MessagesRequest[AnyContent], userData: User) =
+    request.session
+      + (User.sessionKey -> userData.username)
+      + ("ts"            -> Instant.now.toEpochMilli.toString)
+      + ("isAdmin"       -> loginService.hasRequiredRole(userData, Admin).toString)
+      + ("isSols"        -> loginService.hasRequiredRole(userData, SolsGeneric).toString)
+      + ("isGeneric"     -> loginService.hasRequiredRole(userData, Generic).toString)
+
+  def logoutAction(): Action[AnyContent] = authorisedAction.async { implicit request => user =>
     implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequestAndSession(request, request.session)
     auditConnector.sendEvent(createLogoutEvent(user.username))
     Future.successful(Redirect(routes.LoginController.showLoginPage()).withSession(Session()))
   }
 
-  def createLoginEvent(username: String, successful: Boolean) = DataEvent(
+  private def createLoginEvent(username: String, successful: Boolean): DataEvent = DataEvent(
     auditSource = AppName.fromConfiguration(config),
     auditType = if (successful) "TxSucceeded" else "TxFailed",
     detail = Map("user" -> username),
     tags = Map("transactionName" -> "Login")
   )
 
-  def createLogoutEvent(username: String) = DataEvent(
+  private def createLogoutEvent(username: String): DataEvent = DataEvent(
     auditSource = AppName.fromConfiguration(config),
     auditType = "TxSucceeded",
     detail = Map("user" -> username),
