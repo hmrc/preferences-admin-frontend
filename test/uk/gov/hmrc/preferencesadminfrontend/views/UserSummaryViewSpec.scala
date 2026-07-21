@@ -403,7 +403,7 @@ class UserSummaryViewSpec extends PlaySpec with GuiceOneAppPerSuite {
       doc.text must include("Online")
     }
 
-    "not display Optin/Optout route for a normal user" in {
+    "not display Optin/Optout route for a generic user" in {
       val html =
         user_summary(
           summaryList,
@@ -483,7 +483,7 @@ class UserSummaryViewSpec extends PlaySpec with GuiceOneAppPerSuite {
       doc.text must include("user@example.com")
     }
 
-    "not display preference history for a normal user" in {
+    "not display preference history for a generic user" in {
       val html =
         user_summary(
           summaryList,
