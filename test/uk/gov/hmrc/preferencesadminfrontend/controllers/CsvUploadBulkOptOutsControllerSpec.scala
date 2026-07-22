@@ -15,7 +15,6 @@
  */
 
 package uk.gov.hmrc.preferencesadminfrontend.controllers
-
 import org.apache.pekko.stream.Materializer
 import org.apache.pekko.stream.scaladsl.Framing.FramingException
 import org.mockito.ArgumentMatchers
@@ -31,7 +30,7 @@ import play.api.i18n.MessagesApi
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.Files.TemporaryFile
 import play.api.mvc.MultipartFormData.FilePart
-import play.api.mvc.{ MultipartFormData, Result }
+import play.api.mvc.{ MultipartFormData, ResponseHeader, Result }
 import play.api.test.FakeRequest
 import play.api.test.Helpers.*
 import play.api.{ Application, inject }
@@ -39,7 +38,9 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.preferencesadminfrontend.connectors.{ AlreadyOptedOut, OptedOut, PreferenceNotFound }
 import uk.gov.hmrc.preferencesadminfrontend.controllers.model.User
 import uk.gov.hmrc.preferencesadminfrontend.services.*
+import uk.gov.hmrc.preferencesadminfrontend.services.model.csv.UploadedBulKOptOutNinos
 import uk.gov.hmrc.preferencesadminfrontend.utils.SpecBase
+import uk.gov.hmrc.preferencesadminfrontend.views.messages.BulkUploadErrorMessages
 
 import java.nio.file.Path
 import scala.concurrent.{ ExecutionContext, Future }
@@ -60,9 +61,9 @@ class CsvUploadBulkOptOutsControllerSpec
           FakeRequest(emptyString, emptyString).withSession(User.sessionKey -> "genericUser")
         )
 
+      result.futureValue.header mustBe ResponseHeader(200)
       contentType(result) mustBe Some("text/html")
       charset(result) mustBe Some("utf-8")
-      status(result) mustBe OK
 
       extractBulkOptOutErrors(contentAsString(result)) mustBe List.empty
     }
@@ -77,14 +78,14 @@ class CsvUploadBulkOptOutsControllerSpec
 
   def extractBulkOptOutErrors(body: String): List[String] = {
     val possibleErrorMessages = List(
-      "The following uploaded entries were in an invalid Nino format",
-      "The following uploaded entries were not fully opted in",
-      "The following uploaded entries were not found",
-      "The following uploaded entries were invalid",
-      "The following entries failed for unexpected reasons",
-      "The uploaded file had no entries",
-      "Too many entries were uploaded",
-      "Invalid File Format. The uploaded file format could not be processed. Please enter a valid .csv file format."
+      BulkUploadErrorMessages.invalidFormatNinos,
+      BulkUploadErrorMessages.notFullyOptedIn,
+      BulkUploadErrorMessages.notFoundNinos,
+      BulkUploadErrorMessages.unexpectedFailureNinos,
+      BulkUploadErrorMessages.noUploadedNinos,
+      "Too many Ninos were uploaded",
+      BulkUploadErrorMessages.invalidFileFormat,
+      BulkUploadErrorMessages.duplicateNinos
     )
 
     possibleErrorMessages.collect {
@@ -145,53 +146,6 @@ class CsvUploadBulkOptOutsControllerSpec
       )
     }
 
-    "return 200 but display errors when some could not be validated" in new TestCase {
-      val mockTemporaryFile = mock[TemporaryFile]
-      val mockPath = mock[Path]
-
-      when(mockTemporaryFile.path).thenReturn(mockPath)
-
-      when(mockBulkOptOutsService.readNinoBulkOptOutsFromFile(any())(any()))
-        .thenReturn(
-          Future.successful(
-            Right(
-              List(
-                Right("nino1"),
-                Left("error1,sss"),
-                Right("nino2"),
-                Left("error2,sss")
-              )
-            )
-          )
-        )
-
-      val formData = MultipartFormData[TemporaryFile](
-        dataParts = Map.empty,
-        files = Seq(filePart),
-        badParts = Seq.empty
-      )
-
-      val request = FakeRequest(emptyString, emptyString)
-        .withSession(User.sessionKey -> "admin")
-        .withBody(formData)
-
-      val result = controller.uploadBulkOptOuts()(request)
-
-      status(result) mustBe OK
-      val body: String = contentAsString(result)
-
-      extractBulkOptOutErrors(body) mustBe List(
-        "The following uploaded entries were invalid"
-      )
-
-      body must include("error1,sss")
-      body must include("error2,sss")
-
-      body must not include "nino1"
-      body must not include "nino2"
-
-    }
-
     "return 200 but display no entries were found if file was empty" in new TestCase {
       val mockTemporaryFile = mock[TemporaryFile]
       val mockPath = mock[Path]
@@ -200,7 +154,7 @@ class CsvUploadBulkOptOutsControllerSpec
 
       when(mockBulkOptOutsService.readNinoBulkOptOutsFromFile(any())(any()))
         .thenReturn(
-          Future.successful(Right(List.empty))
+          Future.successful(Right(UploadedBulKOptOutNinos.empty))
         )
 
       val formData = MultipartFormData[TemporaryFile](
@@ -209,7 +163,7 @@ class CsvUploadBulkOptOutsControllerSpec
         badParts = Seq.empty
       )
 
-      val request = FakeRequest(emptyString, emptyString)
+      val request = FakeRequest("", "")
         .withSession(User.sessionKey -> "admin")
         .withBody(formData)
 
@@ -219,7 +173,7 @@ class CsvUploadBulkOptOutsControllerSpec
       val body: String = contentAsString(result)
 
       extractBulkOptOutErrors(body) mustBe List(
-        "The uploaded file had no entries"
+        BulkUploadErrorMessages.noUploadedNinos
       )
     }
 
@@ -235,7 +189,7 @@ class CsvUploadBulkOptOutsControllerSpec
 
       when(mockBulkOptOutsService.readNinoBulkOptOutsFromFile(any())(any()))
         .thenReturn(
-          Future.successful(Right(ninos.map(Right.apply)))
+          Future.successful(Right(UploadedBulKOptOutNinos.createUniqueFiltered(ninos)))
         )
 
       val formData = MultipartFormData[TemporaryFile](
@@ -244,7 +198,7 @@ class CsvUploadBulkOptOutsControllerSpec
         badParts = Seq.empty
       )
 
-      val request = FakeRequest(emptyString, emptyString)
+      val request = FakeRequest("", "")
         .withSession(User.sessionKey -> "admin")
         .withBody(formData)
 
@@ -254,14 +208,15 @@ class CsvUploadBulkOptOutsControllerSpec
       val body: String = contentAsString(result)
 
       extractBulkOptOutErrors(body) mustBe List(
-        "Too many entries were uploaded"
+        "Too many Ninos were uploaded"
       )
     }
 
     def testValidParsing(
       controller: CsvUploadBulkOptOutsController,
       mockBulkOptOutsService: BulkUploadOptOutsService,
-      ninos: List[String],
+      nonDistinctNinosFromCsvReading: List[String],
+      ninosThatWillbeProcessed: List[String],
       serverResponse: List[BulkOptOutResult],
       expectedErrors: List[String],
       successCount: Int
@@ -279,19 +234,20 @@ class CsvUploadBulkOptOutsControllerSpec
 
       when(mockBulkOptOutsService.readNinoBulkOptOutsFromFile(any())(any()))
         .thenReturn(
-          Future.successful(
-            Right(ninos.map(Right.apply))
-          )
+          Future.successful(Right(UploadedBulKOptOutNinos.createUniqueFiltered(nonDistinctNinosFromCsvReading)))
         )
 
-      when(mockBulkOptOutsService.processBulkOptOuts(ArgumentMatchers.eq(ninos))(any(), any(), any()))
+      when(
+        mockBulkOptOutsService
+          .processBulkOptOuts(ArgumentMatchers.eq(ninosThatWillbeProcessed))(any(), any(), any())
+      )
         .thenReturn(
           Future.successful(
             serverResponse
           )
         )
 
-      val request = FakeRequest(emptyString, emptyString)
+      val request = FakeRequest("", "")
         .withSession(User.sessionKey -> "admin")
         .withBody(formData)
 
@@ -312,10 +268,32 @@ class CsvUploadBulkOptOutsControllerSpec
       testValidParsing(
         controller = controller,
         mockBulkOptOutsService = mockBulkOptOutsService,
-        ninos = ninos,
+        nonDistinctNinosFromCsvReading = ninos,
+        ninosThatWillbeProcessed = ninos,
         serverResponse = ninos.map(nino => ProcessedBulkOptOutResult(nino, OptedOut)),
         expectedErrors = List.empty,
         successCount = ninos.size
+      )
+    }
+
+    "return 200 when only valid entries were parsed but there were duplicates so these were separated out and used once" in new TestCase {
+      val nonDistinctNinos = List(
+        "nino1",
+        "nino1"
+      )
+
+      val distinctNinos = List(
+        "nino1"
+      )
+
+      testValidParsing(
+        controller = controller,
+        mockBulkOptOutsService = mockBulkOptOutsService,
+        nonDistinctNinosFromCsvReading = nonDistinctNinos,
+        ninosThatWillbeProcessed = distinctNinos,
+        serverResponse = distinctNinos.map(nino => ProcessedBulkOptOutResult(nino, OptedOut)),
+        expectedErrors = List("The following uploaded Ninos were duplicates, so were attempted once"),
+        successCount = 1
       )
     }
 
@@ -328,12 +306,13 @@ class CsvUploadBulkOptOutsControllerSpec
       testValidParsing(
         controller = controller,
         mockBulkOptOutsService = mockBulkOptOutsService,
-        ninos = ninos,
+        nonDistinctNinosFromCsvReading = ninos,
+        ninosThatWillbeProcessed = ninos,
         serverResponse = List(
           ProcessedBulkOptOutResult("nino1", AlreadyOptedOut),
           ProcessedBulkOptOutResult("nino2", AlreadyOptedOut)
         ),
-        expectedErrors = List("The following uploaded entries were not fully opted in"),
+        expectedErrors = List(BulkUploadErrorMessages.notFullyOptedIn),
         successCount = 0
       )
     }
@@ -347,12 +326,13 @@ class CsvUploadBulkOptOutsControllerSpec
       testValidParsing(
         controller = controller,
         mockBulkOptOutsService = mockBulkOptOutsService,
-        ninos = ninos,
+        nonDistinctNinosFromCsvReading = ninos,
+        ninosThatWillbeProcessed = ninos,
         serverResponse = List(
           ProcessedBulkOptOutResult("nino1", PreferenceNotFound),
           ProcessedBulkOptOutResult("nino2", PreferenceNotFound)
         ),
-        expectedErrors = List("The following uploaded entries were not found"),
+        expectedErrors = List(BulkUploadErrorMessages.notFoundNinos),
         successCount = 0
       )
     }
@@ -366,12 +346,13 @@ class CsvUploadBulkOptOutsControllerSpec
       testValidParsing(
         controller = controller,
         mockBulkOptOutsService = mockBulkOptOutsService,
-        ninos = ninos,
+        nonDistinctNinosFromCsvReading = ninos,
+        ninosThatWillbeProcessed = ninos,
         serverResponse = List(
           FailedCallBulkOptOutResult("nino1"),
           FailedCallBulkOptOutResult("nino2")
         ),
-        expectedErrors = List("The following entries failed for unexpected reasons"),
+        expectedErrors = List(BulkUploadErrorMessages.unexpectedFailureNinos),
         successCount = 0
       )
     }
@@ -385,18 +366,33 @@ class CsvUploadBulkOptOutsControllerSpec
       testValidParsing(
         controller = controller,
         mockBulkOptOutsService = mockBulkOptOutsService,
-        ninos = ninos,
+        nonDistinctNinosFromCsvReading = ninos,
+        ninosThatWillbeProcessed = ninos,
         serverResponse = List(
           InvalidNinoBulkOptOutResult("nino1"),
           InvalidNinoBulkOptOutResult("nino2")
         ),
-        expectedErrors = List("The following uploaded entries were in an invalid Nino format"),
+        expectedErrors = List(BulkUploadErrorMessages.invalidFormatNinos),
         successCount = 0
       )
     }
 
     "return 200 and display all combinations of reponses" in new TestCase {
       val ninos = List(
+        "nino1",
+        "nino2",
+        "nino3",
+        "nino4",
+        "nino4",
+        "nino5",
+        "nino6",
+        "nino7",
+        "nino8",
+        "nino8",
+        "nino9"
+      )
+
+      val disinctNinos = List(
         "nino1",
         "nino2",
         "nino3",
@@ -411,7 +407,8 @@ class CsvUploadBulkOptOutsControllerSpec
       testValidParsing(
         controller = controller,
         mockBulkOptOutsService = mockBulkOptOutsService,
-        ninos = ninos,
+        nonDistinctNinosFromCsvReading = ninos,
+        ninosThatWillbeProcessed = disinctNinos,
         serverResponse = List(
           ProcessedBulkOptOutResult("nino1", PreferenceNotFound),
           ProcessedBulkOptOutResult("nino2", OptedOut),
@@ -425,14 +422,16 @@ class CsvUploadBulkOptOutsControllerSpec
           InvalidNinoBulkOptOutResult("nino9")
         ),
         expectedErrors = List(
-          "The following uploaded entries were in an invalid Nino format",
-          "The following uploaded entries were not fully opted in",
-          "The following uploaded entries were not found",
-          "The following entries failed for unexpected reasons"
+          BulkUploadErrorMessages.invalidFormatNinos,
+          BulkUploadErrorMessages.notFullyOptedIn,
+          BulkUploadErrorMessages.notFoundNinos,
+          BulkUploadErrorMessages.unexpectedFailureNinos,
+          BulkUploadErrorMessages.duplicateNinos
         ),
         successCount = 3
       )
     }
+
   }
 
   class TestCase {
