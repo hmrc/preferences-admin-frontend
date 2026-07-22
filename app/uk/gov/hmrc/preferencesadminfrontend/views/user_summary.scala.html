@@ -71,7 +71,7 @@
                     )
                       ),
                   value = Value(
-                        content = Text(preference.genericUpdatedAt.fold("Not available")(date => DateTimeFormatter.ofPattern("d MMMM yyyy hh:mm:ss a").format(date)))
+                        content = Text(preference.genericUpdatedAt.fold("Not available")(date => DateTimeFormatter.ofPattern("d MMMM yyyy hh:mm:ss a", Locale.ENGLISH).format(date)))
                     )
                 ),
                 SummaryListRow(
@@ -85,7 +85,7 @@
                        value = Value(
                        content = Text(
                          preference.email.fold("Not available")(email =>
-                        email.verifiedOn.fold("Not available")(date => DateTimeFormatter.ofPattern("d MMMM yyyy hh:mm:ss a").withLocale(Locale.ENGLISH).format(date)))
+                        email.verifiedOn.fold("Not available")(date => DateTimeFormatter.ofPattern("d MMMM yyyy hh:mm:ss a", Locale.ENGLISH).format(date)))
                           )
                       )
                      )
