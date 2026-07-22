@@ -18,10 +18,10 @@ package uk.gov.hmrc.preferencesadminfrontend.services
 
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.stream.Materializer
-import org.apache.pekko.stream.scaladsl.Framing
 import org.apache.pekko.stream.scaladsl.Framing.FramingException
 import org.mockito.Mockito.when
 import org.scalactic.Prettifier
+import org.scalatest.EitherValues
 import org.scalatest.concurrent.{ IntegrationPatience, ScalaFutures }
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
@@ -30,12 +30,14 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.preferencesadminfrontend.config.BulkOptOutsConfig
 import uk.gov.hmrc.preferencesadminfrontend.connectors.*
 import uk.gov.hmrc.preferencesadminfrontend.services.model.TaxIdentifier
+import uk.gov.hmrc.preferencesadminfrontend.services.model.csv.UploadedBulKOptOutNinos
 
 import java.nio.file.{ Files, Path }
 import scala.concurrent.{ ExecutionContextExecutor, Future }
 
 class BulkUploadOptOutsServiceSpec
-    extends AnyWordSpecLike with Matchers with ScalaFutures with IntegrationPatience with MockitoSugar {
+    extends AnyWordSpecLike with Matchers with ScalaFutures with IntegrationPatience with MockitoSugar
+    with EitherValues {
 
   implicit val system: ActorSystem = ActorSystem("UploadServiceSpec")
 
@@ -74,8 +76,7 @@ class BulkUploadOptOutsServiceSpec
       Files.write(tempFile, csvContent.getBytes("UTF-8"))
 
       try {
-        val eventualErrorOrCvBulkOptOutCsvDataList
-          : Future[Either[Framing.FramingException, List[Either[String, String]]]] =
+        val eventualErrorOrCvBulkOptOutCsvDataList =
           bulkUploadOptOutsService.readNinoBulkOptOutsFromFile(tempFile)
         whenReady(eventualErrorOrCvBulkOptOutCsvDataList) { errorOrCvOptOutCsvDataList =>
           errorOrCvOptOutCsvDataList.left.map(_.getClass) mustBe Left(classOf[FramingException])
@@ -91,10 +92,10 @@ class BulkUploadOptOutsServiceSpec
       Files.write(tempFile, csvContent.getBytes("UTF-8"))
 
       try {
-        val eventualCvBulkOptOutCsvDataList: Future[Either[Framing.FramingException, List[Either[String, String]]]] =
+        val eventualCvBulkOptOutCsvDataList =
           bulkUploadOptOutsService.readNinoBulkOptOutsFromFile(tempFile)
         whenReady(eventualCvBulkOptOutCsvDataList) { cvOptOutCsvDataList =>
-          cvOptOutCsvDataList mustBe Right(List.empty)
+          cvOptOutCsvDataList mustBe Right(UploadedBulKOptOutNinos.empty)
         }
       } finally Files.deleteIfExists(tempFile)
     }
@@ -105,7 +106,9 @@ class BulkUploadOptOutsServiceSpec
           |
           |YY336119B,
           |YY336119A, unexpected value
-          |, YY336119A
+          |YY336119X, unexpected value
+          |, YY336119Z
+          |YY336119C
           |YY336119C
           |""".stripMargin
 
@@ -116,15 +119,16 @@ class BulkUploadOptOutsServiceSpec
         val cvOptOutCsvDataList =
           bulkUploadOptOutsService.readNinoBulkOptOutsFromFile(tempFile).futureValue
 
-        cvOptOutCsvDataList mustBe Right(
+        val successfulList = cvOptOutCsvDataList.value
+        successfulList.distinctEntries mustBe
           List(
-            Right("YY336119A"),
-            Right("YY336119B"),
-            Left("YY336119A, unexpected value"),
-            Left(", YY336119A"),
-            Right("YY336119C")
+            "YY336119A",
+            "YY336119B",
+            "YY336119X",
+            "YY336119C"
           )
-        )
+
+        successfulList.foundDuplicates mustBe List("YY336119A", "YY336119C")
 
       } finally Files.deleteIfExists(tempFile)
     }
@@ -132,7 +136,7 @@ class BulkUploadOptOutsServiceSpec
 
   "processBulkOptOuts" should {
     "return an empty list when no ninos are passed" in {
-      val ninos = List()
+      val ninos = List.empty
       val results: Seq[BulkOptOutResult] = bulkUploadOptOutsService.processBulkOptOuts(ninos).futureValue
 
       results mustBe List.empty

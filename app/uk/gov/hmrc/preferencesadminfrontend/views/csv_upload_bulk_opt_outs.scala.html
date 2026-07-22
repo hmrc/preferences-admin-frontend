@@ -15,11 +15,12 @@
  *@
 
 @import uk.gov.hmrc.preferencesadminfrontend.controllers.routes
+@import uk.gov.hmrc.preferencesadminfrontend.views.messages.BulkUploadErrorMessages
 
 @this(layout: Layout, govukBreadcrumbs: GovukBreadcrumbs, form: FormWithCSRF,govukWarningText : GovukWarningText)
+
 @(
     maxUploads: Int,
-    errors:List[String],
     uploadedFileHadNoEntries: Boolean,
     uploadedFileWasInvalid: Boolean,
     tooManyEntriesWereUploadedCount : Int
@@ -49,7 +50,7 @@
                 @if(uploadedFileWasInvalid ){
                     @govukWarningText(WarningText(
                         iconFallbackText = Some("Warning"),
-                        content = Text(s"Invalid File Format. The uploaded file format could not be processed. Please enter a valid .csv file format.")
+                        content = Text(BulkUploadErrorMessages.invalidFileFormat)
                     ))
                 }
 
@@ -57,31 +58,15 @@
                 @if(tooManyEntriesWereUploadedCount > 0){
                     @govukWarningText(WarningText(
                         iconFallbackText = Some("Warning"),
-                        content = Text(s"Too many entries were uploaded ($tooManyEntriesWereUploadedCount)")
+                        content = Text(BulkUploadErrorMessages.tooManyUploadedNinosFormat.format(tooManyEntriesWereUploadedCount))
                     ))
                 }
 
 
-
-                @if(errors.nonEmpty){
-                    <div class="govuk-body">
-                        @govukWarningText(WarningText(
-                            iconFallbackText = Some("Warning"),
-                            content = Text("The following uploaded entries were invalid")
-                        ))
-
-                        <ul class="govuk-task-list">
-                        @for(error <- errors){
-                            <li class="govuk-task-list__item">@error</li>
-                        }
-                        </ul>
-                    </div>
-                }
-
                 @if(uploadedFileHadNoEntries){
                     @govukWarningText(WarningText(
                         iconFallbackText = Some("Warning"),
-                        content = Text("The uploaded file had no entries")
+                        content = Text(BulkUploadErrorMessages.noUploadedNinos)
                     ))
                 }
 

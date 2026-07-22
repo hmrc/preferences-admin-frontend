@@ -17,10 +17,8 @@
 package uk.gov.hmrc.preferencesadminfrontend.controllers
 
 import org.apache.pekko.stream.Materializer
-import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.*
 import org.mockito.Mockito.*
-import org.scalactic.source.Position
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
