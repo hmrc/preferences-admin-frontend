@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.preferencesadminfrontend.controllers
 
-import play.api.mvc.{ Action, AnyContent, MessagesBaseController, MessagesControllerComponents, MessagesRequest, Request, Result }
+import play.api.mvc.{ Action, AnyContent, MessagesBaseController, MessagesControllerComponents, Request, Result }
 import uk.gov.hmrc.preferencesadminfrontend.controllers.Role.Generic
 import uk.gov.hmrc.preferencesadminfrontend.controllers.model.User
 import uk.gov.hmrc.preferencesadminfrontend.services.LoginService
@@ -38,20 +38,18 @@ class AuthorisedAction @Inject() (loginService: LoginService, val controllerComp
 
       user match {
         case Some(user) if checkForRequiredRoleAndBulkOptOutsAccess(user, role) || isAdmin => block(request)(user)
-        case _ => Future.successful(play.api.mvc.Results.Redirect(routes.LoginController.showLoginPage()))
+        case _ => Future.successful(Redirect(routes.LoginController.showLoginPage()))
       }
     }
 
-  private def checkForRequiredRoleAndBulkOptOutsAccess(user: User, role: Role)(implicit
-    request: MessagesRequest[AnyContent]
-  ) =
+  private def checkForRequiredRoleAndBulkOptOutsAccess(user: User, role: Role)(implicit request: Request[_]) =
     if (request.uri.equals(routes.CsvUploadBulkOptOutsController.showBulkOptOutsUploadPage.url)) {
       loginService.hasRequiredRole(user, role) && checkAccessForCsvUploadBulkOptOuts
     } else {
       loginService.hasRequiredRole(user, role)
     }
 
-  private def checkAccessForCsvUploadBulkOptOuts(implicit request: MessagesRequest[AnyContent]): Boolean = {
+  private def checkAccessForCsvUploadBulkOptOuts(implicit request: Request[_]): Boolean = {
     val isAdmin = request.session.get("isAdmin").getOrElse("false").toBoolean
     val isGeneric = request.session.get("isGeneric").getOrElse("false").toBoolean
     val isSols = request.session.get("isSols").getOrElse("false").toBoolean
