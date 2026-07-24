@@ -37,19 +37,19 @@ class AuthorisedAction @Inject() (loginService: LoginService, val controllerComp
       val user = request.session.get(User.sessionKey).map(name => User(name, ""))
 
       user match {
-        case Some(user) if checkForRequiredRoleAndBulkOptOutsAccess(user, role) || isAdmin => block(request)(user)
+        case Some(user) if hasRequiredRoleOrBulkOptOutsAccess(user, role) || isAdmin => block(request)(user)
         case _ => Future.successful(Redirect(routes.LoginController.showLoginPage()))
       }
     }
 
-  private def checkForRequiredRoleAndBulkOptOutsAccess(user: User, role: Role)(implicit request: Request[_]) =
+  private def hasRequiredRoleOrBulkOptOutsAccess(user: User, role: Role)(implicit request: Request[_]) =
     if (request.uri.equals(routes.CsvUploadBulkOptOutsController.showBulkOptOutsUploadPage.url)) {
-      loginService.hasRequiredRole(user, role) && checkAccessForCsvUploadBulkOptOuts
+      loginService.hasRequiredRole(user, role) && hasAccessForCsvUploadBulkOptOuts
     } else {
       loginService.hasRequiredRole(user, role)
     }
 
-  private def checkAccessForCsvUploadBulkOptOuts(implicit request: Request[_]): Boolean = {
+  private def hasAccessForCsvUploadBulkOptOuts(implicit request: Request[_]): Boolean = {
     val isAdmin = request.session.get("isAdmin").getOrElse("false").toBoolean
     val isGeneric = request.session.get("isGeneric").getOrElse("false").toBoolean
     val isSols = request.session.get("isSols").getOrElse("false").toBoolean
