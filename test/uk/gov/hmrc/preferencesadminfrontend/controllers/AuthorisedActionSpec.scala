@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2026 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,20 +39,19 @@ class AuthorisedActionSpec extends PlaySpec with MockitoSugar with ScalaFutures 
 
     val authorisedAction = app.injector.instanceOf[AuthorisedAction]
     val empty_string = ""
+    val blockInput: Request[AnyContent] => User => Future[Result] = _ => _ => Future.successful(Ok(empty_string))
 
     "return the correct page when the user has admin role" in {
       implicit val req: FakeRequest[AnyContentAsEmpty.type] = FakeRequest()
         .withSession((User.sessionKey, "admin"), ("isSols", "false"), ("isAdmin", "true"), ("isGeneric", "false"))
 
-      val pageInput: Request[AnyContent] => User => Future[Result] = _ => _ => Future.successful(Ok(empty_string))
-
-      val result = authorisedAction.async(Admin)(pageInput)
+      val result = authorisedAction.async(Admin)(blockInput)
 
       val finalResult = await(result.apply(req))
       finalResult.header.status mustBe OK
     }
 
-    "return the login page when the user has both sols and genric roles" in {
+    "return to login page when the user has both sols and genric roles" in {
       implicit val req: FakeRequest[AnyContentAsEmpty.type] =
         FakeRequest("GET", "/paperless/admin/csv-upload-bulk-opt-outs")
           .withSession(
@@ -63,16 +62,15 @@ class AuthorisedActionSpec extends PlaySpec with MockitoSugar with ScalaFutures 
           )
 
       val mockLoginService = mock[LoginService]
-      val pageInput: Request[AnyContent] => User => Future[Result] = _ => _ => Future.successful(Ok(empty_string))
 
       when(mockLoginService.hasRequiredRole(any, any)).thenReturn(true)
-      val result = authorisedAction.async(SolsGeneric)(pageInput)
+      val result = authorisedAction.async(SolsGeneric)(blockInput)
 
       val finalResult = await(result.apply(req))
       finalResult.header.status mustBe SEE_OTHER
     }
 
-    "return the correct page when the user has correct role to access CsvUpload bulk opt-outs" in {
+    "return the correct page when the user has correct (generic) role to access CsvUpload bulk opt-outs" in {
       implicit val req: FakeRequest[AnyContentAsEmpty.type] =
         FakeRequest("GET", "/paperless/admin/csv-upload-bulk-opt-outs")
           .withSession(
@@ -82,9 +80,7 @@ class AuthorisedActionSpec extends PlaySpec with MockitoSugar with ScalaFutures 
             ("isGeneric", "true")
           )
 
-      val pageInput: Request[AnyContent] => User => Future[Result] = _ => _ => Future.successful(Ok(empty_string))
-
-      val result = authorisedAction.async(Generic)(pageInput)
+      val result = authorisedAction.async(Generic)(blockInput)
 
       val finalResult = await(result.apply(req))
       finalResult.header.status mustBe OK
