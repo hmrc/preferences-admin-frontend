@@ -370,7 +370,7 @@ class EntityResolverConnectorSpec extends ConnectorBaseSpec(EntityResolverConnec
     }
 
     "return None if taxId does not exist" in new TestCase {
-      stubGetPreferenceDetails(nino.regime, nino.value, Status.NOT_FOUND, "")
+      stubGetPreferenceDetails(sautr.regime, sautr.value, Status.NOT_FOUND, "")
 
       val result = entityResolverConnector.getPreferenceDetails(sautr).futureValue
 
@@ -384,7 +384,7 @@ class EntityResolverConnectorSpec extends ConnectorBaseSpec(EntityResolverConnec
     }
 
     "handle unexpected exceptions" in new TestCase {
-      stubGetPreferenceDetails(nino.regime, nino.value, Status.INTERNAL_SERVER_ERROR, "")
+      stubGetPreferenceDetails(sautr.regime, sautr.value, Status.INTERNAL_SERVER_ERROR, "")
       val result = entityResolverConnector.getPreferenceDetails(sautr).futureValue
       result mustBe None
     }
