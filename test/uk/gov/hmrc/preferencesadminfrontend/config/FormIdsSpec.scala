@@ -64,8 +64,8 @@ class FormIdsSpec extends PlaySpec {
       }
     }
 
-    "contain CH(A)1700 and CH(A)1708 form ids" in {
-      val CHAFormIds: List[String] = List("CH(A)1700", "CH(A)1708")
+    "contain CHA1700 and CHA1708 form ids" in {
+      val CHAFormIds: List[String] = List("CHA1700", "CHA1708")
 
       CHAFormIds.foreach { id =>
         assert(formIdsConfig.contains(id))
