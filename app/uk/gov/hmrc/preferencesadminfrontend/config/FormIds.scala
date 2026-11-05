@@ -166,6 +166,7 @@ object FormIds {
     "LEPP4",
     "CHA1700",
     "CHA1708",
-    "VPD1"
+    "VPD1",
+    "VPD-CA"
   )
 }
