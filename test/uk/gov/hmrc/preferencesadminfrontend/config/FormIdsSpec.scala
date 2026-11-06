@@ -76,6 +76,10 @@ class FormIdsSpec extends PlaySpec {
       assert(formIdsConfig.contains("VPD1"))
     }
 
+    "contain VPD-CA formId" in {
+      assert(formIdsConfig.contains("VPD-CA"))
+    }
+
     "contain ITSAFD form ids" in {
       val niRefFormIds: List[String] =
         List(
