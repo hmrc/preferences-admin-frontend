@@ -7,6 +7,7 @@ POST        /login                                      uk.gov.hmrc.preferencesa
 GET         /logout                                     uk.gov.hmrc.preferencesadminfrontend.controllers.LoginController.logoutAction()
 GET         /                                           uk.gov.hmrc.preferencesadminfrontend.controllers.LoginController.showLoginPage()
 GET         /home                                       uk.gov.hmrc.preferencesadminfrontend.controllers.HomeController.showHomePage()
+GET         /emailRemoval                               uk.gov.hmrc.preferencesadminfrontend.controllers.EmailRemovalController.showPage()
 GET         /decode                                     uk.gov.hmrc.preferencesadminfrontend.controllers.MultiSearchController.showDecodePage()
 GET         /multi-search                               uk.gov.hmrc.preferencesadminfrontend.controllers.MultiSearchController.showMultiSearchPage()
 GET         /search-results                             uk.gov.hmrc.preferencesadminfrontend.controllers.MultiSearchController.showResultsPage()
@@ -28,7 +29,7 @@ GET         /csv-upload                                 uk.gov.hmrc.preferencesa
 POST        /csv-upload/confirmation                    uk.gov.hmrc.preferencesadminfrontend.controllers.CsvUploadController.upload()
 GET         /csv-upload-bulk-opt-outs                   uk.gov.hmrc.preferencesadminfrontend.controllers.CsvUploadBulkOptOutsController.showBulkOptOutsUploadPage
 POST        /csv-upload-bulk-opt-outs/confirmation      uk.gov.hmrc.preferencesadminfrontend.controllers.CsvUploadBulkOptOutsController.uploadBulkOptOuts()
-
+GET         /insufficient-roles                         uk.gov.hmrc.preferencesadminfrontend.controllers.InsufficientRolesController.get()
 
 # Temporaty endpoits to migrate MDTP to ETMP
 GET         /migration                              uk.gov.hmrc.preferencesadminfrontend.controllers.MessageController.show()
