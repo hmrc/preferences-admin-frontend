@@ -34,4 +34,9 @@ class FakeStrideAuth @Inject() (
     action: Request[AnyContent] => OperatorDetails => Future[Result]
   )(implicit ec: ExecutionContext): Action[AnyContent] =
     defaultActionBuilder.async(implicit request => action(request)(OperatorDetails(List.empty, Some(""), "")))
+
+  def authorisedFromStrideOrLoginCredentials(
+    action: Request[AnyContent] => OperatorDetails => Future[Result]
+  )(implicit ec: ExecutionContext): Action[AnyContent] =
+    defaultActionBuilder.async(implicit request => action(request)(OperatorDetails(List.empty, Some(""), "")))
 }
