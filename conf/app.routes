@@ -31,7 +31,7 @@ GET         /csv-upload-bulk-opt-outs                   uk.gov.hmrc.preferencesa
 POST        /csv-upload-bulk-opt-outs/confirmation      uk.gov.hmrc.preferencesadminfrontend.controllers.CsvUploadBulkOptOutsController.uploadBulkOptOuts()
 GET         /insufficient-roles                         uk.gov.hmrc.preferencesadminfrontend.controllers.InsufficientRolesController.get()
 
-# Temporaty endpoints to migrate MDTP to ETMP
+# Temporary endpoints to migrate MDTP to ETMP
 GET         /migration                              uk.gov.hmrc.preferencesadminfrontend.controllers.MessageController.show()
 POST        /migration                               uk.gov.hmrc.preferencesadminfrontend.controllers.MessageController.check()
 
