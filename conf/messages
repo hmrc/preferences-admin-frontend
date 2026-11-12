@@ -1,3 +1,5 @@
 error.preference_not_found=No paperless preference found for that identifier.
 error.name_invalid=Invalid tax identifier type selected.
 error.credentials.invalid=Wrong username or password combination.
+insufficient.roles.header=You do not have permission to access this service
+insufficient.roles.body=Contact your administrator if you need to use this service.
