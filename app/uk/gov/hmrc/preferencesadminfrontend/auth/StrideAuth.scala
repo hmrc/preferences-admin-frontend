@@ -55,6 +55,10 @@ trait StrideAuth extends AuthRedirects with AuthorisedFunctions with Results wit
     action: Request[AnyContent] => OperatorDetails => Future[Result]
   )(implicit ec: ExecutionContext): Action[AnyContent]
 
+  def authorisedFromStrideOrLoginCredentials(
+    action: Request[AnyContent] => OperatorDetails => Future[Result]
+  )(implicit ec: ExecutionContext): Action[AnyContent]
+
 }
 
 @Singleton
@@ -66,6 +70,34 @@ class StrideAuthImpl @Inject() (
 
   val role: String = serviceConfig.getString("stride.role")
 
+  def authorisedFromStrideOrLoginCredentials(
+    action: Request[AnyContent] => OperatorDetails => Future[Result]
+  )(implicit ec: ExecutionContext): Action[AnyContent] =
+    actionBuilder.async { implicit request =>
+      authorised(Enrolment(role) and AuthProviders(PrivilegedApplication))
+        .retrieve(Retrievals.allEnrolments and Retrievals.email and Retrievals.credentials) {
+          case allEnrolments ~ email ~ credentials =>
+            action(request)(
+              OperatorDetails(
+                allEnrolments.enrolments.map(_.key).toList,
+                credentials.map(_.providerId),
+                email.getOrElse("")
+              )
+            )
+        }
+        .recoverWith {
+          case _: NoActiveSession =>
+            Future.successful(
+              toStrideLogin(
+                if (request.host.contains("localhost")) s"http://${request.host}${request.uri}" else request.uri
+              )
+            )
+          case _: InsufficientEnrolments =>
+            Future.successful(
+              SeeOther(uk.gov.hmrc.preferencesadminfrontend.controllers.routes.LoginController.showLoginPage().url)
+            )
+        }
+    }
   def authorisedFromStride(
     action: Request[AnyContent] => OperatorDetails => Future[Result]
   )(implicit ec: ExecutionContext): Action[AnyContent] =
@@ -94,7 +126,6 @@ class StrideAuthImpl @Inject() (
             )
         }
     }
-
 }
 
 case class OperatorDetails(roles: List[String], pid: Option[String], email: String)
