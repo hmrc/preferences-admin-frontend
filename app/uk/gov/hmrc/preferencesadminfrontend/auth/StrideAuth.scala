@@ -20,40 +20,22 @@ import com.google.inject.{ ImplementedBy, Inject, Singleton }
 import play.api.libs.json.{ Format, Json }
 import play.api.mvc.*
 import play.api.mvc.Results.*
-import play.api.{ Configuration, Environment, Mode }
 import uk.gov.hmrc.auth.core.*
 import uk.gov.hmrc.auth.core.AuthProvider.PrivilegedApplication
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.auth.core.retrieve.~
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendHeaderCarrierProvider
 
 import scala.concurrent.{ ExecutionContext, Future }
 
 trait AuthRedirects {
 
-  def config: Configuration
+  def serviceConfig: ServicesConfig
 
-  def env: Environment
+  private def strideLoginUrl: String = serviceConfig.baseUrl("stride-auth-frontend") + "/stride/sign-in"
 
-  private lazy val envPrefix =
-    if (env.mode.equals(Mode.Test)) "Test"
-    else
-      config
-        .getOptional[String]("run.mode")
-        .getOrElse("Dev")
-
-  private val hostDefaults: Map[String, String] = Map(
-    "Dev.external-url.stride-auth-frontend.host" -> "http://localhost:9041"
-  )
-
-  private def host(service: String): String = {
-    val key = s"$envPrefix.external-url.$service.host"
-    config.getOptional[String](key).orElse(hostDefaults.get(key)).getOrElse("")
-  }
-
-  def strideLoginUrl: String = host("stride-auth-frontend") + "/stride/sign-in"
-
-  lazy val origin: String = config.get[String]("appName")
+  lazy val origin: String = serviceConfig.getString("appName")
 
   def toStrideLogin(successUrl: String, failureUrl: Option[String] = None): Result =
     Redirect(
@@ -78,13 +60,11 @@ trait StrideAuth extends AuthRedirects with AuthorisedFunctions with Results wit
 @Singleton
 class StrideAuthImpl @Inject() (
   val authConnector: AuthConnector,
-  val env: Environment,
-  val config: Configuration,
+  val serviceConfig: ServicesConfig,
   actionBuilder: DefaultActionBuilder
 ) extends StrideAuth {
 
-  val isLocal: Boolean = config.getOptional[String]("platform.frontend.host").isEmpty
-  val role: String = config.get[String]("stride.role")
+  val role: String = serviceConfig.getString("stride.role")
 
   def authorisedFromStride(
     action: Request[AnyContent] => OperatorDetails => Future[Result]
@@ -105,7 +85,7 @@ class StrideAuthImpl @Inject() (
           case _: NoActiveSession =>
             Future.successful(
               toStrideLogin(
-                if (isLocal) s"http://${request.host}${request.uri}" else request.uri
+                s"http://${request.host}${request.uri}"
               )
             )
           case _: InsufficientEnrolments =>

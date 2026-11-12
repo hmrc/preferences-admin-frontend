@@ -21,19 +21,21 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.{ Application, Configuration, Environment }
+import play.api.Application
 import play.api.http.*
 import play.api.i18n.MessagesApi
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.mvc.{ DefaultActionBuilder, MessagesControllerComponents }
+import play.api.test.CSRFTokenHelper.CSRFFRequestHeader
 import play.api.test.FakeRequest
 import play.api.test.Helpers.*
-import play.api.test.CSRFTokenHelper.CSRFFRequestHeader
 import uk.gov.hmrc.auth.core.AuthConnector
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.preferencesadminfrontend.auth.FakeStrideAuth
 import uk.gov.hmrc.preferencesadminfrontend.config.AppConfig
 import uk.gov.hmrc.preferencesadminfrontend.utils.SpecBase
 import uk.gov.hmrc.preferencesadminfrontend.views.html.test_email_removal
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class EmailRemovalControllerSpec extends PlaySpec with GuiceOneAppPerSuite with SpecBase with ScalaFutures {
@@ -41,14 +43,14 @@ class EmailRemovalControllerSpec extends PlaySpec with GuiceOneAppPerSuite with 
   implicit lazy val materializer: Materializer = app.materializer
   override implicit lazy val app: Application = GuiceApplicationBuilder().build()
   implicit val messagesApi: MessagesApi = app.injector.instanceOf[MessagesApi]
+  implicit val servicesConfig: ServicesConfig = app.injector.instanceOf[ServicesConfig]
   protected lazy val authConnector: AuthConnector = MockitoSugar.mock[AuthConnector]
-  val env: Environment = Environment.simple()
-  val configuration: Configuration = Configuration.load(env)
   val defaultActionBuilder: DefaultActionBuilder = app.injector.instanceOf[DefaultActionBuilder]
-  val strideAuth = new FakeStrideAuth(authConnector, env, configuration, defaultActionBuilder)
+  val strideAuth = new FakeStrideAuth(authConnector, servicesConfig, defaultActionBuilder)
   val view: test_email_removal = app.injector.instanceOf[test_email_removal]
   val mcc: MessagesControllerComponents = stubMessagesControllerComponents()
   implicit val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
+
   val emailRemovalController: EmailRemovalController = new EmailRemovalController(view, strideAuth, mcc)
 
   "GET /emailRemoval" should {
