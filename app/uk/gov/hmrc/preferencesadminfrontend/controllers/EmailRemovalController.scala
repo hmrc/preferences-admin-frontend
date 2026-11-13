@@ -37,7 +37,7 @@ class EmailRemovalController @Inject() (
   ec: ExecutionContext
 ) extends FrontendController(mcc) with I18nSupport with Logging {
 
-  val showPage: Action[AnyContent] = strideAuth.authorisedFromStride { implicit request => _ =>
-    Future.successful(Ok(view()))
+  val showPage: Action[AnyContent] = strideAuth.authorisedFromStride { implicit request => user =>
+    Future.successful(Ok(view(user.email)))
   }
 }
