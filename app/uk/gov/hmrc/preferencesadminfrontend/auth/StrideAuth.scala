@@ -117,7 +117,7 @@ class StrideAuthImpl @Inject() (
           case _: NoActiveSession =>
             Future.successful(
               toStrideLogin(
-                s"http://${request.host}${request.uri}"
+                if (request.host.contains("localhost")) s"http://${request.host}${request.uri}" else request.uri
               )
             )
           case _: InsufficientEnrolments =>
