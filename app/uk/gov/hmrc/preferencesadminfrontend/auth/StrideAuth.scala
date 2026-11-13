@@ -70,6 +70,8 @@ class StrideAuthImpl @Inject() (
 
   val role: String = serviceConfig.getString("stride.role")
 
+  val allowlist: List[String] = serviceConfig.getString("stride.allowlist").split(",").map(_.trim).toList
+
   def authorisedFromStrideOrLoginCredentials(
     action: Request[AnyContent] => OperatorDetails => Future[Result]
   )(implicit ec: ExecutionContext): Action[AnyContent] =
@@ -94,10 +96,11 @@ class StrideAuthImpl @Inject() (
             )
           case _: InsufficientEnrolments =>
             Future.successful(
-              SeeOther(uk.gov.hmrc.preferencesadminfrontend.controllers.routes.LoginController.showLoginPage().url)
+              SeeOther(uk.gov.hmrc.preferencesadminfrontend.controllers.routes.HomeController.showHomePage().url)
             )
         }
     }
+
   def authorisedFromStride(
     action: Request[AnyContent] => OperatorDetails => Future[Result]
   )(implicit ec: ExecutionContext): Action[AnyContent] =
@@ -105,13 +108,19 @@ class StrideAuthImpl @Inject() (
       authorised(Enrolment(role) and AuthProviders(PrivilegedApplication))
         .retrieve(Retrievals.allEnrolments and Retrievals.email and Retrievals.credentials) {
           case allEnrolments ~ email ~ credentials =>
-            action(request)(
-              OperatorDetails(
-                allEnrolments.enrolments.map(_.key).toList,
-                credentials.map(_.providerId),
-                email.getOrElse("")
+            if (allowlist.contains(email.getOrElse("Unknown"))) {
+              action(request)(
+                OperatorDetails(
+                  allEnrolments.enrolments.map(_.key).toList,
+                  credentials.map(_.providerId),
+                  email.getOrElse("")
+                )
               )
-            )
+            } else {
+              Future.successful(
+                SeeOther(uk.gov.hmrc.preferencesadminfrontend.controllers.routes.InsufficientRolesController.get().url)
+              )
+            }
         }
         .recoverWith {
           case _: NoActiveSession =>
